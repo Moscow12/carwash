@@ -12,14 +12,17 @@
             <p class="text-muted mb-0">Carwash Management System</p>
         </div>
 
-        <form wire:submit.prevent="login">
+        <form method="POST" action="{{ route('admin.login.post') }}">
+            @csrf
             <div class="mb-3">
                 <label class="form-label fw-semibold">Email Address</label>
                 <input type="email"
-                       wire:model="email"
+                       name="email"
+                       value="{{ old('email') }}"
                        class="form-control form-control-lg @error('email') is-invalid @enderror"
                        placeholder="admin@example.com"
-                       autofocus>
+                       autofocus
+                       required>
                 @error('email')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -28,9 +31,10 @@
             <div class="mb-4">
                 <label class="form-label fw-semibold">Password</label>
                 <input type="password"
-                       wire:model="password"
+                       name="password"
                        class="form-control form-control-lg @error('password') is-invalid @enderror"
-                       placeholder="Enter your password">
+                       placeholder="Enter your password"
+                       required>
                 @error('password')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -39,7 +43,7 @@
             <div class="mb-4 d-flex justify-content-between align-items-center">
                 <div class="form-check">
                     <input type="checkbox"
-                           wire:model="remember"
+                           name="remember"
                            class="form-check-input"
                            id="remember">
                     <label class="form-check-label" for="remember">
@@ -48,12 +52,8 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" wire:loading.attr="disabled">
-                <span wire:loading.remove wire:target="login">Sign In</span>
-                <span wire:loading wire:target="login">
-                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                    Signing in...
-                </span>
+            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                Sign In
             </button>
         </form>
 

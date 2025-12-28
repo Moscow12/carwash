@@ -31,7 +31,18 @@ Route::get('/login', Login::class)->name('site.login');
 Route::get('/register', Register::class)->name('site.register');
 
 // Admin Authentication
+use App\Http\Controllers\Auth\LoginController;
+
 Route::get('/admin/login', AdminLogin::class)->name('admin.login');
+Route::post('/admin/login', [LoginController::class, 'login'])->name('admin.login.post');
+
+// Debug route - remove after testing
+Route::get('/auth-test', function () {
+    if (Auth::check()) {
+        return 'Logged in as: ' . Auth::user()->email . ' <a href="/admin">Go to Dashboard</a>';
+    }
+    return 'Not logged in. <a href="/admin/login">Login</a>';
+});
 Route::post('/admin/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
