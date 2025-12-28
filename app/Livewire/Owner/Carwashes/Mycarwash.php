@@ -7,19 +7,13 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Rule;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 use App\Models\carwashes;
 use App\Models\regions;
 use App\Models\districts;
 use App\Models\wards;
 use App\Models\street;
-use App\Models\sales;
-use App\Models\customers;
-use App\Models\Booking;
-
 #[Layout('components.layouts.app-owner')]
-class Index extends Component
+class Mycarwash extends Component
 {
     use WithPagination;
 
@@ -208,91 +202,15 @@ class Index extends Component
 
     public function render()
     {
-        $carwashIds = Auth::user()->ownedCarwashes()->pluck('id');
-
         $carwashes = Auth::user()->ownedCarwashes()
             ->when($this->search, function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%');
             })
             ->with(['regions', 'districts', 'wards'])
-            ->withCount(['sales', 'customers', 'bookings', 'staffs', 'items'])
             ->latest()
             ->paginate(10);
-
-        // Performance metrics
-        $metrics = $this->calculateMetrics($carwashIds);
-
-        return view('livewire.owner.carwashes.index', [
-            'carwashes' => $carwashes,
-            'metrics' => $metrics,
+        return view('livewire.owner.carwashes.mycarwash', [
+            'carwashes' => $carwashes
         ]);
-    }
-
-    private function calculateMetrics($carwashIds): array
-    {
-        $now = Carbon::now();
-        $startOfMonth = $now->copy()->startOfMonth();
-        $startOfLastMonth = $now->copy()->subMonth()->startOfMonth();
-        $endOfLastMonth = $now->copy()->subMonth()->endOfMonth();
-
-        // Total counts
-        $totalCarwashes = $carwashIds->count();
-        $activeCarwashes = carwashes::whereIn('id', $carwashIds)->where('status', 'active')->count();
-
-        // Sales metrics
-        $totalRevenue = sales::whereIn('carwash_id', $carwashIds)
-            ->where('payment_status', 'paid')
-            ->sum(DB::raw('CAST(price AS DECIMAL(10,2))'));
-
-        $thisMonthRevenue = sales::whereIn('carwash_id', $carwashIds)
-            ->where('payment_status', 'paid')
-            ->where('date', '>=', $startOfMonth)
-            ->sum(DB::raw('CAST(price AS DECIMAL(10,2))'));
-
-        $lastMonthRevenue = sales::whereIn('carwash_id', $carwashIds)
-            ->where('payment_status', 'paid')
-            ->whereBetween('date', [$startOfLastMonth, $endOfLastMonth])
-            ->sum(DB::raw('CAST(price AS DECIMAL(10,2))'));
-
-        $totalSales = sales::whereIn('carwash_id', $carwashIds)->count();
-        $thisMonthSales = sales::whereIn('carwash_id', $carwashIds)
-            ->where('date', '>=', $startOfMonth)
-            ->count();
-
-        // Customer metrics
-        $totalCustomers = customers::whereIn('carwash_id', $carwashIds)->count();
-        $newCustomersThisMonth = customers::whereIn('carwash_id', $carwashIds)
-            ->where('created_at', '>=', $startOfMonth)
-            ->count();
-
-        // Booking metrics
-        $totalBookings = Booking::whereIn('carwash_id', $carwashIds)->count();
-        $pendingBookings = Booking::whereIn('carwash_id', $carwashIds)
-            ->where('status', 'pending')
-            ->count();
-        $completedBookings = Booking::whereIn('carwash_id', $carwashIds)
-            ->where('status', 'completed')
-            ->count();
-
-        // Calculate growth percentage
-        $revenueGrowth = $lastMonthRevenue > 0
-            ? round((($thisMonthRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100, 1)
-            : ($thisMonthRevenue > 0 ? 100 : 0);
-
-        return [
-            'totalCarwashes' => $totalCarwashes,
-            'activeCarwashes' => $activeCarwashes,
-            'totalRevenue' => $totalRevenue,
-            'thisMonthRevenue' => $thisMonthRevenue,
-            'lastMonthRevenue' => $lastMonthRevenue,
-            'revenueGrowth' => $revenueGrowth,
-            'totalSales' => $totalSales,
-            'thisMonthSales' => $thisMonthSales,
-            'totalCustomers' => $totalCustomers,
-            'newCustomersThisMonth' => $newCustomersThisMonth,
-            'totalBookings' => $totalBookings,
-            'pendingBookings' => $pendingBookings,
-            'completedBookings' => $completedBookings,
-        ];
     }
 }

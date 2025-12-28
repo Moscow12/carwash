@@ -11,153 +11,11 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="mb-1">My Carwashes</h3>
-            <p class="text-muted mb-0">Manage your carwash locations and track performance</p>
+            <p class="text-muted mb-0">Manage your carwash locations</p>
         </div>
         <button wire:click="openModal" class="btn btn-primary">
             <i class="ti ti-plus me-1"></i> Add Carwash
         </button>
-    </div>
-
-    {{-- Performance Summary Cards --}}
-    <div class="row g-3 mb-4">
-        {{-- Total Revenue --}}
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="avatar avatar-lg bg-success-subtle rounded">
-                                <i class="ti ti-currency-dollar text-success fs-4"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted mb-1">Total Revenue</h6>
-                            <h4 class="mb-0">TZS {{ number_format($metrics['totalRevenue'], 0) }}</h4>
-                            <div class="d-flex align-items-center mt-1">
-                                @if($metrics['revenueGrowth'] >= 0)
-                                    <span class="badge bg-success-subtle text-success me-2">
-                                        <i class="ti ti-trending-up me-1"></i>{{ $metrics['revenueGrowth'] }}%
-                                    </span>
-                                @else
-                                    <span class="badge bg-danger-subtle text-danger me-2">
-                                        <i class="ti ti-trending-down me-1"></i>{{ abs($metrics['revenueGrowth']) }}%
-                                    </span>
-                                @endif
-                                <small class="text-muted">vs last month</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- This Month Sales --}}
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="avatar avatar-lg bg-primary-subtle rounded">
-                                <i class="ti ti-receipt text-primary fs-4"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted mb-1">This Month</h6>
-                            <h4 class="mb-0">TZS {{ number_format($metrics['thisMonthRevenue'], 0) }}</h4>
-                            <small class="text-muted">{{ $metrics['thisMonthSales'] }} transactions</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Total Customers --}}
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="avatar avatar-lg bg-info-subtle rounded">
-                                <i class="ti ti-users text-info fs-4"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted mb-1">Total Customers</h6>
-                            <h4 class="mb-0">{{ number_format($metrics['totalCustomers']) }}</h4>
-                            @if($metrics['newCustomersThisMonth'] > 0)
-                                <small class="text-success">
-                                    <i class="ti ti-plus"></i> {{ $metrics['newCustomersThisMonth'] }} new this month
-                                </small>
-                            @else
-                                <small class="text-muted">No new customers this month</small>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Bookings Overview --}}
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="avatar avatar-lg bg-warning-subtle rounded">
-                                <i class="ti ti-calendar-event text-warning fs-4"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted mb-1">Bookings</h6>
-                            <h4 class="mb-0">{{ number_format($metrics['totalBookings']) }}</h4>
-                            <div class="d-flex gap-2">
-                                @if($metrics['pendingBookings'] > 0)
-                                    <span class="badge bg-warning-subtle text-warning">
-                                        {{ $metrics['pendingBookings'] }} pending
-                                    </span>
-                                @endif
-                                <small class="text-muted">{{ $metrics['completedBookings'] }} completed</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Quick Stats Row --}}
-    <div class="row g-3 mb-4">
-        <div class="col-12">
-            <div class="card border-0 bg-gradient-primary text-white shadow">
-                <div class="card-body py-3">
-                    <div class="row align-items-center">
-                        <div class="col-auto">
-                            <i class="ti ti-building-store fs-1 opacity-75"></i>
-                        </div>
-                        <div class="col">
-                            <div class="row text-center">
-                                <div class="col-md-3 col-6 border-end border-white-25">
-                                    <h3 class="mb-0">{{ $metrics['totalCarwashes'] }}</h3>
-                                    <small class="opacity-75">Total Carwashes</small>
-                                </div>
-                                <div class="col-md-3 col-6 border-end-md border-white-25">
-                                    <h3 class="mb-0">{{ $metrics['activeCarwashes'] }}</h3>
-                                    <small class="opacity-75">Active</small>
-                                </div>
-                                <div class="col-md-3 col-6 border-end border-white-25 mt-3 mt-md-0">
-                                    <h3 class="mb-0">{{ $metrics['totalSales'] }}</h3>
-                                    <small class="opacity-75">Total Sales</small>
-                                </div>
-                                <div class="col-md-3 col-6 mt-3 mt-md-0">
-                                    <h3 class="mb-0">{{ $metrics['totalBookings'] }}</h3>
-                                    <small class="opacity-75">Total Bookings</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     {{-- Main Card --}}
@@ -185,9 +43,9 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr class="bg-light">
-                            <th class="border-0 ps-4">Carwash</th>
+                            <th class="border-0 ps-4">Name</th>
                             <th class="border-0">Location</th>
-                            <th class="border-0 text-center">Performance</th>
+                            <th class="border-0">Contact</th>
                             <th class="border-0 text-center">Status</th>
                             <th class="border-0 text-end pe-4">Actions</th>
                         </tr>
@@ -197,58 +55,31 @@
                         <tr>
                             <td class="ps-4">
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar avatar-md bg-primary-subtle text-primary rounded me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                                        <i class="ti ti-car-wash fs-5"></i>
+                                    <div class="avatar avatar-sm bg-primary-subtle text-primary rounded me-3">
+                                        <i class="ti ti-car-wash"></i>
                                     </div>
                                     <div>
                                         <h6 class="mb-0">{{ $carwash->name }}</h6>
-                                        <small class="text-muted">{{ Str::limit($carwash->address, 35) }}</small>
-                                        <div class="mt-1">
-                                            <span class="badge bg-light text-dark me-1">
-                                                <i class="ti ti-package text-muted me-1"></i>{{ $carwash->items_count }} items
-                                            </span>
-                                            <span class="badge bg-light text-dark">
-                                                <i class="ti ti-users text-muted me-1"></i>{{ $carwash->staffs_count }} staff
-                                            </span>
-                                        </div>
+                                        <small class="text-muted">{{ Str::limit($carwash->address, 30) }}</small>
                                     </div>
                                 </div>
                             </td>
                             <td>
                                 <div>
-                                    <span class="d-block fw-medium">{{ $carwash->regions->name ?? '-' }}</span>
+                                    <span class="d-block">{{ $carwash->regions->name ?? '-' }}</span>
                                     <small class="text-muted">
                                         {{ $carwash->districts->name ?? '' }}{{ $carwash->wards ? ', ' . $carwash->wards->name : '' }}
                                     </small>
                                 </div>
                             </td>
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center gap-3">
-                                    <div class="text-center">
-                                        <div class="avatar avatar-sm bg-success-subtle rounded mb-1 mx-auto d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                                            <i class="ti ti-receipt text-success"></i>
-                                        </div>
-                                        <div class="fw-bold">{{ $carwash->sales_count }}</div>
-                                        <small class="text-muted">Sales</small>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="avatar avatar-sm bg-info-subtle rounded mb-1 mx-auto d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                                            <i class="ti ti-users text-info"></i>
-                                        </div>
-                                        <div class="fw-bold">{{ $carwash->customers_count }}</div>
-                                        <small class="text-muted">Customers</small>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="avatar avatar-sm bg-warning-subtle rounded mb-1 mx-auto d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                                            <i class="ti ti-calendar text-warning"></i>
-                                        </div>
-                                        <div class="fw-bold">{{ $carwash->bookings_count }}</div>
-                                        <small class="text-muted">Bookings</small>
-                                    </div>
+                            <td>
+                                <div>
+                                    <span class="d-block">{{ $carwash->resentative_name }}</span>
+                                    <small class="text-muted">{{ $carwash->resentative_phone }}</small>
                                 </div>
                             </td>
                             <td class="text-center">
-                                <span class="badge rounded-pill bg-{{ $carwash->status === 'active' ? 'success' : 'secondary' }}-subtle text-{{ $carwash->status === 'active' ? 'success' : 'secondary' }} px-3 py-2">
+                                <span class="badge rounded-pill bg-{{ $carwash->status === 'active' ? 'success' : 'secondary' }}-subtle text-{{ $carwash->status === 'active' ? 'success' : 'secondary' }}">
                                     <i class="ti ti-{{ $carwash->status === 'active' ? 'check' : 'x' }} me-1"></i>
                                     {{ ucfirst($carwash->status) }}
                                 </span>

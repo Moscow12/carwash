@@ -33,6 +33,10 @@ use App\Livewire\Owner\Sales\Index as OwnerSales;
 use App\Livewire\Owner\Purchases\Index as OwnerPurchases;
 use App\Livewire\Owner\Stocktaking\Index as OwnerStocktaking;
 use App\Livewire\Owner\Suppliers\Index as OwnerSuppliers;
+use App\Livewire\Owner\Carwashes\Mycarwash;
+use App\Livewire\Owner\Items\Categories;
+use App\Livewire\Owner\Items\Itemregister;
+use App\Livewire\Owner\Items\Uploaditems;
 
 // Customer Pages
 use App\Livewire\Customer\Dashboard as CustomerDashboard;
@@ -51,6 +55,7 @@ Route::get('/register', Register::class)->name('site.register');
 
 // Admin Authentication
 use App\Http\Controllers\Auth\LoginController;
+use App\Livewire\Owner\Items\Units;
 
 Route::get('/admin/login', AdminLogin::class)->name('admin.login');
 Route::post('/admin/login', [LoginController::class, 'login'])->name('admin.login.post');
@@ -109,6 +114,11 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/purchases', OwnerPurchases::class)->name('owner.purchases');
     Route::get('/stocktaking', OwnerStocktaking::class)->name('owner.stocktaking');
     Route::get('/suppliers', OwnerSuppliers::class)->name('owner.suppliers');
+    Route::get('/units', Units::class)->name('owner.units');
+    Route::get('/my-carwash', Mycarwash::class)->name('owner.mycarwash');
+    Route::get('/categories', Categories::class)->name('owner.categories');
+    Route::get('/item-register', Itemregister::class)->name('owner.itemregister');
+    Route::get('/upload-items', Uploaditems::class)->name('owner.uploaditems');
 });
 
 // Customer Dashboard (Protected Routes - Customer Only)

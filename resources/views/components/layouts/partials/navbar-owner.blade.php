@@ -12,19 +12,62 @@
     <div class="nav-heading">My Business</div>
     <hr class="mx-5 nav-line mb-1" />
   </li>
-  <li class="nav-item">
-    <a class='nav-link {{ request()->routeIs("owner.carwashes*") ? "active" : "" }}' href="{{ route('owner.carwashes') }}">
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.carwashes*') || request()->routeIs('owner.carwashes*') ? 'active' : '' }}"
+       href="#!"
+       role="button"
+       data-bs-toggle="dropdown"
+       aria-expanded="{{ request()->routeIs('owner.carwashes*') || request()->routeIs('owner.carwashes*') ? 'true' : 'false' }}">
       <span class="nav-icon"><i class="ti ti-car-garage fs-5"></i></span>
       <span class="text">My Carwashes</span>
     </a>
+    <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.carwashes*') || request()->routeIs('owner.carwashes*') ? 'show' : '' }}">
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.carwashes") ? "active" : "" }}' href="{{ route('owner.carwashes') }}">
+          <i class="ti ti-package me-2"></i> Manage Carwash(s)
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.mycarwash") ? "active" : "" }}' href="{{ route('owner.mycarwash') }}">
+          <i class="ti ti-ruler-2 me-2"></i> Add New Carwash
+        </a>
+      </li>
+    </ul>
   </li>
-  <li class="nav-item">
-    <a class='nav-link {{ request()->routeIs("owner.items*") ? "active" : "" }}' href="{{ route('owner.items') }}">
+  <!-- Items & Services Dropdown -->
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.items*') || request()->routeIs('owner.itemregister*') || request()->routeIs('owner.categories*') || request()->routeIs('owner.units*') ? 'active' : '' }}"
+       href="#!"
+       role="button"
+       data-bs-toggle="dropdown"
+       aria-expanded="{{ request()->routeIs('owner.items*') || request()->routeIs('owner.itemregister*') || request()->routeIs('owner.categories*') || request()->routeIs('owner.units*') ? 'true' : 'false' }}">
       <span class="nav-icon"><i class="ti ti-tools fs-5"></i></span>
       <span class="text">Items & Services</span>
     </a>
-  </li>
+    <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.items*') || request()->routeIs('owner.itemregister*') || request()->routeIs('owner.categories*') || request()->routeIs('owner.units*') ? 'show' : '' }}">
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.itemregister") ? "active" : "" }}' href="{{ route('owner.itemregister') }}">
+          <i class="ti ti-package me-2"></i> Items / Services
+        </a>
+      </li>
 
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.uploaditems") ? "active" : "" }}' href="{{ route('owner.uploaditems') }}">
+          <i class="ti ti-upload me-2"></i> Upload Items
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.categories") ? "active" : "" }}' href="{{ route('owner.categories') }}">
+          <i class="ti ti-category me-2"></i> Categories
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.units*") ? "active" : "" }}' href="{{ route('owner.units') }}">
+          <i class="ti ti-ruler-2 me-2"></i> Units
+        </a>
+      </li>
+    </ul>
+  </li>
   <!-- People -->
   <li class="nav-item">
     <div class="nav-heading">People</div>

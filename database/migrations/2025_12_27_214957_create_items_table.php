@@ -26,6 +26,7 @@ return new class extends Migration
             $table->enum('require_plate_number', ['yes', 'no'])->default('no');
             $table->foreignUuid('unit_id')->constrained('units')->onDelete('cascade');
             $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->foreignUuid('category_id')->constrained('categories')->onDelete('cascade');
             $table->foreignUuid('carwash_id')->constrained('carwashes')->onDelete('cascade');
             $table->timestamps();
         });
