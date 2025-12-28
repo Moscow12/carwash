@@ -11,7 +11,7 @@ use App\Livewire\Sitepg\Contact;
 use App\Livewire\Sitepg\Login;
 use App\Livewire\Sitepg\Register;
 
-// Dashboard Pages
+// Dashboard Pages (Admin)
 use App\Livewire\Dashboard\Auth\Login as AdminLogin;
 use App\Livewire\Dashboard\Index as DashboardIndex;
 use App\Livewire\Dashboard\Users\Index as UsersIndex;
@@ -21,6 +21,25 @@ use App\Livewire\Dashboard\Locations\CDistricts;
 use App\Livewire\Dashboard\Locations\CWards;
 use App\Livewire\Dashboard\Locations\Streets;
 use App\Livewire\Dashboard\Settings\Index as SettingsIndex;
+use App\Livewire\Dashboard\Carwashes\Index as AdminCarwashes;
+
+// Owner Pages
+use App\Livewire\Owner\Dashboard as OwnerDashboard;
+use App\Livewire\Owner\Carwashes\Index as OwnerCarwashes;
+use App\Livewire\Owner\Items\Index as OwnerItems;
+use App\Livewire\Owner\Staffs\Index as OwnerStaffs;
+use App\Livewire\Owner\Customers\Index as OwnerCustomers;
+use App\Livewire\Owner\Sales\Index as OwnerSales;
+use App\Livewire\Owner\Purchases\Index as OwnerPurchases;
+use App\Livewire\Owner\Stocktaking\Index as OwnerStocktaking;
+use App\Livewire\Owner\Suppliers\Index as OwnerSuppliers;
+
+// Customer Pages
+use App\Livewire\Customer\Dashboard as CustomerDashboard;
+use App\Livewire\Customer\Carwashes\Browse as BrowseCarwashes;
+use App\Livewire\Customer\Carwashes\Details as CarwashDetails;
+use App\Livewire\Customer\Bookings\Index as MyBookings;
+use App\Livewire\Customer\Profile\Index as CustomerProfile;
 
 // Site Pages
 Route::get('/', Home::class)->name('site.home');
@@ -39,10 +58,18 @@ Route::post('/admin/login', [LoginController::class, 'login'])->name('admin.logi
 // Debug route - remove after testing
 Route::get('/auth-test', function () {
     if (Auth::check()) {
-        return 'Logged in as: ' . Auth::user()->email . ' <a href="/admin">Go to Dashboard</a>';
+        return 'Logged in as: ' . Auth::user()->email . ' (Role: ' . Auth::user()->role . ') <a href="/admin">Admin</a> | <a href="/owner">Owner</a> | <a href="/customer">Customer</a>';
     }
     return 'Not logged in. <a href="/admin/login">Login</a>';
 });
+
+Route::post('/logout', function () {
+    Auth::logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect()->route('admin.login');
+})->name('logout');
+
 Route::post('/admin/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
@@ -50,12 +77,15 @@ Route::post('/admin/logout', function () {
     return redirect()->route('admin.login');
 })->name('admin.logout');
 
-// Admin Dashboard (Protected Routes)
-Route::middleware(['auth'])->prefix('admin')->group(function () {
+// Admin Dashboard (Protected Routes - Admin Only)
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/', DashboardIndex::class)->name('admin.dashboard');
 
     // User Management
     Route::get('/users', UsersIndex::class)->name('admin.users');
+
+    // Carwash Management
+    Route::get('/carwashes', AdminCarwashes::class)->name('admin.carwashes');
 
     // Location Management
     Route::get('/countries', CCountries::class)->name('admin.countries');
@@ -66,4 +96,26 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
 
     // Settings
     Route::get('/settings', SettingsIndex::class)->name('admin.settings');
+});
+
+// Owner Dashboard (Protected Routes - Owner Only)
+Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
+    Route::get('/', OwnerDashboard::class)->name('owner.dashboard');
+    Route::get('/carwashes', OwnerCarwashes::class)->name('owner.carwashes');
+    Route::get('/items', OwnerItems::class)->name('owner.items');
+    Route::get('/staffs', OwnerStaffs::class)->name('owner.staffs');
+    Route::get('/customers', OwnerCustomers::class)->name('owner.customers');
+    Route::get('/sales', OwnerSales::class)->name('owner.sales');
+    Route::get('/purchases', OwnerPurchases::class)->name('owner.purchases');
+    Route::get('/stocktaking', OwnerStocktaking::class)->name('owner.stocktaking');
+    Route::get('/suppliers', OwnerSuppliers::class)->name('owner.suppliers');
+});
+
+// Customer Dashboard (Protected Routes - Customer Only)
+Route::middleware(['auth', 'role:customer'])->prefix('customer')->group(function () {
+    Route::get('/', CustomerDashboard::class)->name('customer.dashboard');
+    Route::get('/carwashes', BrowseCarwashes::class)->name('customer.carwashes');
+    Route::get('/carwashes/{id}', CarwashDetails::class)->name('customer.carwash.details');
+    Route::get('/bookings', MyBookings::class)->name('customer.bookings');
+    Route::get('/profile', CustomerProfile::class)->name('customer.profile');
 });

@@ -19,6 +19,18 @@
     </a>
   </li>
 
+  <!-- Carwash Management -->
+  <li class="nav-item">
+    <div class="nav-heading">Carwash Management</div>
+    <hr class="mx-5 nav-line mb-1" />
+  </li>
+  <li class="nav-item">
+    <a class='nav-link {{ request()->routeIs("admin.carwashes*") ? "active" : "" }}' href="{{ route('admin.carwashes') }}">
+      <span class="nav-icon"><i class="ti ti-car-garage fs-5"></i></span>
+      <span class="text">Carwashes</span>
+    </a>
+  </li>
+
   <!-- Configuration -->
   <li class="nav-item">
     <div class="nav-heading">Configuration</div>
