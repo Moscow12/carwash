@@ -14,7 +14,7 @@
       <div class="offcanvasNav offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
         <div class="offcanvas-header">
 
-            <a class='d-flex align-items-center gap-2' href="{{ route('dashboard') }}">
+            <a class='d-flex align-items-center gap-2' href="{{ route('admin.dashboard') }}">
               <img src="{{ asset('images/brand/logo/logo-icon.svg') }}" alt="" />
               <span class="fw-bold fs-4  site-logo-text">HRP</span>
             </a>
@@ -42,7 +42,10 @@
       </div>
     </div>
     <!-- Libs JS -->
+    @if(class_exists('ToastMagic'))
     {!! ToastMagic::scripts() !!}
+    @endif
+    @livewireScripts
   </body>
 
 </html>

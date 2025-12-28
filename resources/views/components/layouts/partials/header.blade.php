@@ -46,6 +46,9 @@
     <!-- Theme CSS -->
     <link rel="stylesheet" href="{{ asset('assets/css/theme.min.css') }}">
     <!-- Theme CSS -->
+    @if(class_exists('ToastMagic'))
     {!! ToastMagic::styles() !!}
+    @endif
+    @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
   </head>
