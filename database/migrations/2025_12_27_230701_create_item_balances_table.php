@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignUuid('carwash_id')->constrained('carwashes')->onDelete('cascade');
             $table->string('previous_balance');
             $table->string('current_balance');
+            $table->string('quantity_changed');
             $table->enum('stock_type', ['in', 'out'])->default('in');
             $table->enum('stransaction_type', ['initial_stock', 'restock', 'sale', 'adjustment', 'refund', 'return', 'purchase'])->default('initial_stock');
             $table->string('invoice_number');

@@ -55,7 +55,11 @@
           <i class="ti ti-package me-2"></i> Items / Services
         </a>
       </li>
-
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.list-items") ? "active" : "" }}' href="{{ route('owner.list-items') }}">
+          <i class="ti ti-package me-2"></i> List all Items
+        </a>
+      </li>
       <li class="nav-item">
         <a class='dropdown-item {{ request()->routeIs("owner.uploaditems") ? "active" : "" }}' href="{{ route('owner.uploaditems') }}">
           <i class="ti ti-upload me-2"></i> Upload Items

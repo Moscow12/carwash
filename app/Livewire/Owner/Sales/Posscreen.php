@@ -455,6 +455,7 @@ class Posscreen extends Component
             'carwash_id' => $this->selectedCarwash,
             'previous_balance' => $previousBalance,
             'current_balance' => $newBalance,
+            'quantity_changed' => abs($quantity),
             'stock_type' => $quantity >= 0 ? 'in' : 'out',
             'stransaction_type' => $transactionType,
             'invoice_number' => item_balance::generateInvoiceNumber(),

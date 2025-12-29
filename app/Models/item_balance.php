@@ -18,6 +18,7 @@ class item_balance extends Model
         'carwash_id',
         'previous_balance',
         'current_balance',
+        'quantity_changed',
         'stock_type',
         'stransaction_type',
         'invoice_number',
@@ -26,6 +27,7 @@ class item_balance extends Model
     protected $casts = [
         'previous_balance' => 'decimal:2',
         'current_balance' => 'decimal:2',
+        'quantity_changed' => 'decimal:2',
     ];
 
     // Relationships
