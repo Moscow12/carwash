@@ -216,13 +216,14 @@
                                                             <i class="ti ti-package me-2"></i> Add/Edit Stock
                                                         </button>
                                                     </li>
+                                                @endif
                                                     <li><hr class="dropdown-divider"></li>
                                                     <li>
                                                         <a href="{{ route('owner.history', ['itemId' => $item->id]) }}" class="dropdown-item">
                                                             <i class="ti ti-history me-2"></i> Item History
                                                         </a>
                                                     </li>
-                                                @endif
+                                                
                                                
                                                 <li><hr class="dropdown-divider"></li>
                                                  <li>

@@ -4,6 +4,7 @@ namespace App\Livewire\Owner\Items;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 use App\Models\items;
@@ -55,6 +56,27 @@ class History extends Component
         $this->resetPage();
         $this->itemId = '';
         $this->loadStats();
+
+        // Dispatch event to update Choices.js items dropdown
+        $items = $this->getItems();
+        $this->dispatch('itemsUpdated', [
+            'items' => $items->map(fn($item) => ['id' => $item->id, 'name' => $item->name])->toArray(),
+            'selectedItemId' => $this->itemId,
+        ]);
+    }
+
+    #[On('setCarwash')]
+    public function setCarwash($carwashId)
+    {
+        $this->selectedCarwash = $carwashId;
+        $this->updatedSelectedCarwash();
+    }
+
+    #[On('setItem')]
+    public function setItem($itemId)
+    {
+        $this->itemId = $itemId;
+        $this->updatedItemId();
     }
 
     public function loadStats()

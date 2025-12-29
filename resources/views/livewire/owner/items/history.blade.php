@@ -1,3 +1,21 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+<script src="{{ asset('assets/libs/choices.js/public/assets/scripts/choices.min.js') }}"></script>
+<style>
+    .choices__inner {
+        min-height: 44px;
+        padding: 7px 10px 3px;
+        background-color: var(--bs-body-bg);
+        border-color: var(--bs-border-color);
+        border-radius: var(--bs-border-radius);
+    }
+    .choices__list--dropdown {
+        z-index: 1050;
+    }
+    .choices[data-type*=select-one] .choices__inner {
+        padding-bottom: 7px;
+    }
+</style>
+
 <div class="container-fluid py-4">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -18,26 +36,93 @@
             @endif
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">Product:</label>
-                    <select wire:model.live="itemId" class="form-select">
-                        <option value="">Select Product</option>
-                        @foreach($itemsList as $listItem)
-                            <option value="{{ $listItem->id }}">{{ $listItem->name }}</option>
-                        @endforeach
-                    </select>
+                    <label class="form-label">Business Location:</label>
+                    <div wire:ignore>
+                        <select id="carwashSelect" class="form-select">
+                            <option value="">Select Location</option>
+                            @foreach($carwashes as $carwash)
+                                <option value="{{ $carwash->id }}" {{ $selectedCarwash == $carwash->id ? 'selected' : '' }}>{{ $carwash->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Business Location:</label>
-                    <select wire:model.live="selectedCarwash" class="form-select">
-                        <option value="">Select Location</option>
-                        @foreach($carwashes as $carwash)
-                            <option value="{{ $carwash->id }}">{{ $carwash->name }}</option>
-                        @endforeach
-                    </select>
+                    <label class="form-label">Product:</label>
+                    <div wire:ignore>
+                        <select id="itemSelect" class="form-select">
+                            <option value="">Select Product</option>
+                            @foreach($itemsList as $listItem)
+                                <option value="{{ $listItem->id }}" {{ $itemId == $listItem->id ? 'selected' : '' }}>{{ $listItem->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let carwashChoices = null;
+            let itemChoices = null;
+
+            // Initialize Carwash/Location Select
+            const carwashSelect = document.getElementById('carwashSelect');
+            if (carwashSelect) {
+                carwashChoices = new Choices(carwashSelect, {
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Search location...',
+                    placeholderValue: 'Select Location',
+                    itemSelectText: '',
+                    shouldSort: false,
+                    allowHTML: true,
+                });
+
+                carwashSelect.addEventListener('change', function(e) {
+                    Livewire.dispatch('setCarwash', { carwashId: e.target.value });
+                });
+            }
+
+            // Initialize Item/Product Select
+            const itemSelect = document.getElementById('itemSelect');
+            if (itemSelect) {
+                itemChoices = new Choices(itemSelect, {
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Search product...',
+                    placeholderValue: 'Select Product',
+                    itemSelectText: '',
+                    shouldSort: false,
+                    allowHTML: true,
+                });
+
+                itemSelect.addEventListener('change', function(e) {
+                    Livewire.dispatch('setItem', { itemId: e.target.value });
+                });
+            }
+
+            // Listen for Livewire updates to refresh item list
+            Livewire.on('itemsUpdated', (data) => {
+                if (itemChoices) {
+                    const items = data[0].items;
+                    const selectedItemId = data[0].selectedItemId;
+
+                    itemChoices.clearStore();
+                    itemChoices.setChoices(
+                        [{ value: '', label: 'Select Product', selected: !selectedItemId }].concat(
+                            items.map(item => ({
+                                value: item.id,
+                                label: item.name,
+                                selected: item.id === selectedItemId
+                            }))
+                        ),
+                        'value',
+                        'label',
+                        true
+                    );
+                }
+            });
+        });
+    </script>
 
     @if($item && $itemId)
         <!-- Summary Card -->
