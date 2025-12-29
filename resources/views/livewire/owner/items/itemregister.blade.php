@@ -101,6 +101,9 @@
                             @endif
                             <div>
                                 <h6 class="mb-0">{{ $item->name }}</h6>
+                                @if($item->barcode)
+                                    <small class="text-muted d-block"><i class="ti ti-barcode me-1"></i>{{ $item->barcode }}</small>
+                                @endif
                                 <span class="badge bg-{{ $item->type === 'Service' ? 'primary' : 'info' }}-subtle text-{{ $item->type === 'Service' ? 'primary' : 'info' }}">
                                     {{ $item->type }}
                                 </span>
@@ -265,6 +268,22 @@
                                 <label class="form-label">Item Name <span class="text-danger">*</span></label>
                                 <input type="text" wire:model="name" class="form-control @error('name') is-invalid @enderror" placeholder="e.g., Full Car Wash, Interior Cleaning">
                                 @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Barcode</label>
+                                <div class="input-group">
+                                    <input type="text" wire:model="barcode"
+                                           class="form-control @error('barcode') is-invalid @enderror"
+                                           placeholder="Enter barcode or scan">
+                                    <button type="button" wire:click="openScannerModal"
+                                            class="btn btn-outline-primary"
+                                            title="Scan Barcode">
+                                        <i class="ti ti-scan"></i>
+                                    </button>
+                                </div>
+                                @error('barcode') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                <small class="text-muted">Optional - Use the camera to scan or enter manually</small>
                             </div>
 
                             <div class="col-md-6">
@@ -462,5 +481,111 @@
             </div>
         </div>
     </div>
+    @endif
+
+    {{-- Barcode Scanner Modal --}}
+    @if($showScannerModal)
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" wire:keydown.escape="closeScannerModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title">
+                        <i class="ti ti-scan me-2"></i> Scan Barcode
+                    </h5>
+                    <button type="button" wire:click="closeScannerModal" class="btn-close" onclick="cleanupBarcodeScanner()"></button>
+                </div>
+                <div class="modal-body">
+                    {{-- Scanner Container --}}
+                    <div id="barcode-reader" style="width: 100%; min-height: 250px;"></div>
+
+                    {{-- Status Messages --}}
+                    <div id="scanner-status" class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                        <span class="ms-2">Initializing camera...</span>
+                    </div>
+
+                    {{-- Manual Entry Option --}}
+                    <div class="mt-3 pt-3 border-top">
+                        <label class="form-label small text-muted">Or enter manually:</label>
+                        <div class="input-group">
+                            <input type="text" id="manual-barcode-input" class="form-control"
+                                   placeholder="Enter barcode manually">
+                            <button type="button" class="btn btn-primary" onclick="submitManualBarcode()">
+                                <i class="ti ti-check me-1"></i> Use
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top bg-light">
+                    <small class="text-muted me-auto">
+                        <i class="ti ti-info-circle me-1"></i>
+                        Point camera at barcode
+                    </small>
+                    <button type="button" wire:click="closeScannerModal" class="btn btn-outline-secondary" onclick="cleanupBarcodeScanner()">
+                        <i class="ti ti-x me-1"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script>
+        var barcodeScanner = null;
+        var livewireComponent = @json($this->getId());
+
+        function initBarcodeScanner() {
+            var statusEl = document.getElementById('scanner-status');
+
+            if (typeof Html5Qrcode === 'undefined') {
+                if (statusEl) statusEl.innerHTML = '<span class="text-danger">Scanner library not loaded. Use manual entry.</span>';
+                return;
+            }
+
+            barcodeScanner = new Html5Qrcode("barcode-reader");
+
+            barcodeScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 100 } },
+                function(decodedText) {
+                    if (statusEl) statusEl.innerHTML = '<span class="text-success"><i class="ti ti-check me-1"></i>Scanned: ' + decodedText + '</span>';
+                    cleanupBarcodeScanner();
+                    Livewire.find(livewireComponent).call('setBarcodeFromScanner', decodedText);
+                },
+                function() {}
+            ).then(function() {
+                if (statusEl) statusEl.style.display = 'none';
+            }).catch(function(err) {
+                console.error('Camera error:', err);
+                if (statusEl) statusEl.innerHTML = '<span class="text-warning"><i class="ti ti-alert-circle me-1"></i>Camera not available. Use manual entry below.</span>';
+            });
+        }
+
+        function cleanupBarcodeScanner() {
+            if (barcodeScanner) {
+                barcodeScanner.stop().catch(function() {});
+                barcodeScanner = null;
+            }
+        }
+
+        function submitManualBarcode() {
+            var input = document.getElementById('manual-barcode-input');
+            if (input && input.value.trim()) {
+                cleanupBarcodeScanner();
+                Livewire.find(livewireComponent).call('setBarcodeFromScanner', input.value.trim());
+            }
+        }
+
+        // Handle Enter key in manual input
+        document.getElementById('manual-barcode-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitManualBarcode();
+            }
+        });
+
+        // Initialize after small delay
+        setTimeout(initBarcodeScanner, 200);
+    </script>
     @endif
 </div>

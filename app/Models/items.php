@@ -16,6 +16,7 @@ class items extends Model
 
     protected $fillable = [
         'name',
+        'barcode',
         'description',
         'cost_price',
         'type',
@@ -109,6 +110,11 @@ class items extends Model
     public function scopeByCategory(Builder $query, string $categoryId): Builder
     {
         return $query->where('category_id', $categoryId);
+    }
+
+    public function scopeByBarcode(Builder $query, string $barcode, string $carwashId): Builder
+    {
+        return $query->where('barcode', $barcode)->where('carwash_id', $carwashId);
     }
 
     // Accessors

@@ -33,6 +33,11 @@ class Itemregister extends Component
     #[Rule('required|string|max:255')]
     public $name = '';
 
+    #[Rule('nullable|string|max:255')]
+    public $barcode = '';
+
+    public $showScannerModal = false;
+
     #[Rule('required|string|max:500')]
     public $description = '';
 
@@ -134,6 +139,7 @@ class Itemregister extends Component
 
         $this->itemId = $item->id;
         $this->name = $item->name;
+        $this->barcode = $item->barcode ?? '';
         $this->description = $item->description;
         $this->cost_price = $item->cost_price;
         $this->selling_price = $item->selling_price;
@@ -206,6 +212,21 @@ class Itemregister extends Component
     {
         $this->validate();
 
+        // Custom barcode uniqueness validation per carwash
+        if ($this->barcode) {
+            $query = items::where('barcode', $this->barcode)
+                ->where('carwash_id', $this->carwash_id);
+
+            if ($this->editMode && $this->itemId) {
+                $query->where('id', '!=', $this->itemId);
+            }
+
+            if ($query->exists()) {
+                $this->addError('barcode', 'This barcode is already used by another item in this carwash.');
+                return;
+            }
+        }
+
         // Verify carwash ownership
         $carwashIds = Auth::user()->ownedCarwashes()->pluck('id');
         if (!$carwashIds->contains($this->carwash_id)) {
@@ -215,6 +236,7 @@ class Itemregister extends Component
 
         $data = [
             'name' => $this->name,
+            'barcode' => $this->barcode ?: null,
             'description' => $this->description,
             'cost_price' => $this->cost_price,
             'selling_price' => $this->selling_price,
@@ -262,13 +284,29 @@ class Itemregister extends Component
         $this->itemId = null;
     }
 
+    public function openScannerModal()
+    {
+        $this->showScannerModal = true;
+    }
+
+    public function closeScannerModal()
+    {
+        $this->showScannerModal = false;
+    }
+
+    public function setBarcodeFromScanner($barcode)
+    {
+        $this->barcode = $barcode;
+        $this->showScannerModal = false;
+    }
+
     public function resetForm()
     {
         $this->reset([
-            'itemId', 'name', 'description', 'cost_price', 'selling_price',
+            'itemId', 'name', 'barcode', 'description', 'cost_price', 'selling_price',
             'market_price', 'type', 'product_stock', 'require_plate_number',
             'commission', 'commission_type', 'status', 'category_id', 'unit_id',
-            'image', 'existingImage'
+            'image', 'existingImage', 'showScannerModal'
         ]);
 
         $this->type = 'Service';
@@ -299,7 +337,8 @@ class Itemregister extends Component
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('description', 'like', '%' . $this->search . '%');
+                      ->orWhere('description', 'like', '%' . $this->search . '%')
+                      ->orWhere('barcode', 'like', '%' . $this->search . '%');
                 });
             })
             ->when($this->filterCarwash, function ($query) {
