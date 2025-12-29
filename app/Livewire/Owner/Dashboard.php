@@ -15,8 +15,11 @@ class Dashboard extends Component
 {
     public $totalCarwashes = 0;
     public $totalSales = 0;
+    public $totalRevenue = 0;
     public $totalStaff = 0;
     public $totalCustomers = 0;
+    public $todaySales = 0;
+    public $todayRevenue = 0;
     public $recentSales = [];
 
     public function mount()
@@ -26,13 +29,24 @@ class Dashboard extends Component
 
         $this->totalCarwashes = $carwashIds->count();
         $this->totalSales = sales::whereIn('carwash_id', $carwashIds)->count();
+        $this->totalRevenue = sales::whereIn('carwash_id', $carwashIds)->sum('total_amount');
         $this->totalStaff = staffs::whereIn('carwash_id', $carwashIds)->count();
         $this->totalCustomers = customers::whereIn('carwash_id', $carwashIds)->count();
+
+        // Today's stats
+        $this->todaySales = sales::whereIn('carwash_id', $carwashIds)
+            ->whereDate('sale_date', today())
+            ->count();
+        $this->todayRevenue = sales::whereIn('carwash_id', $carwashIds)
+            ->whereDate('sale_date', today())
+            ->sum('total_amount');
+
         $this->recentSales = sales::whereIn('carwash_id', $carwashIds)
-            ->with(['item', 'carwash'])
-            ->latest()
+            ->with(['items.item', 'carwash', 'customer'])
+            ->latest('sale_date')
             ->take(5)
-            ->get();
+            ->get()
+            ->toArray();
     }
 
     public function render()

@@ -57,6 +57,7 @@ Route::get('/register', Register::class)->name('site.register');
 use App\Http\Controllers\Auth\LoginController;
 use App\Livewire\Owner\Items\Units;
 use App\Livewire\Owner\Sales\Posscreen;
+use App\Livewire\Owner\Settings\Setup as OwnerSettings;
 
 Route::get('/admin/login', AdminLogin::class)->name('admin.login');
 Route::post('/admin/login', [LoginController::class, 'login'])->name('admin.login.post');
@@ -121,6 +122,7 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/item-register', Itemregister::class)->name('owner.itemregister');
     Route::get('/upload-items', Uploaditems::class)->name('owner.uploaditems');
     Route::get('/pos-screen', Posscreen::class)->name('owner.posscreen');
+    Route::get('/settings', OwnerSettings::class)->name('owner.settings');
 });
 
 // Customer Dashboard (Protected Routes - Customer Only)

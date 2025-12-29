@@ -13,17 +13,18 @@ return new class extends Migration
     {
         Schema::create('sales', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('carwash_id')->constrained('carwashes')->onDelete('cascade');
-            $table->foreignUuid('payment_method_id')->constrained('payment_methods')->onDelete('cascade');
+            $table->foreignUuid('carwash_id')->constrained('carwashes')->onDelete('cascade');            
+            $table->enum('sale_status', ['completed', 'pending', 'canceled', 'refunded'])->default('pending');
+            $table->enum('sale_type', ['in-store', 'online'])->default('in-store');
+            $table->string('sale_date');
+            $table->date('payment_date')->nullable();
+            $table->string('notes')->nullable();
+            $table->enum('receipt_type', ['email', 'sms', 'none'])->default('none');
+            $table->enum('payment_type', ['cash', 'credit'])->default('cash');
             $table->foreignUuid('customer_id')->constrained('customers')->onDelete('cascade')->nullable();
-            $table->foreignUuid('item_id')->constrained('items')->onDelete('cascade');
-            $table->foreignUuid('staff_id')->constrained('staffs')->onDelete('cascade')->nullable();
-            $table->dateTime('date');
-            $table->string('plate_number')->nullable();
-            $table->string('discount')->nullable();
-            $table->string('commission')->nullable();
-            $table->string('price');
-            $table->enum('payment_status', ['paid', 'unpaid', 'canceled', 'refunded', 'pending'])->default('unpaid');           
+            $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
+            $table->string('total_amount');
+            $table->enum('payment_status', ['paid', 'unpaid', 'canceled', 'refunded', 'pending', 'partial'])->default('unpaid');           
             $table->timestamps();
         });
     }

@@ -6,7 +6,7 @@
       <span class="text">Dashboard</span>
     </a>
   </li>
-<li class="nav-item">
+  <li class="nav-item">
     <a class='nav-link {{ request()->routeIs("owner.posscreen") ? "active" : "" }}' href="{{ route('owner.posscreen') }}">
       <span class="nav-icon"><i class="fa-solid fa-cash-register fs-6"></i></span>
       <span class="text">POS</span>
@@ -19,10 +19,10 @@
   </li>
   <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.carwashes*') || request()->routeIs('owner.carwashes*') ? 'active' : '' }}"
-       href="#!"
-       role="button"
-       data-bs-toggle="dropdown"
-       aria-expanded="{{ request()->routeIs('owner.carwashes*') || request()->routeIs('owner.carwashes*') ? 'true' : 'false' }}">
+      href="#!"
+      role="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="{{ request()->routeIs('owner.carwashes*') || request()->routeIs('owner.carwashes*') ? 'true' : 'false' }}">
       <span class="nav-icon"><i class="ti ti-car-garage fs-5"></i></span>
       <span class="text">My Carwashes</span>
     </a>
@@ -42,10 +42,10 @@
   <!-- Items & Services Dropdown -->
   <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.items*') || request()->routeIs('owner.itemregister*') || request()->routeIs('owner.categories*') || request()->routeIs('owner.units*') ? 'active' : '' }}"
-       href="#!"
-       role="button"
-       data-bs-toggle="dropdown"
-       aria-expanded="{{ request()->routeIs('owner.items*') || request()->routeIs('owner.itemregister*') || request()->routeIs('owner.categories*') || request()->routeIs('owner.units*') ? 'true' : 'false' }}">
+      href="#!"
+      role="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="{{ request()->routeIs('owner.items*') || request()->routeIs('owner.itemregister*') || request()->routeIs('owner.categories*') || request()->routeIs('owner.units*') ? 'true' : 'false' }}">
       <span class="nav-icon"><i class="ti ti-tools fs-5"></i></span>
       <span class="text">Items & Services</span>
     </a>
@@ -124,6 +124,17 @@
     <a class='nav-link {{ request()->routeIs("owner.suppliers*") ? "active" : "" }}' href="{{ route('owner.suppliers') }}">
       <span class="nav-icon"><i class="ti ti-truck fs-5"></i></span>
       <span class="text">Suppliers</span>
+    </a>
+  </li>
+  <!-- Configuration -->
+  <li class="nav-item">
+    <div class="nav-heading">Configuration</div>
+    <hr class="mx-5 nav-line mb-1" />
+  </li>
+  <li class="nav-item">
+    <a class='nav-link {{ request()->routeIs("owner.settings*") ? "active" : "" }}' href="{{ route('owner.settings') }}">
+      <span class="nav-icon"><i class="ti ti-settings fs-5"></i></span>
+      <span class="text">Settings</span>
     </a>
   </li>
 </ul>
