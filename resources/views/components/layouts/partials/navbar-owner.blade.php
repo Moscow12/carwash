@@ -6,7 +6,12 @@
       <span class="text">Dashboard</span>
     </a>
   </li>
-
+<li class="nav-item">
+    <a class='nav-link {{ request()->routeIs("owner.posscreen") ? "active" : "" }}' href="{{ route('owner.posscreen') }}">
+      <span class="nav-icon"><i class="fa-solid fa-cash-register fs-6"></i></span>
+      <span class="text">POS</span>
+    </a>
+  </li>
   <!-- My Business -->
   <li class="nav-item">
     <div class="nav-heading">My Business</div>
