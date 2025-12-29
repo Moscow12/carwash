@@ -73,6 +73,28 @@
       </li>
     </ul>
   </li>
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.expenses*') || request()->routeIs('owner.expenses*') ? 'active' : '' }}"
+      href="#!"
+      role="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="{{ request()->routeIs('owner.expenses*') || request()->routeIs('owner.expenses*') ? 'true' : 'false' }}">
+      <span class="nav-icon"><i class="ti ti-car-garage fs-5"></i></span>
+      <span class="text">Expenses</span>
+    </a>
+    <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.expenses*') || request()->routeIs('owner.expenses*') ? 'show' : '' }}">
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.expenses") ? "active" : "" }}' href="{{ route('owner.expenses') }}">
+          <i class="ti ti-package me-2"></i> List all Expenses
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.expenses.categories") ? "active" : "" }}' href="{{ route('owner.expenses.categories') }}">
+          <i class="ti ti-ruler-2 me-2"></i>Category and Sub Category
+        </a>
+      </li>
+    </ul>
+  </li>
   <!-- People -->
   <li class="nav-item">
     <div class="nav-heading">People</div>

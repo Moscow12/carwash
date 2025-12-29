@@ -55,6 +55,8 @@ Route::get('/register', Register::class)->name('site.register');
 
 // Admin Authentication
 use App\Http\Controllers\Auth\LoginController;
+use App\Livewire\Owner\Expenses\Category;
+use App\Livewire\Owner\Expenses\Expenses;
 use App\Livewire\Owner\Items\Units;
 use App\Livewire\Owner\Sales\Posscreen;
 use App\Livewire\Owner\Settings\Setup as OwnerSettings;
@@ -123,6 +125,8 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/upload-items', Uploaditems::class)->name('owner.uploaditems');
     Route::get('/pos-screen', Posscreen::class)->name('owner.posscreen');
     Route::get('/settings', OwnerSettings::class)->name('owner.settings');
+    Route::get('/expenses/categories', Category::class)->name('owner.expenses.categories');
+    Route::get('/expenses', Expenses::class)->name('owner.expenses');
 });
 
 // Customer Dashboard (Protected Routes - Customer Only)
