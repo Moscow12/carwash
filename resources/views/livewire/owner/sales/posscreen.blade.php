@@ -809,7 +809,12 @@
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
                                 <small class="text-muted">{{ \Carbon\Carbon::parse($sale['sale_date'])->format('M d, H:i') }}</small>
-                                <span class="fw-bold text-primary">TZS {{ number_format($sale['total_amount'], 0) }}</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="fw-bold text-primary">TZS {{ number_format($sale['total_amount'], 0) }}</span>
+                                    <button wire:click="showReceipt('{{ $sale['id'] }}')" class="btn btn-sm btn-outline-primary" title="Print Receipt">
+                                        <i class="ti ti-printer"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         @empty
@@ -827,6 +832,7 @@
                                     <th>Customer</th>
                                     <th class="text-end">Amount</th>
                                     <th class="text-center">Status</th>
+                                    <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -846,10 +852,15 @@
                                             {{ ucfirst($sale['payment_status']) }}
                                         </span>
                                     </td>
+                                    <td class="text-center">
+                                        <button wire:click="showReceipt('{{ $sale['id'] }}')" class="btn btn-sm btn-outline-primary" title="Print Receipt">
+                                            <i class="ti ti-printer"></i>
+                                        </button>
+                                    </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">No recent sales</td>
+                                    <td colspan="6" class="text-center py-4 text-muted">No recent sales</td>
                                 </tr>
                                 @endforelse
                             </tbody>

@@ -228,6 +228,9 @@
                                         <button wire:click="viewSale('{{ $sale->id }}')" class="btn btn-outline-primary" title="View Details">
                                             <i class="ti ti-eye"></i>
                                         </button>
+                                        <button wire:click="showReceipt('{{ $sale->id }}')" class="btn btn-outline-info" title="Print Receipt">
+                                            <i class="ti ti-printer"></i>
+                                        </button>
                                         @if($sale->payment_status === 'unpaid' || $sale->payment_status === 'partial')
                                             <button wire:click="openAddPaymentModal('{{ $sale->id }}')" class="btn btn-outline-success" title="Add Payment">
                                                 <i class="ti ti-cash"></i>
@@ -521,4 +524,319 @@
             </div>
         </div>
     @endif
+
+    <!-- Receipt Modal for Thermal Printer -->
+    @if($showReceiptModal && $receiptSale)
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); z-index: 1100;">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 py-2">
+                    <h6 class="modal-title"><i class="ti ti-receipt me-2"></i> Receipt</h6>
+                    <button type="button" class="btn-close" wire:click="closeReceiptModal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <!-- Receipt Preview -->
+                    <div id="receiptContent" class="receipt-thermal">
+                        <!-- Header -->
+                        <div class="receipt-header">
+                            <div class="shop-name">{{ $receiptCarwashInfo['name'] ?? 'SHOP NAME' }}</div>
+                            <div class="shop-address">{{ $receiptCarwashInfo['address'] ?? '' }}</div>
+                            <div class="shop-contact">
+                                @if($receiptCarwashInfo['phone'] ?? false)
+                                    Mobile: {{ $receiptCarwashInfo['phone'] }}
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="receipt-divider">================================</div>
+
+                        <!-- Invoice Info -->
+                        <div class="receipt-info">
+                            <div class="receipt-row">
+                                <span>Invoice:</span>
+                                <span>INV-{{ strtoupper(substr($receiptSale['id'], 0, 8)) }}</span>
+                            </div>
+                            <div class="receipt-row">
+                                <span>Date:</span>
+                                <span>{{ \Carbon\Carbon::parse($receiptSale['sale_date'])->format('d/m/Y H:i') }}</span>
+                            </div>
+                            <div class="receipt-row">
+                                <span>Customer:</span>
+                                <span>{{ $receiptSale['customer']['name'] ?? 'Walk-In' }}</span>
+                            </div>
+                            <div class="receipt-row">
+                                <span>Served by:</span>
+                                <span>{{ $receiptSale['user']['name'] ?? 'N/A' }}</span>
+                            </div>
+                        </div>
+
+                        <div class="receipt-divider">================================</div>
+
+                        <!-- Items Header -->
+                        <div class="receipt-items-header">
+                            <span class="item-name">ITEM</span>
+                            <span class="item-qty">QTY</span>
+                            <span class="item-price">PRICE</span>
+                            <span class="item-total">TOTAL</span>
+                        </div>
+                        <div class="receipt-divider-thin">--------------------------------</div>
+
+                        <!-- Items -->
+                        <div class="receipt-items">
+                            @foreach($receiptSaleItems as $item)
+                            @php
+                                $itemQty = $item['quantity'] ?? 1;
+                                $itemPrice = (float) ($item['price'] ?? 0);
+                                $itemTotal = $itemPrice * $itemQty;
+                            @endphp
+                            <div class="receipt-item">
+                                <div class="item-name-full">{{ $item['item']['name'] ?? 'Item' }}</div>
+                                <div class="item-details">
+                                    <span class="item-qty">{{ number_format($itemQty, 0) }}</span>
+                                    <span class="item-price">{{ number_format($itemPrice, 0) }}</span>
+                                    <span class="item-total">{{ number_format($itemTotal, 0) }}</span>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+
+                        <div class="receipt-divider">================================</div>
+
+                        <!-- Totals -->
+                        <div class="receipt-totals">
+                            @php
+                                $subtotal = collect($receiptSaleItems)->sum(function($item) {
+                                    $qty = $item['quantity'] ?? 1;
+                                    $price = (float) ($item['price'] ?? 0);
+                                    return $price * $qty;
+                                });
+                                $discount = (float) ($receiptSale['discount_amount'] ?? 0);
+                                $totalPaid = collect($receiptSalePayments)->sum('amount');
+                            @endphp
+                            <div class="receipt-row">
+                                <span>Subtotal:</span>
+                                <span>TZS {{ number_format($subtotal, 0) }}</span>
+                            </div>
+                            @if($discount > 0)
+                            <div class="receipt-row">
+                                <span>Discount:</span>
+                                <span>-TZS {{ number_format($discount, 0) }}</span>
+                            </div>
+                            @endif
+                            <div class="receipt-row receipt-total">
+                                <span>TOTAL:</span>
+                                <span>TZS {{ number_format($receiptSale['total_amount'], 0) }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Payments -->
+                        @if(count($receiptSalePayments) > 0)
+                        <div class="receipt-divider-thin">--------------------------------</div>
+                        <div class="receipt-payments">
+                            @foreach($receiptSalePayments as $payment)
+                            <div class="receipt-row">
+                                <span>{{ $payment['payment_method']['name'] ?? 'Payment' }}:</span>
+                                <span>TZS {{ number_format($payment['amount'], 0) }}</span>
+                            </div>
+                            @endforeach
+                        </div>
+                        @endif
+
+                        @php
+                            $balance = (float) $receiptSale['total_amount'] - $totalPaid;
+                        @endphp
+                        @if($balance > 0)
+                        <div class="receipt-row receipt-balance">
+                            <span>BALANCE:</span>
+                            <span>TZS {{ number_format($balance, 0) }}</span>
+                        </div>
+                        @elseif($totalPaid > $receiptSale['total_amount'])
+                        <div class="receipt-row receipt-change">
+                            <span>CHANGE:</span>
+                            <span>TZS {{ number_format($totalPaid - $receiptSale['total_amount'], 0) }}</span>
+                        </div>
+                        @endif
+
+                        <div class="receipt-divider">================================</div>
+
+                        <!-- Footer -->
+                        <div class="receipt-footer">
+                            <div>Thank you for your business!</div>
+                            <div class="text-muted small">Powered by Carwash POS</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" wire:click="closeReceiptModal">
+                        <i class="ti ti-x me-1"></i> Close
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="printThermalReceipt()">
+                        <i class="ti ti-printer me-1"></i> Print
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Receipt Styles -->
+    <style>
+        .receipt-thermal {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            width: 280px;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 10px;
+            background: #fff;
+            line-height: 1.3;
+        }
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .receipt-header .shop-name {
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        .receipt-header .shop-address,
+        .receipt-header .shop-contact {
+            font-size: 11px;
+        }
+        .receipt-divider {
+            text-align: center;
+            letter-spacing: -1px;
+            margin: 5px 0;
+        }
+        .receipt-divider-thin {
+            text-align: center;
+            letter-spacing: -1px;
+            margin: 3px 0;
+            opacity: 0.6;
+        }
+        .receipt-info .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+        }
+        .receipt-items-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 10px;
+        }
+        .receipt-items-header .item-name { flex: 2; }
+        .receipt-items-header .item-qty { flex: 0.5; text-align: right; }
+        .receipt-items-header .item-price { flex: 1; text-align: right; }
+        .receipt-items-header .item-total { flex: 1; text-align: right; }
+        .receipt-item {
+            margin-bottom: 3px;
+        }
+        .receipt-item .item-name-full {
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .receipt-item .item-details {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            font-size: 11px;
+        }
+        .receipt-item .item-details .item-qty { width: 30px; text-align: right; }
+        .receipt-item .item-details .item-price { width: 60px; text-align: right; }
+        .receipt-item .item-details .item-total { width: 70px; text-align: right; }
+        .receipt-totals .receipt-row,
+        .receipt-payments .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+        }
+        .receipt-total {
+            font-weight: bold;
+            font-size: 13px !important;
+        }
+        .receipt-balance {
+            font-weight: bold;
+            color: #dc3545;
+        }
+        .receipt-change {
+            font-weight: bold;
+            color: #198754;
+        }
+        .receipt-footer {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 11px;
+        }
+        @media print {
+            body * { visibility: hidden; }
+            #printableReceipt, #printableReceipt * { visibility: visible; }
+            #printableReceipt {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 80mm;
+            }
+        }
+    </style>
+
+    <script>
+        function printThermalReceipt() {
+            var content = document.getElementById('receiptContent').innerHTML;
+            var printWindow = window.open('', '_blank', 'width=320,height=600');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Receipt</title>
+                    <style>
+                        @page { size: 80mm auto; margin: 0; }
+                        body {
+                            font-family: 'Courier New', Courier, monospace;
+                            font-size: 12px;
+                            width: 80mm;
+                            margin: 0;
+                            padding: 5mm;
+                            line-height: 1.3;
+                        }
+                        .receipt-header { text-align: center; margin-bottom: 5px; }
+                        .receipt-header .shop-name { font-weight: bold; font-size: 14px; text-transform: uppercase; }
+                        .receipt-header .shop-address, .receipt-header .shop-contact { font-size: 11px; }
+                        .receipt-divider { text-align: center; letter-spacing: -1px; margin: 5px 0; }
+                        .receipt-divider-thin { text-align: center; letter-spacing: -1px; margin: 3px 0; opacity: 0.6; }
+                        .receipt-info .receipt-row { display: flex; justify-content: space-between; font-size: 11px; }
+                        .receipt-items-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 10px; }
+                        .receipt-items-header .item-name { flex: 2; }
+                        .receipt-items-header .item-qty { flex: 0.5; text-align: right; }
+                        .receipt-items-header .item-price { flex: 1; text-align: right; }
+                        .receipt-items-header .item-total { flex: 1; text-align: right; }
+                        .receipt-item { margin-bottom: 3px; }
+                        .receipt-item .item-name-full { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                        .receipt-item .item-details { display: flex; justify-content: flex-end; gap: 10px; font-size: 11px; }
+                        .receipt-item .item-details .item-qty { width: 30px; text-align: right; }
+                        .receipt-item .item-details .item-price { width: 60px; text-align: right; }
+                        .receipt-item .item-details .item-total { width: 70px; text-align: right; }
+                        .receipt-totals .receipt-row, .receipt-payments .receipt-row { display: flex; justify-content: space-between; font-size: 11px; }
+                        .receipt-total { font-weight: bold; font-size: 13px !important; }
+                        .receipt-balance { font-weight: bold; }
+                        .receipt-change { font-weight: bold; }
+                        .receipt-footer { text-align: center; margin-top: 10px; font-size: 11px; }
+                    </style>
+                </head>
+                <body>
+                    ${content}
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                            setTimeout(function() { window.close(); }, 500);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+    </script>
 </div>

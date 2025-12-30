@@ -46,6 +46,13 @@ class Index extends Component
     public $partialSalesCount = 0;
     public $unpaidSalesCount = 0;
 
+    // Receipt Modal
+    public $showReceiptModal = false;
+    public $receiptSale = null;
+    public $receiptSaleItems = [];
+    public $receiptSalePayments = [];
+    public $receiptCarwashInfo = null;
+
     public function mount()
     {
         $firstCarwash = Auth::user()->ownedCarwashes()->first();
@@ -303,6 +310,28 @@ class Index extends Component
             session()->flash('message', 'Sale canceled successfully.');
             $this->loadStats();
         }
+    }
+
+    public function showReceipt($saleId)
+    {
+        $sale = sales::with(['customer', 'user', 'items.item', 'payments.paymentMethod', 'carwash'])
+            ->find($saleId);
+        if (!$sale) return;
+
+        $this->receiptSale = $sale->toArray();
+        $this->receiptSaleItems = $sale->items->toArray();
+        $this->receiptSalePayments = $sale->payments->toArray();
+        $this->receiptCarwashInfo = $sale->carwash ? $sale->carwash->toArray() : null;
+        $this->showReceiptModal = true;
+    }
+
+    public function closeReceiptModal()
+    {
+        $this->showReceiptModal = false;
+        $this->receiptSale = null;
+        $this->receiptSaleItems = [];
+        $this->receiptSalePayments = [];
+        $this->receiptCarwashInfo = null;
     }
 
     public function render()
