@@ -205,7 +205,7 @@
                                                     </button>
                                                 </li>
                                                 <li>
-                                                    <a href="{{ route('owner.itemregister', ['edit' => $item->id]) }}" class="dropdown-item">
+                                                    <a href="{{ route('owner.items.edit', ['itemId' => $item->id]) }}" class="dropdown-item">
                                                         <i class="ti ti-edit me-2"></i> Edit
                                                     </a>
                                                 </li>

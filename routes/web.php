@@ -57,6 +57,7 @@ Route::get('/register', Register::class)->name('site.register');
 use App\Http\Controllers\Auth\LoginController;
 use App\Livewire\Owner\Expenses\Category;
 use App\Livewire\Owner\Expenses\Expenses;
+use App\Livewire\Owner\Items\Edititems;
 use App\Livewire\Owner\Items\History;
 use App\Livewire\Owner\Items\Listitems;
 use App\Livewire\Owner\Items\Units;
@@ -117,6 +118,7 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/', OwnerDashboard::class)->name('owner.dashboard');
     Route::get('/carwashes', OwnerCarwashes::class)->name('owner.carwashes');
     Route::get('/items', OwnerItems::class)->name('owner.items');
+    Route::get('/items/edit/{itemId}', Edititems::class)->name('owner.items.edit');
     Route::get('/staffs', OwnerStaffs::class)->name('owner.staffs');
     Route::get('/customers', OwnerCustomers::class)->name('owner.customers');
     Route::get('/sales', OwnerSales::class)->name('owner.sales');
