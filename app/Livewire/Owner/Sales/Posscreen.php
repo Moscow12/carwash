@@ -79,6 +79,7 @@ class Posscreen extends Component
     public $lastSaleItems = [];
     public $lastSalePayments = [];
     public $carwashInfo = null;
+    public $carwashSettings = null;
 
     public function mount()
     {
@@ -352,6 +353,38 @@ class Posscreen extends Component
     }
 
     // Payment processing
+    public function quickCashOut()
+    {
+        if (empty($this->cart)) {
+            session()->flash('error', 'Cart is empty.');
+            return;
+        }
+
+        // Get default cash payment method
+        $cashMethod = collect($this->availablePaymentMethods)->firstWhere('name', 'Cash');
+        $defaultMethodId = $cashMethod ? $cashMethod['id'] : ($this->availablePaymentMethods[0]['id'] ?? '');
+
+        if (!$defaultMethodId) {
+            session()->flash('error', 'No payment method available.');
+            return;
+        }
+
+        // Set up payment for full amount with cash
+        $this->paymentType = 'cash';
+        $this->paymentRows = [
+            [
+                'amount' => $this->cartTotal,
+                'payment_method_id' => $defaultMethodId,
+                'note' => '',
+            ]
+        ];
+        $this->sellNote = '';
+        $this->staffNote = '';
+
+        // Process the sale directly
+        $this->processSale();
+    }
+
     public function openPaymentModal($type = 'cash')
     {
         if (empty($this->cart)) {
@@ -611,7 +644,7 @@ class Posscreen extends Component
     // Receipt methods
     public function showReceipt($saleId)
     {
-        $sale = sales::with(['customer', 'user', 'items.item', 'payments.paymentMethod', 'carwash'])
+        $sale = sales::with(['customer', 'user', 'items.item', 'payments.paymentMethod', 'carwash.settings'])
             ->find($saleId);
 
         if (!$sale) return;
@@ -620,6 +653,7 @@ class Posscreen extends Component
         $this->lastSaleItems = $sale->items->toArray();
         $this->lastSalePayments = $sale->payments->toArray();
         $this->carwashInfo = $sale->carwash ? $sale->carwash->toArray() : null;
+        $this->carwashSettings = $sale->carwash && $sale->carwash->settings ? $sale->carwash->settings->toArray() : null;
         $this->showReceiptModal = true;
     }
 
@@ -630,6 +664,7 @@ class Posscreen extends Component
         $this->lastSaleItems = [];
         $this->lastSalePayments = [];
         $this->carwashInfo = null;
+        $this->carwashSettings = null;
     }
 
     public function printReceipt()

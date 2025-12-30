@@ -553,9 +553,14 @@
                     <i class="ti ti-wallet"></i>
                     <span class="btn-text ms-1 d-none d-sm-inline">Multiple</span>
                 </button>
-                <button wire:click="openPaymentModal('cash')" class="btn btn-success btn-action" {{ empty($cart) ? 'disabled' : '' }}>
-                    <i class="ti ti-cash"></i>
-                    <span class="btn-text ms-1 d-none d-sm-inline">Cash</span>
+                <button wire:click="quickCashOut" class="btn btn-success btn-action" {{ empty($cart) ? 'disabled' : '' }}>
+                    <span wire:loading.remove wire:target="quickCashOut">
+                        <i class="ti ti-cash"></i>
+                        <span class="btn-text ms-1 d-none d-sm-inline">Cash</span>
+                    </span>
+                    <span wire:loading wire:target="quickCashOut">
+                        <span class="spinner-border spinner-border-sm"></span>
+                    </span>
                 </button>
                 <button wire:click="clearCart" class="btn btn-outline-danger btn-action" {{ empty($cart) ? 'disabled' : '' }}>
                     <i class="ti ti-x"></i>
@@ -887,19 +892,30 @@
                 <div class="modal-body p-0">
                     {{-- Receipt Preview --}}
                     <div id="receiptContent" class="receipt-thermal">
-                        {{-- Header --}}
+                        {{-- Header with Logo --}}
                         <div class="receipt-header">
-                            <div class="shop-name">{{ $carwashInfo['name'] ?? 'SHOP NAME' }}</div>
-                            <div class="shop-address">{{ $carwashInfo['address'] ?? '' }}</div>
+                            @php
+                                $showLogo = ($carwashSettings['show_logo_on_receipt'] ?? false) && ($carwashInfo['logo'] ?? false);
+                                $logoUrl = $carwashInfo['logo'] ?? null;
+                            @endphp
+                            @if($showLogo && $logoUrl)
+                                <img src="{{ asset('storage/' . $logoUrl) }}" alt="Logo" class="receipt-logo" style="max-width: 120px; max-height: 60px; margin-bottom: 5px;">
+                            @endif
+                            <div class="shop-name">{{ $carwashSettings['business_name'] ?? $carwashInfo['name'] ?? 'SHOP NAME' }}</div>
+                            <div class="shop-address">{{ $carwashSettings['business_address'] ?? $carwashInfo['address'] ?? '' }}</div>
                             <div class="shop-contact">
-                                @if($carwashInfo['phone'] ?? false)
-                                    Mobile: {{ $carwashInfo['phone'] }}
-                                @endif
-                                @if($carwashInfo['website'] ?? false)
-                                    <br>{{ $carwashInfo['website'] }}
+                                @if($carwashSettings['business_phone'] ?? $carwashInfo['phone'] ?? false)
+                                    Mobile: {{ $carwashSettings['business_phone'] ?? $carwashInfo['phone'] }}
                                 @endif
                             </div>
                         </div>
+
+                        {{-- Custom Receipt Header --}}
+                        @if($carwashSettings['receipt_header'] ?? false)
+                        <div class="receipt-custom-header">
+                            {!! nl2br(e($carwashSettings['receipt_header'])) !!}
+                        </div>
+                        @endif
 
                         <div class="receipt-divider">=================================</div>
 
@@ -1009,9 +1025,12 @@
 
                         {{-- Footer --}}
                         <div class="receipt-footer">
-                            <div class="thank-you">Thank you for your business!</div>
-                            <div class="visit-again">Please visit again</div>
-                            <div class="powered-by">Powered by TechScales POS</div>
+                            @if($carwashSettings['receipt_footer'] ?? false)
+                                <div class="custom-footer">{!! nl2br(e($carwashSettings['receipt_footer'])) !!}</div>
+                            @else
+                                <div class="thank-you">Thank you for your business!</div>
+                                <div class="visit-again">Please visit again</div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -1020,7 +1039,7 @@
                         <i class="ti ti-x me-1"></i> Close
                     </button>
                     <button onclick="printThermalReceipt()" class="btn btn-sm btn-primary">
-                        <i class="ti ti-printer me-1"></i> Print Receipt
+                        <i class="ti ti-printer me-1"></i> Print
                     </button>
                 </div>
             </div>
@@ -1046,6 +1065,12 @@
             margin-bottom: 5px;
         }
 
+        .receipt-logo {
+            max-width: 120px;
+            max-height: 60px;
+            margin-bottom: 5px;
+        }
+
         .receipt-header .shop-name {
             font-size: 16px;
             font-weight: bold;
@@ -1055,6 +1080,13 @@
         .receipt-header .shop-address,
         .receipt-header .shop-contact {
             font-size: 11px;
+        }
+
+        .receipt-custom-header {
+            text-align: center;
+            font-size: 10px;
+            margin: 5px 0;
+            font-style: italic;
         }
 
         .receipt-divider {
@@ -1158,10 +1190,12 @@
             font-size: 12px;
         }
 
-        .receipt-footer .powered-by {
-            margin-top: 5px;
-            font-size: 9px;
-            color: #666;
+        .receipt-footer .custom-footer {
+            font-size: 11px;
+        }
+
+        .receipt-footer .visit-again {
+            font-size: 10px;
         }
 
         /* Print Styles */
@@ -1287,17 +1321,27 @@
                         padding: 0;
                         box-sizing: border-box;
                     }
+                    html, body {
+                        width: 100%;
+                        height: 100%;
+                    }
                     body {
                         font-family: 'Courier New', Courier, monospace;
                         font-size: 12px;
                         line-height: 1.4;
+                        background: #fff;
+                        display: flex;
+                        justify-content: center;
+                    }
+                    .receipt-wrapper {
                         width: 80mm;
                         padding: 2mm;
-                        background: #fff;
                     }
                     .receipt-header { text-align: center; margin-bottom: 5px; }
+                    .receipt-logo { max-width: 120px; max-height: 60px; margin-bottom: 5px; }
                     .receipt-header .shop-name { font-size: 16px; font-weight: bold; text-transform: uppercase; }
                     .receipt-header .shop-address, .receipt-header .shop-contact { font-size: 11px; }
+                    .receipt-custom-header { text-align: center; font-size: 10px; margin: 5px 0; font-style: italic; }
                     .receipt-divider { text-align: center; font-size: 10px; letter-spacing: -1px; margin: 5px 0; }
                     .receipt-title { text-align: center; font-size: 14px; font-weight: bold; }
                     .receipt-info { margin: 5px 0; }
@@ -1316,7 +1360,7 @@
                     .receipt-totals .change { color: #080; }
                     .receipt-footer { text-align: center; margin-top: 10px; font-size: 10px; }
                     .receipt-footer .thank-you { font-weight: bold; font-size: 12px; }
-                    .receipt-footer .powered-by { margin-top: 5px; font-size: 9px; color: #666; }
+                    .receipt-footer .custom-footer { font-size: 11px; }
                     .text-left { text-align: left; }
                     .text-center { text-align: center; }
                     .text-right { text-align: right; }
@@ -1336,7 +1380,9 @@
                     ${styles}
                 </head>
                 <body>
-                    ${receiptContent.innerHTML}
+                    <div class="receipt-wrapper">
+                        ${receiptContent.innerHTML}
+                    </div>
                 </body>
                 </html>
             `);
@@ -1353,5 +1399,6 @@
                 }, 500);
             };
         }
+
     </script>
 </div>

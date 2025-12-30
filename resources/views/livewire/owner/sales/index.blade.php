@@ -537,16 +537,30 @@
                 <div class="modal-body p-0">
                     <!-- Receipt Preview -->
                     <div id="receiptContent" class="receipt-thermal">
-                        <!-- Header -->
+                        <!-- Header with Logo -->
                         <div class="receipt-header">
-                            <div class="shop-name">{{ $receiptCarwashInfo['name'] ?? 'SHOP NAME' }}</div>
-                            <div class="shop-address">{{ $receiptCarwashInfo['address'] ?? '' }}</div>
+                            @php
+                                $showLogo = ($receiptCarwashSettings['show_logo_on_receipt'] ?? false) && ($receiptCarwashInfo['logo'] ?? false);
+                                $logoUrl = $receiptCarwashInfo['logo'] ?? null;
+                            @endphp
+                            @if($showLogo && $logoUrl)
+                                <img src="{{ asset('storage/' . $logoUrl) }}" alt="Logo" class="receipt-logo" style="max-width: 120px; max-height: 60px; margin-bottom: 5px;">
+                            @endif
+                            <div class="shop-name">{{ $receiptCarwashSettings['business_name'] ?? $receiptCarwashInfo['name'] ?? 'SHOP NAME' }}</div>
+                            <div class="shop-address">{{ $receiptCarwashSettings['business_address'] ?? $receiptCarwashInfo['address'] ?? '' }}</div>
                             <div class="shop-contact">
-                                @if($receiptCarwashInfo['phone'] ?? false)
-                                    Mobile: {{ $receiptCarwashInfo['phone'] }}
+                                @if($receiptCarwashSettings['business_phone'] ?? $receiptCarwashInfo['phone'] ?? false)
+                                    Mobile: {{ $receiptCarwashSettings['business_phone'] ?? $receiptCarwashInfo['phone'] }}
                                 @endif
                             </div>
                         </div>
+
+                        <!-- Custom Receipt Header -->
+                        @if($receiptCarwashSettings['receipt_header'] ?? false)
+                        <div class="receipt-custom-header">
+                            {!! nl2br(e($receiptCarwashSettings['receipt_header'])) !!}
+                        </div>
+                        @endif
 
                         <div class="receipt-divider">================================</div>
 
@@ -661,8 +675,12 @@
 
                         <!-- Footer -->
                         <div class="receipt-footer">
-                            <div>Thank you for your business!</div>
-                            <div class="text-muted small">Powered by Carwash POS</div>
+                            @if($receiptCarwashSettings['receipt_footer'] ?? false)
+                                <div class="custom-footer">{!! nl2br(e($receiptCarwashSettings['receipt_footer'])) !!}</div>
+                            @else
+                                <div>Thank you for your business!</div>
+                                <div class="small">Please visit again</div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -695,6 +713,11 @@
             text-align: center;
             margin-bottom: 5px;
         }
+        .receipt-logo {
+            max-width: 120px;
+            max-height: 60px;
+            margin-bottom: 5px;
+        }
         .receipt-header .shop-name {
             font-weight: bold;
             font-size: 14px;
@@ -703,6 +726,12 @@
         .receipt-header .shop-address,
         .receipt-header .shop-contact {
             font-size: 11px;
+        }
+        .receipt-custom-header {
+            text-align: center;
+            font-size: 10px;
+            margin: 5px 0;
+            font-style: italic;
         }
         .receipt-divider {
             text-align: center;
@@ -793,17 +822,25 @@
                     <title>Receipt</title>
                     <style>
                         @page { size: 80mm auto; margin: 0; }
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        html, body { width: 100%; height: 100%; }
                         body {
                             font-family: 'Courier New', Courier, monospace;
                             font-size: 12px;
-                            width: 80mm;
-                            margin: 0;
-                            padding: 5mm;
+                            background: #fff;
+                            display: flex;
+                            justify-content: center;
                             line-height: 1.3;
                         }
+                        .receipt-wrapper {
+                            width: 80mm;
+                            padding: 5mm;
+                        }
                         .receipt-header { text-align: center; margin-bottom: 5px; }
+                        .receipt-logo { max-width: 120px; max-height: 60px; margin-bottom: 5px; }
                         .receipt-header .shop-name { font-weight: bold; font-size: 14px; text-transform: uppercase; }
                         .receipt-header .shop-address, .receipt-header .shop-contact { font-size: 11px; }
+                        .receipt-custom-header { text-align: center; font-size: 10px; margin: 5px 0; font-style: italic; }
                         .receipt-divider { text-align: center; letter-spacing: -1px; margin: 5px 0; }
                         .receipt-divider-thin { text-align: center; letter-spacing: -1px; margin: 3px 0; opacity: 0.6; }
                         .receipt-info .receipt-row { display: flex; justify-content: space-between; font-size: 11px; }
@@ -826,7 +863,9 @@
                     </style>
                 </head>
                 <body>
-                    ${content}
+                    <div class="receipt-wrapper">
+                        ${content}
+                    </div>
                     <script>
                         window.onload = function() {
                             window.print();
@@ -838,5 +877,6 @@
             `);
             printWindow.document.close();
         }
+
     </script>
 </div>

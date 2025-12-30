@@ -52,6 +52,7 @@ class Index extends Component
     public $receiptSaleItems = [];
     public $receiptSalePayments = [];
     public $receiptCarwashInfo = null;
+    public $receiptCarwashSettings = null;
 
     public function mount()
     {
@@ -314,7 +315,7 @@ class Index extends Component
 
     public function showReceipt($saleId)
     {
-        $sale = sales::with(['customer', 'user', 'items.item', 'payments.paymentMethod', 'carwash'])
+        $sale = sales::with(['customer', 'user', 'items.item', 'payments.paymentMethod', 'carwash.settings'])
             ->find($saleId);
         if (!$sale) return;
 
@@ -322,6 +323,7 @@ class Index extends Component
         $this->receiptSaleItems = $sale->items->toArray();
         $this->receiptSalePayments = $sale->payments->toArray();
         $this->receiptCarwashInfo = $sale->carwash ? $sale->carwash->toArray() : null;
+        $this->receiptCarwashSettings = $sale->carwash && $sale->carwash->settings ? $sale->carwash->settings->toArray() : null;
         $this->showReceiptModal = true;
     }
 
@@ -332,6 +334,7 @@ class Index extends Component
         $this->receiptSaleItems = [];
         $this->receiptSalePayments = [];
         $this->receiptCarwashInfo = null;
+        $this->receiptCarwashSettings = null;
     }
 
     public function render()

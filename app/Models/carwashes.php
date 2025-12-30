@@ -91,6 +91,11 @@ class carwashes extends Model
         return $this->hasMany(Booking::class, 'carwash_id');
     }
 
+    public function settings()
+    {
+        return $this->hasOne(CarwashSetting::class, 'carwash_id');
+    }
+
     // Scopes
     public function scopeActive(Builder $query): Builder
     {
