@@ -60,6 +60,9 @@ use App\Livewire\Owner\Expenses\Expenses;
 use App\Livewire\Owner\Items\History;
 use App\Livewire\Owner\Items\Listitems;
 use App\Livewire\Owner\Items\Units;
+use App\Livewire\Owner\Reports\Profitandloss;
+use App\Livewire\Owner\Reports\Sales;
+use App\Livewire\Owner\Reports\Stock;
 use App\Livewire\Owner\Sales\Posscreen;
 use App\Livewire\Owner\Settings\Setup as OwnerSettings;
 
@@ -131,6 +134,10 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/expenses', Expenses::class)->name('owner.expenses');
     Route::get('/list-items', Listitems::class)->name('owner.list-items');
     Route::get('/history/{itemId}', History::class)->name('owner.history');
+    Route::get('/reports/profit-and-loss', Profitandloss::class)->name('owner.reports.profitandloss');
+    Route::get('/reports/sales', Sales::class)->name('owner.reports.sales');
+    Route::get('/reports/stock', Stock::class)->name('owner.reports.stock');
+
 });
 
 // Customer Dashboard (Protected Routes - Customer Only)

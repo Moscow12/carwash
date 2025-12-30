@@ -99,6 +99,33 @@
       </li>
     </ul>
   </li>
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.reports*') || request()->routeIs('owner.reports*') ? 'active' : '' }}"
+      href="#!"
+      role="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="{{ request()->routeIs('owner.reports*') || request()->routeIs('owner.reports*') ? 'true' : 'false' }}">
+      <span class="nav-icon"><i class="ti ti-file-text fs-5"></i></span>
+      <span class="text">Reports</span>
+    </a>
+    <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.reports*') || request()->routeIs('owner.reports*') ? 'show' : '' }}">
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.reports.profitandloss") ? "active" : "" }}' href="{{ route('owner.reports.profitandloss') }}">
+          <i class="ti ti-package me-2"></i> Profit and Loss
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.reports.sales") ? "active" : "" }}' href="{{ route('owner.reports.sales') }}">
+          <i class="ti ti-ruler-2 me-2"></i> Sales
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.reports.stock") ? "active" : "" }}' href="{{ route('owner.reports.stock') }}">
+          <i class="ti ti-ruler-2 me-2"></i> Stock Report
+        </a>
+      </li>
+    </ul>
+  </li>
   <!-- People -->
   <li class="nav-item">
     <div class="nav-heading">People</div>
