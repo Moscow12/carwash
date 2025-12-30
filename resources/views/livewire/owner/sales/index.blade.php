@@ -19,16 +19,23 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
+    @if (session()->has('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="ti ti-alert-circle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
 
     <!-- Summary Cards -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm bg-primary text-white">
+            <div class="card border-0 shadow-sm bg-primary text-white h-100" role="button" wire:click="$set('paymentStatusFilter', '')">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="mb-1 opacity-75">Total Sales</p>
+                            <p class="mb-1 opacity-75 small">Total Sales</p>
                             <h3 class="mb-0">{{ number_format($totalSales) }}</h3>
+                            <small class="opacity-75">transactions</small>
                         </div>
                         <div class="bg-white bg-opacity-25 rounded-circle p-3">
                             <i class="ti ti-receipt fs-4"></i>
@@ -38,12 +45,13 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm bg-success text-white">
+            <div class="card border-0 shadow-sm bg-success text-white h-100" role="button" wire:click="$set('paymentStatusFilter', '')">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="mb-1 opacity-75">Total Revenue</p>
-                            <h3 class="mb-0">TZS {{ number_format($totalRevenue) }}</h3>
+                            <p class="mb-1 opacity-75 small">Total Revenue</p>
+                            <h3 class="mb-0">TZS {{ number_format($totalRevenue, 2) }}</h3>
+                            <small class="opacity-75">expected</small>
                         </div>
                         <div class="bg-white bg-opacity-25 rounded-circle p-3">
                             <i class="ti ti-currency-dollar fs-4"></i>
@@ -53,12 +61,13 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm bg-info text-white">
+            <div class="card border-0 shadow-sm bg-info text-white h-100" role="button" wire:click="$set('paymentStatusFilter', 'paid')">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="mb-1 opacity-75">Paid Amount</p>
-                            <h3 class="mb-0">TZS {{ number_format($paidSales) }}</h3>
+                            <p class="mb-1 opacity-75 small">Paid Amount</p>
+                            <h3 class="mb-0">TZS {{ number_format($paidSales, 2) }}</h3>
+                            <small class="opacity-75">collected</small>
                         </div>
                         <div class="bg-white bg-opacity-25 rounded-circle p-3">
                             <i class="ti ti-check fs-4"></i>
@@ -68,12 +77,13 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm bg-danger text-white">
+            <div class="card border-0 shadow-sm bg-danger text-white h-100" role="button" wire:click="$set('paymentStatusFilter', 'unpaid')">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="mb-1 opacity-75">Unpaid Amount</p>
-                            <h3 class="mb-0">TZS {{ number_format($unpaidSales) }}</h3>
+                            <p class="mb-1 opacity-75 small">Unpaid Amount</p>
+                            <h3 class="mb-0">TZS {{ number_format($unpaidSales, 2) }}</h3>
+                            <small class="opacity-75">{{ $unpaidSalesCount + $partialSalesCount }} pending</small>
                         </div>
                         <div class="bg-white bg-opacity-25 rounded-circle p-3">
                             <i class="ti ti-clock fs-4"></i>
@@ -133,61 +143,82 @@
 
     <!-- Sales Table -->
     <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <label class="mb-0 small text-muted">Show</label>
+                <select wire:model.live="perPage" class="form-select form-select-sm" style="width: auto;">
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="250">250</option>
+                    <option value="all">All</option>
+                </select>
+                <label class="mb-0 small text-muted">entries</label>
+            </div>
+            <div class="text-muted small">
+                Showing {{ $sales->firstItem() ?? 0 }} to {{ $sales->lastItem() ?? 0 }} of {{ $sales->total() }} transactions
+            </div>
+        </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
+            <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-light position-sticky top-0" style="z-index: 1;">
                         <tr>
                             <th>Invoice</th>
                             <th>Date</th>
                             <th>Customer</th>
                             <th>Items</th>
-                            <th class="text-end">Amount</th>
-                            <th class="text-center">Sale Status</th>
-                            <th class="text-center">Payment</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-end">Paid</th>
+                            <th class="text-end">Unpaid</th>
+                            <th class="text-center">Status</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($sales as $sale)
+                            @php
+                                $paidAmount = (float) $sale->payments->sum('amount');
+                                $unpaidAmount = max(0, (float) $sale->total_amount - $paidAmount);
+                            @endphp
                             <tr>
                                 <td>
                                     <span class="fw-medium text-primary">{{ $sale->invoice_number }}</span>
                                     <br>
                                     <small class="text-muted">{{ $sale->sale_type }}</small>
                                 </td>
-                                <td>
+                                <td class="text-nowrap">
                                     {{ $sale->sale_date ? $sale->sale_date->format('M d, Y') : '-' }}
                                     <br>
                                     <small class="text-muted">{{ $sale->sale_date ? $sale->sale_date->format('H:i') : '' }}</small>
                                 </td>
                                 <td>
                                     @if($sale->customer)
-                                        <span class="fw-medium">{{ $sale->customer->name }}</span>
+                                        <span class="fw-medium">{{ Str::limit($sale->customer->name, 15) }}</span>
                                         <br>
                                         <small class="text-muted">{{ $sale->customer->phone ?? '' }}</small>
                                     @else
-                                        <span class="text-muted">Walk-in Customer</span>
+                                        <span class="text-muted">Walk-in</span>
                                     @endif
                                 </td>
                                 <td>
                                     @php $itemCount = $sale->items->count(); @endphp
-                                    <span class="badge bg-secondary">{{ $itemCount }} {{ $itemCount === 1 ? 'item' : 'items' }}</span>
+                                    <span class="badge bg-secondary">{{ $itemCount }}</span>
                                     @if($sale->items->first())
                                         <br>
-                                        <small class="text-muted">{{ $sale->items->first()->item->name ?? '' }}</small>
-                                        @if($itemCount > 1)
-                                            <small class="text-muted">+{{ $itemCount - 1 }} more</small>
-                                        @endif
+                                        <small class="text-muted">{{ Str::limit($sale->items->first()->item->name ?? '', 12) }}</small>
                                     @endif
                                 </td>
-                                <td class="text-end fw-bold">TZS {{ number_format($sale->total_amount) }}</td>
-                                <td class="text-center">
-                                    <span class="badge bg-{{ $sale->sale_status_badge_class }}">
-                                        {{ ucfirst($sale->sale_status) }}
-                                    </span>
+                                <td class="text-end fw-bold text-nowrap">TZS {{ number_format($sale->total_amount, 2) }}</td>
+                                <td class="text-end text-success fw-medium text-nowrap">TZS {{ number_format($paidAmount, 2) }}</td>
+                                <td class="text-end {{ $unpaidAmount > 0 ? 'text-danger fw-bold' : 'text-muted' }} text-nowrap">
+                                    TZS {{ number_format($unpaidAmount, 2) }}
                                 </td>
                                 <td class="text-center">
+                                    <span class="badge bg-{{ $sale->sale_status_badge_class }} mb-1">
+                                        {{ ucfirst($sale->sale_status) }}
+                                    </span>
+                                    <br>
                                     <span class="badge bg-{{ $sale->payment_status_badge_class }}">
                                         {{ ucfirst($sale->payment_status) }}
                                     </span>
@@ -197,9 +228,9 @@
                                         <button wire:click="viewSale('{{ $sale->id }}')" class="btn btn-outline-primary" title="View Details">
                                             <i class="ti ti-eye"></i>
                                         </button>
-                                        @if($sale->payment_status === 'unpaid')
-                                            <button wire:click="markAsPaid('{{ $sale->id }}')" class="btn btn-outline-success" title="Mark as Paid">
-                                                <i class="ti ti-check"></i>
+                                        @if($sale->payment_status === 'unpaid' || $sale->payment_status === 'partial')
+                                            <button wire:click="openAddPaymentModal('{{ $sale->id }}')" class="btn btn-outline-success" title="Add Payment">
+                                                <i class="ti ti-cash"></i>
                                             </button>
                                         @endif
                                         @if($sale->sale_status !== 'canceled')
@@ -212,7 +243,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5">
+                                <td colspan="9" class="text-center py-5">
                                     <div class="text-muted">
                                         <i class="ti ti-receipt-off fs-1 d-block mb-2"></i>
                                         No sales found for the selected filters
@@ -224,17 +255,20 @@
                 </table>
             </div>
         </div>
-        @if($sales->hasPages())
-            <div class="card-footer bg-transparent">
-                {{ $sales->links() }}
+        <div class="card-footer bg-transparent d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="text-muted small">
+                Total: {{ $sales->total() }} transactions
             </div>
-        @endif
+            @if($sales->hasPages())
+                {{ $sales->links() }}
+            @endif
+        </div>
     </div>
 
     <!-- Sale Details Modal -->
     @if($showDetailsModal && $selectedSale)
         <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">
@@ -267,9 +301,37 @@
                             </div>
                         </div>
 
+                        <!-- Payment Summary Cards -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <div class="card bg-primary text-white border-0">
+                                    <div class="card-body py-2">
+                                        <div class="small opacity-75">Total Amount</div>
+                                        <div class="fs-5 fw-bold">TZS {{ number_format($selectedSale['total_amount'], 2) }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-success text-white border-0">
+                                    <div class="card-body py-2">
+                                        <div class="small opacity-75">Paid Amount</div>
+                                        <div class="fs-5 fw-bold">TZS {{ number_format($selectedSalePaidAmount, 2) }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-{{ $selectedSaleUnpaidAmount > 0 ? 'danger' : 'secondary' }} text-white border-0">
+                                    <div class="card-body py-2">
+                                        <div class="small opacity-75">Unpaid Amount</div>
+                                        <div class="fs-5 fw-bold">TZS {{ number_format($selectedSaleUnpaidAmount, 2) }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Items Table -->
-                        <h6 class="mb-3">Items</h6>
-                        <div class="table-responsive">
+                        <h6 class="mb-3"><i class="ti ti-package me-1"></i> Items</h6>
+                        <div class="table-responsive mb-4">
                             <table class="table table-sm table-bordered">
                                 <thead class="table-light">
                                     <tr>
@@ -302,6 +364,49 @@
                             </table>
                         </div>
 
+                        <!-- Payment History -->
+                        <h6 class="mb-3"><i class="ti ti-cash me-1"></i> Payment History</h6>
+                        @if(count($selectedSalePayments) > 0)
+                            <div class="table-responsive mb-3">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Payment Method</th>
+                                            <th class="text-end">Amount</th>
+                                            <th>Note</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($selectedSalePayments as $payment)
+                                            <tr>
+                                                <td>{{ \Carbon\Carbon::parse($payment['payment_date'])->format('M d, Y') }}</td>
+                                                <td>
+                                                    <span class="badge bg-info">
+                                                        {{ $payment['payment_method']['name'] ?? 'N/A' }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-end text-success fw-bold">TZS {{ number_format($payment['amount'], 2) }}</td>
+                                                <td>{{ $payment['notes'] ?? '-' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <td colspan="2" class="text-end fw-bold">Total Paid:</td>
+                                            <td class="text-end fw-bold text-success">TZS {{ number_format($selectedSalePaidAmount, 2) }}</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        @else
+                            <div class="alert alert-warning mb-3">
+                                <i class="ti ti-alert-circle me-2"></i>
+                                No payments recorded yet.
+                            </div>
+                        @endif
+
                         @if($selectedSale['notes'])
                             <div class="mt-3">
                                 <strong>Notes:</strong>
@@ -310,9 +415,106 @@
                         @endif
                     </div>
                     <div class="modal-footer">
+                        @if($selectedSaleUnpaidAmount > 0)
+                            <button type="button" class="btn btn-success" wire:click="openAddPaymentModal('{{ $selectedSale['id'] }}')">
+                                <i class="ti ti-cash me-1"></i> Add Payment
+                            </button>
+                        @endif
                         <button type="button" class="btn btn-secondary" wire:click="closeDetailsModal">Close</button>
                         <button type="button" class="btn btn-primary" onclick="window.print()">
                             <i class="ti ti-printer me-1"></i> Print
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Add Payment Modal -->
+    @if($showPaymentModal)
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.6); z-index: 1060;">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">
+                            <i class="ti ti-cash me-2"></i> Add Payment
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" wire:click="closePaymentModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Payment Rows -->
+                        <div class="payment-rows mb-3">
+                            @foreach($paymentRows as $index => $row)
+                            <div class="card mb-2 border" wire:key="add-payment-row-{{ $index }}">
+                                <div class="card-body p-3">
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-5">
+                                            <label class="form-label small mb-1">Amount <span class="text-danger">*</span></label>
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text">TSh</span>
+                                                <input type="number"
+                                                       wire:model.live="paymentRows.{{ $index }}.amount"
+                                                       class="form-control text-end"
+                                                       placeholder="0.00"
+                                                       min="0"
+                                                       step="0.01"
+                                                       inputmode="decimal">
+                                            </div>
+                                        </div>
+                                        <div class="col-5">
+                                            <label class="form-label small mb-1">Method <span class="text-danger">*</span></label>
+                                            <select wire:model="paymentRows.{{ $index }}.payment_method_id" class="form-select form-select-sm">
+                                                <option value="">Select</option>
+                                                @foreach($availablePaymentMethods as $method)
+                                                    <option value="{{ $method['id'] }}">{{ $method['name'] }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-2">
+                                            @if(count($paymentRows) > 1)
+                                            <button wire:click="removePaymentRow({{ $index }})"
+                                                    class="btn btn-outline-danger btn-sm w-100"
+                                                    title="Remove">
+                                                <i class="ti ti-x"></i>
+                                            </button>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <input type="text"
+                                               wire:model="paymentRows.{{ $index }}.note"
+                                               class="form-control form-control-sm"
+                                               placeholder="Note (optional)">
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+
+                        <!-- Add Row Button -->
+                        <button wire:click="addPaymentRow" class="btn btn-outline-primary w-100 mb-3">
+                            <i class="ti ti-plus me-1"></i> Add Another Payment
+                        </button>
+
+                        <!-- Payment Total -->
+                        <div class="card bg-light">
+                            <div class="card-body py-2">
+                                <div class="d-flex justify-content-between">
+                                    <span>Payment Total:</span>
+                                    <span class="fw-bold text-success">TZS {{ number_format($this->paymentTotal, 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="closePaymentModal">Cancel</button>
+                        <button type="button" class="btn btn-success" wire:click="processPayment" {{ $this->paymentTotal <= 0 ? 'disabled' : '' }}>
+                            <span wire:loading.remove wire:target="processPayment">
+                                <i class="ti ti-check me-1"></i> Save Payment
+                            </span>
+                            <span wire:loading wire:target="processPayment">
+                                <span class="spinner-border spinner-border-sm me-1"></span> Processing...
+                            </span>
                         </button>
                     </div>
                 </div>

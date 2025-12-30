@@ -549,6 +549,10 @@
                     <i class="ti ti-credit-card"></i>
                     <span class="btn-text ms-1 d-none d-sm-inline">Card</span>
                 </button>
+                <button wire:click="openPaymentModal('multiple')" class="btn btn-secondary btn-action" {{ empty($cart) ? 'disabled' : '' }}>
+                    <i class="ti ti-wallet"></i>
+                    <span class="btn-text ms-1 d-none d-sm-inline">Multiple</span>
+                </button>
                 <button wire:click="openPaymentModal('cash')" class="btn btn-success btn-action" {{ empty($cart) ? 'disabled' : '' }}>
                     <i class="ti ti-cash"></i>
                     <span class="btn-text ms-1 d-none d-sm-inline">Cash</span>
@@ -631,84 +635,147 @@
     </div>
     @endif
 
-    {{-- Payment Modal --}}
+    {{-- Payment Modal - Multiple Payment Support --}}
     @if($showPaymentModal)
     <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-0 pb-0">
                     <h5 class="modal-title">
-                        <i class="ti ti-{{ $paymentType === 'cash' ? 'cash' : ($paymentType === 'card' ? 'credit-card' : 'file-invoice') }} me-2"></i>
-                        {{ $paymentType === 'credit' ? 'Credit Sale' : ucfirst($paymentType) . ' Payment' }}
+                        <i class="ti ti-cash-banknote me-2"></i> Payment
                     </h5>
                     <button type="button" class="btn-close" wire:click="closePaymentModal"></button>
                 </div>
-                <div class="modal-body">
-                    {{-- Amount Display --}}
-                    <div class="text-center mb-4 p-4 bg-light rounded">
-                        <div class="text-muted small">Total Amount</div>
-                        <div class="fs-1 fw-bold text-primary">TZS {{ number_format($cartTotal, 0) }}</div>
-                    </div>
+                <div class="modal-body p-0">
+                    <div class="row g-0">
+                        {{-- Left Section: Payment Rows --}}
+                        <div class="col-md-8 p-3 border-end">
+                            @if($paymentType === 'credit')
+                            {{-- Credit Sale Info --}}
+                            <div class="alert alert-info mb-3">
+                                <i class="ti ti-info-circle me-2"></i>
+                                This sale will be recorded as <strong>unpaid</strong>. Customer can pay later.
+                            </div>
+                            @else
+                            {{-- Payment Rows --}}
+                            <div class="payment-rows mb-3">
+                                @foreach($paymentRows as $index => $row)
+                                <div class="card mb-2 border" wire:key="payment-row-{{ $index }}">
+                                    <div class="card-body p-3">
+                                        <div class="row g-2 align-items-end">
+                                            <div class="col-md-4">
+                                                <label class="form-label small mb-1">Amount <span class="text-danger">*</span></label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text">TSh</span>
+                                                    <input type="number"
+                                                           wire:model.live="paymentRows.{{ $index }}.amount"
+                                                           class="form-control text-end"
+                                                           placeholder="0.00"
+                                                           min="0"
+                                                           step="0.01"
+                                                           inputmode="decimal">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label small mb-1">Payment Method <span class="text-danger">*</span></label>
+                                                <select wire:model.live="paymentRows.{{ $index }}.payment_method_id" class="form-select form-select-sm">
+                                                    <option value="">Select Method</option>
+                                                    @foreach($availablePaymentMethods as $method)
+                                                        <option value="{{ $method['id'] }}">{{ $method['name'] }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label small mb-1">Note</label>
+                                                <input type="text"
+                                                       wire:model="paymentRows.{{ $index }}.note"
+                                                       class="form-control form-control-sm"
+                                                       placeholder="Note...">
+                                            </div>
+                                            <div class="col-md-1">
+                                                @if(count($paymentRows) > 1)
+                                                <button wire:click="removePaymentRow({{ $index }})"
+                                                        class="btn btn-outline-danger btn-sm w-100"
+                                                        title="Remove">
+                                                    <i class="ti ti-x"></i>
+                                                </button>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
 
-                    @if($paymentType !== 'credit')
-                    {{-- Payment Method --}}
-                    <div class="mb-3">
-                        <label class="form-label">Payment Method <span class="text-danger">*</span></label>
-                        <select wire:model="paymentMethodId" class="form-select">
-                            <option value="">Select Method</option>
-                            @foreach($availablePaymentMethods as $method)
-                                <option value="{{ $method['id'] }}">{{ $method['name'] }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                            {{-- Add Payment Row Button --}}
+                            <button wire:click="addPaymentRow" class="btn btn-primary w-100 mb-3">
+                                <i class="ti ti-plus me-1"></i> Add Payment Row
+                            </button>
+                            @endif
 
-                    {{-- Amount Received --}}
-                    <div class="mb-3">
-                        <label class="form-label">Amount Received</label>
-                        <div class="input-group">
-                            <span class="input-group-text">TZS</span>
-                            <input type="number" wire:model="paymentAmount" class="form-control form-control-lg text-end" min="{{ $cartTotal }}" inputmode="numeric">
+                            {{-- Notes Section --}}
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label small">Sell note:</label>
+                                    <textarea wire:model="sellNote" class="form-control form-control-sm" rows="2" placeholder="Sell note"></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small">Staff note:</label>
+                                    <textarea wire:model="staffNote" class="form-control form-control-sm" rows="2" placeholder="Staff note"></textarea>
+                                </div>
+                            </div>
                         </div>
-                        @if($paymentAmount > $cartTotal)
-                        <div class="text-success mt-2 fw-bold">
-                            <i class="ti ti-arrow-back me-1"></i>
-                            Change: TZS {{ number_format($paymentAmount - $cartTotal, 0) }}
+
+                        {{-- Right Section: Summary --}}
+                        <div class="col-md-4 bg-warning p-3 d-flex flex-column">
+                            <div class="flex-grow-1">
+                                <div class="mb-3">
+                                    <div class="text-dark small">Total Items:</div>
+                                    <div class="fs-4 fw-bold text-dark">{{ number_format($cartItemsCount, 2) }}</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="text-dark small">Total Payable:</div>
+                                    <div class="fs-5 fw-bold text-dark">TSh {{ number_format($cartTotal, 2) }}</div>
+                                </div>
+
+                                @if($paymentType !== 'credit')
+                                <div class="mb-3">
+                                    <div class="text-dark small">Total Paying:</div>
+                                    <div class="fs-5 fw-bold text-dark">TSh {{ number_format($this->totalPaying, 2) }}</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="text-dark small">Change Return:</div>
+                                    <div class="fs-5 fw-bold text-success">TSh {{ number_format($this->changeReturn, 2) }}</div>
+                                </div>
+
+                                <div class="mb-3 pb-3 border-bottom border-dark">
+                                    <div class="text-dark small">Balance:</div>
+                                    <div class="fs-5 fw-bold {{ $this->balanceDue > 0 ? 'text-danger' : 'text-dark' }}">
+                                        TSh {{ number_format($this->balanceDue, 2) }}
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+
+                            {{-- Action Buttons --}}
+                            <div class="d-flex gap-2 mt-auto">
+                                <button wire:click="closePaymentModal" class="btn btn-light flex-fill">
+                                    Close
+                                </button>
+                                <button wire:click="processSale"
+                                        class="btn btn-primary flex-fill"
+                                        {{ $paymentType !== 'credit' && $this->totalPaying <= 0 ? 'disabled' : '' }}>
+                                    <span wire:loading.remove wire:target="processSale">
+                                        <i class="ti ti-check me-1"></i> Finalize Payment
+                                    </span>
+                                    <span wire:loading wire:target="processSale">
+                                        <span class="spinner-border spinner-border-sm me-1"></span> Processing...
+                                    </span>
+                                </button>
+                            </div>
                         </div>
-                        @endif
-                    </div>
-                    @else
-                    {{-- Credit Sale Info --}}
-                    <div class="alert alert-info">
-                        <i class="ti ti-info-circle me-2"></i>
-                        This sale will be recorded as unpaid. Customer can pay later.
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Payment Method (for record)</label>
-                        <select wire:model="paymentMethodId" class="form-select">
-                            <option value="">Select Method</option>
-                            @foreach($availablePaymentMethods as $method)
-                                <option value="{{ $method['id'] }}">{{ $method['name'] }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    @endif
-
-                    {{-- Note --}}
-                    <div class="mb-3">
-                        <label class="form-label">Note</label>
-                        <textarea wire:model="paymentNote" class="form-control" rows="2" placeholder="Optional note..."></textarea>
-                    </div>
-
-                    <div class="d-flex gap-2 pt-3">
-                        <button wire:click="closePaymentModal" class="btn btn-light flex-fill py-3">Cancel</button>
-                        <button wire:click="processSale" class="btn btn-{{ $paymentType === 'credit' ? 'info' : 'success' }} flex-fill py-3">
-                            <span wire:loading.remove wire:target="processSale">
-                                <i class="ti ti-check me-1"></i> Complete Sale
-                            </span>
-                            <span wire:loading wire:target="processSale">
-                                <span class="spinner-border spinner-border-sm me-1"></span> Processing...
-                            </span>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -797,6 +864,374 @@
     </div>
     @endif
 
+    {{-- Receipt Modal for Thermal Printer --}}
+    @if($showReceiptModal && $lastSale)
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); z-index: 1100;">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 py-2">
+                    <h6 class="modal-title"><i class="ti ti-receipt me-2"></i> Receipt</h6>
+                    <button type="button" class="btn-close" wire:click="closeReceiptModal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    {{-- Receipt Preview --}}
+                    <div id="receiptContent" class="receipt-thermal">
+                        {{-- Header --}}
+                        <div class="receipt-header">
+                            <div class="shop-name">{{ $carwashInfo['name'] ?? 'SHOP NAME' }}</div>
+                            <div class="shop-address">{{ $carwashInfo['address'] ?? '' }}</div>
+                            <div class="shop-contact">
+                                @if($carwashInfo['phone'] ?? false)
+                                    Mobile: {{ $carwashInfo['phone'] }}
+                                @endif
+                                @if($carwashInfo['website'] ?? false)
+                                    <br>{{ $carwashInfo['website'] }}
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="receipt-divider">=================================</div>
+
+                        <div class="receipt-title">Invoice</div>
+
+                        <div class="receipt-divider">---------------------------------</div>
+
+                        {{-- Invoice Info --}}
+                        <div class="receipt-info">
+                            <div class="info-row">
+                                <span>Invoice No.</span>
+                                <span>{{ $lastSale['invoice_number'] ?? 'INV-' . strtoupper(substr($lastSale['id'], 0, 8)) }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span>Date</span>
+                                <span>{{ \Carbon\Carbon::parse($lastSale['sale_date'])->format('d/m/Y H:i') }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span>Customer</span>
+                                <span>{{ $lastSale['customer']['name'] ?? 'Walk-In Customer' }}</span>
+                            </div>
+                            @if($lastSale['customer']['phone'] ?? false)
+                            <div class="info-row">
+                                <span>Mobile</span>
+                                <span>{{ $lastSale['customer']['phone'] }}</span>
+                            </div>
+                            @endif
+                        </div>
+
+                        <div class="receipt-divider">=================================</div>
+
+                        {{-- Items Table --}}
+                        <table class="receipt-items">
+                            <thead>
+                                <tr>
+                                    <th class="text-left">Product</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-right">Price</th>
+                                    <th class="text-right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($lastSaleItems as $item)
+                                <tr>
+                                    <td class="text-left">
+                                        {{ Str::limit($item['item']['name'] ?? '-', 15) }}
+                                        @if($item['plate_number'])
+                                            <br><small>{{ $item['plate_number'] }}</small>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">{{ number_format($item['quantity'], 0) }}</td>
+                                    <td class="text-right">{{ number_format($item['price'], 0) }}</td>
+                                    <td class="text-right">{{ number_format($item['price'] * $item['quantity'], 0) }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+
+                        <div class="receipt-divider">---------------------------------</div>
+
+                        {{-- Payments --}}
+                        @if(count($lastSalePayments) > 0)
+                        <div class="receipt-payments">
+                            @foreach($lastSalePayments as $payment)
+                            <div class="payment-row">
+                                <span>{{ $payment['payment_method']['name'] ?? 'Payment' }}</span>
+                                <span>TSh {{ number_format($payment['amount'], 2) }}</span>
+                                <span>{{ \Carbon\Carbon::parse($payment['payment_date'])->format('d/m/Y') }}</span>
+                            </div>
+                            @endforeach
+                            <div class="payment-row total-paid">
+                                <span>Total Paid</span>
+                                <span>TSh {{ number_format(collect($lastSalePayments)->sum('amount'), 2) }}</span>
+                            </div>
+                        </div>
+                        <div class="receipt-divider">---------------------------------</div>
+                        @endif
+
+                        {{-- Totals --}}
+                        <div class="receipt-totals">
+                            <div class="total-row">
+                                <span>Subtotal:</span>
+                                <span>TSh {{ number_format($lastSale['total_amount'], 2) }}</span>
+                            </div>
+                            <div class="total-row grand-total">
+                                <span>Total:</span>
+                                <span>TSh {{ number_format($lastSale['total_amount'], 2) }}</span>
+                            </div>
+                            @php
+                                $totalPaid = collect($lastSalePayments)->sum('amount');
+                                $balance = (float)$lastSale['total_amount'] - $totalPaid;
+                            @endphp
+                            @if($balance > 0)
+                            <div class="total-row balance-due">
+                                <span>Balance Due:</span>
+                                <span>TSh {{ number_format($balance, 2) }}</span>
+                            </div>
+                            @elseif($totalPaid > (float)$lastSale['total_amount'])
+                            <div class="total-row change">
+                                <span>Change:</span>
+                                <span>TSh {{ number_format($totalPaid - (float)$lastSale['total_amount'], 2) }}</span>
+                            </div>
+                            @endif
+                        </div>
+
+                        <div class="receipt-divider">=================================</div>
+
+                        {{-- Footer --}}
+                        <div class="receipt-footer">
+                            <div class="thank-you">Thank you for your business!</div>
+                            <div class="visit-again">Please visit again</div>
+                            <div class="powered-by">Powered by TechScales POS</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 py-2">
+                    <button wire:click="closeReceiptModal" class="btn btn-sm btn-secondary">
+                        <i class="ti ti-x me-1"></i> Close
+                    </button>
+                    <button onclick="printThermalReceipt()" class="btn btn-sm btn-primary">
+                        <i class="ti ti-printer me-1"></i> Print Receipt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Thermal Receipt Print Styles --}}
+    <style>
+        /* Receipt Thermal Styles */
+        .receipt-thermal {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            padding: 10px;
+            background: #fff;
+            max-width: 280px;
+            margin: 0 auto;
+        }
+
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .receipt-header .shop-name {
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .receipt-header .shop-address,
+        .receipt-header .shop-contact {
+            font-size: 11px;
+        }
+
+        .receipt-divider {
+            text-align: center;
+            font-size: 10px;
+            letter-spacing: -1px;
+            margin: 5px 0;
+        }
+
+        .receipt-title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .receipt-info {
+            margin: 5px 0;
+        }
+
+        .receipt-info .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+        }
+
+        .receipt-items {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .receipt-items th {
+            border-bottom: 1px dashed #000;
+            padding: 3px 2px;
+            font-weight: bold;
+        }
+
+        .receipt-items td {
+            padding: 3px 2px;
+            vertical-align: top;
+        }
+
+        .receipt-items small {
+            font-size: 9px;
+            color: #666;
+        }
+
+        .receipt-payments {
+            margin: 5px 0;
+        }
+
+        .receipt-payments .payment-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            gap: 5px;
+        }
+
+        .receipt-payments .total-paid {
+            font-weight: bold;
+            border-top: 1px dashed #000;
+            padding-top: 3px;
+            margin-top: 3px;
+        }
+
+        .receipt-totals {
+            margin: 5px 0;
+        }
+
+        .receipt-totals .total-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+
+        .receipt-totals .grand-total {
+            font-weight: bold;
+            font-size: 14px;
+            border-top: 1px solid #000;
+            padding-top: 3px;
+            margin-top: 3px;
+        }
+
+        .receipt-totals .balance-due {
+            color: #c00;
+            font-weight: bold;
+        }
+
+        .receipt-totals .change {
+            color: #080;
+        }
+
+        .receipt-footer {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 10px;
+        }
+
+        .receipt-footer .thank-you {
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .receipt-footer .powered-by {
+            margin-top: 5px;
+            font-size: 9px;
+            color: #666;
+        }
+
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #receiptContent,
+            #receiptContent * {
+                visibility: visible;
+            }
+
+            #receiptContent {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 80mm;
+                padding: 2mm;
+                margin: 0;
+                font-size: 10pt;
+            }
+
+            .receipt-thermal {
+                max-width: 80mm;
+                padding: 0;
+            }
+
+            .receipt-header .shop-name {
+                font-size: 14pt;
+            }
+
+            .receipt-divider {
+                font-size: 8pt;
+            }
+
+            .receipt-title {
+                font-size: 12pt;
+            }
+
+            .receipt-items,
+            .receipt-info .info-row,
+            .receipt-payments .payment-row,
+            .receipt-totals .total-row {
+                font-size: 9pt;
+            }
+
+            .receipt-totals .grand-total {
+                font-size: 11pt;
+            }
+
+            .receipt-footer {
+                font-size: 8pt;
+            }
+
+            .modal,
+            .modal-dialog,
+            .modal-content,
+            .modal-header,
+            .modal-footer {
+                position: static;
+                width: auto;
+                padding: 0;
+                margin: 0;
+                border: none;
+                background: none;
+                box-shadow: none;
+            }
+
+            .btn-close,
+            .modal-footer {
+                display: none !important;
+            }
+
+            @page {
+                size: 80mm auto;
+                margin: 0;
+            }
+        }
+    </style>
+
     <script>
         function toggleView(view) {
             const cartSection = document.getElementById('cartSection');
@@ -824,5 +1259,88 @@
                 }
             });
         });
+
+        // Print thermal receipt
+        function printThermalReceipt() {
+            const receiptContent = document.getElementById('receiptContent');
+            if (!receiptContent) return;
+
+            // Create a new window for printing
+            const printWindow = window.open('', '_blank', 'width=300,height=600');
+
+            // Get the receipt styles
+            const styles = `
+                <style>
+                    * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                    }
+                    body {
+                        font-family: 'Courier New', Courier, monospace;
+                        font-size: 12px;
+                        line-height: 1.4;
+                        width: 80mm;
+                        padding: 2mm;
+                        background: #fff;
+                    }
+                    .receipt-header { text-align: center; margin-bottom: 5px; }
+                    .receipt-header .shop-name { font-size: 16px; font-weight: bold; text-transform: uppercase; }
+                    .receipt-header .shop-address, .receipt-header .shop-contact { font-size: 11px; }
+                    .receipt-divider { text-align: center; font-size: 10px; letter-spacing: -1px; margin: 5px 0; }
+                    .receipt-title { text-align: center; font-size: 14px; font-weight: bold; }
+                    .receipt-info { margin: 5px 0; }
+                    .receipt-info .info-row { display: flex; justify-content: space-between; font-size: 11px; }
+                    .receipt-items { width: 100%; border-collapse: collapse; font-size: 11px; }
+                    .receipt-items th { border-bottom: 1px dashed #000; padding: 3px 2px; font-weight: bold; }
+                    .receipt-items td { padding: 3px 2px; vertical-align: top; }
+                    .receipt-items small { font-size: 9px; color: #666; }
+                    .receipt-payments { margin: 5px 0; }
+                    .receipt-payments .payment-row { display: flex; justify-content: space-between; font-size: 11px; gap: 5px; }
+                    .receipt-payments .total-paid { font-weight: bold; border-top: 1px dashed #000; padding-top: 3px; margin-top: 3px; }
+                    .receipt-totals { margin: 5px 0; }
+                    .receipt-totals .total-row { display: flex; justify-content: space-between; font-size: 12px; }
+                    .receipt-totals .grand-total { font-weight: bold; font-size: 14px; border-top: 1px solid #000; padding-top: 3px; margin-top: 3px; }
+                    .receipt-totals .balance-due { color: #c00; font-weight: bold; }
+                    .receipt-totals .change { color: #080; }
+                    .receipt-footer { text-align: center; margin-top: 10px; font-size: 10px; }
+                    .receipt-footer .thank-you { font-weight: bold; font-size: 12px; }
+                    .receipt-footer .powered-by { margin-top: 5px; font-size: 9px; color: #666; }
+                    .text-left { text-align: left; }
+                    .text-center { text-align: center; }
+                    .text-right { text-align: right; }
+                    @page { size: 80mm auto; margin: 0; }
+                    @media print {
+                        body { width: 80mm; }
+                    }
+                </style>
+            `;
+
+            // Build the print document
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Receipt</title>
+                    ${styles}
+                </head>
+                <body>
+                    ${receiptContent.innerHTML}
+                </body>
+                </html>
+            `);
+
+            printWindow.document.close();
+
+            // Wait for content to load, then print
+            printWindow.onload = function() {
+                printWindow.focus();
+                printWindow.print();
+                // Close after print dialog closes (with small delay)
+                setTimeout(() => {
+                    printWindow.close();
+                }, 500);
+            };
+        }
     </script>
 </div>

@@ -250,7 +250,6 @@
                     <thead class="table-light">
                         <tr>
                             <th>Product</th>
-                            <th>SKU</th>
                             <th class="text-end">Total Quantity</th>
                             <th class="text-end">Avg. Unit Price</th>
                             <th class="text-end">Total Discount</th>
@@ -261,7 +260,6 @@
                         @forelse($groupedData as $item)
                         <tr>
                             <td>{{ $item->product_name }}</td>
-                            <td><span class="badge bg-secondary">{{ $item->sku ?? '-' }}</span></td>
                             <td class="text-end">{{ number_format($item->total_quantity, 2) }}</td>
                             <td class="text-end">TSh {{ number_format($item->avg_price, 2) }}</td>
                             <td class="text-end">TSh {{ number_format($item->total_discount, 2) }}</td>
