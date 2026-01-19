@@ -124,6 +124,11 @@
           <i class="ti ti-ruler-2 me-2"></i> Stock Report
         </a>
       </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.reports.staffcommissions") ? "active" : "" }}' href="{{ route('owner.reports.staffcommissions') }}">
+          <i class="ti ti-users me-2"></i> Staff Commissions
+        </a>
+      </li>
     </ul>
   </li>
   <!-- People -->

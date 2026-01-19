@@ -64,6 +64,7 @@ use App\Livewire\Owner\Items\Units;
 use App\Livewire\Owner\Reports\Profitandloss;
 use App\Livewire\Owner\Reports\Sales;
 use App\Livewire\Owner\Reports\Stock;
+use App\Livewire\Owner\Reports\Staffcommisions;
 use App\Livewire\Owner\Sales\Posscreen;
 use App\Livewire\Owner\Settings\Setup as OwnerSettings;
 
@@ -131,6 +132,7 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/reports/profit-and-loss', Profitandloss::class)->name('owner.reports.profitandloss');
     Route::get('/reports/sales', Sales::class)->name('owner.reports.sales');
     Route::get('/reports/stock', Stock::class)->name('owner.reports.stock');
+    Route::get('/reports/staff-commissions', Staffcommisions::class)->name('owner.reports.staffcommissions');
 
 });
 
