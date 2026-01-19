@@ -97,11 +97,21 @@ Route::get('/debug-session', function () {
 
 // Clear cache route - REMOVE AFTER FIXING
 Route::get('/clear-all-cache', function () {
-    \Artisan::call('config:clear');
-    \Artisan::call('cache:clear');
-    \Artisan::call('route:clear');
-    \Artisan::call('view:clear');
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    Artisan::call('route:clear');
+    Artisan::call('view:clear');
     return 'All caches cleared! <a href="/admin/login">Go to login</a>';
+});
+
+// Simple test login - REMOVE AFTER FIXING
+Route::get('/test-login', function () {
+    $user = \App\Models\User::where('email', 'admin@gmail.com')->first();
+    if ($user) {
+        Auth::login($user, true);
+        return redirect('/debug-session');
+    }
+    return 'User not found';
 });
 
 Route::post('/logout', function () {
