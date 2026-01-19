@@ -22,10 +22,22 @@ class Login extends Component
 
         if (Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
             session()->regenerate();
-            return redirect()->intended('/dashboard');
+
+            return redirect()->intended($this->getDashboardRoute());
         }
 
         $this->addError('email', 'The provided credentials do not match our records.');
+    }
+
+    protected function getDashboardRoute(): string
+    {
+        return match (Auth::user()->role) {
+            'admin' => route('admin.dashboard'),
+            'owner' => route('owner.dashboard'),
+            'customer' => route('customer.dashboard'),
+            'staff' => route('owner.dashboard'),
+            default => route('site.home'),
+        };
     }
 
     public function render()
