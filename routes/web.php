@@ -78,6 +78,31 @@ Route::get('/auth-test', function () {
     return 'Not logged in. <a href="/admin/login">Login</a>';
 });
 
+// Session debug route - REMOVE AFTER FIXING
+Route::get('/debug-session', function () {
+    return [
+        'authenticated' => Auth::check(),
+        'user' => Auth::user()?->email,
+        'session_driver' => config('session.driver'),
+        'session_secure' => config('session.secure'),
+        'session_domain' => config('session.domain'),
+        'session_same_site' => config('session.same_site'),
+        'app_url' => config('app.url'),
+        'is_https' => request()->secure(),
+        'session_id' => session()->getId(),
+        'has_session' => session()->isStarted(),
+    ];
+});
+
+// Clear cache route - REMOVE AFTER FIXING
+Route::get('/clear-all-cache', function () {
+    \Artisan::call('config:clear');
+    \Artisan::call('cache:clear');
+    \Artisan::call('route:clear');
+    \Artisan::call('view:clear');
+    return 'All caches cleared! <a href="/admin/login">Go to login</a>';
+});
+
 Route::post('/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
