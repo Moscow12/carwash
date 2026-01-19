@@ -36,10 +36,12 @@ class Categories extends Component
     public $carwash_id = '';
 
     public $ownerCarwashes = [];
+    public $hasCarwashes = false;
 
     public function mount()
     {
         $this->ownerCarwashes = Auth::user()->ownedCarwashes()->orderBy('name')->get();
+        $this->hasCarwashes = $this->ownerCarwashes->count() > 0;
 
         if ($this->ownerCarwashes->count() === 1) {
             $this->carwash_id = $this->ownerCarwashes->first()->id;

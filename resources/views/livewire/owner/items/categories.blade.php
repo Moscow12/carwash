@@ -153,7 +153,15 @@
                 <form wire:submit="save">
                     <div class="modal-body" style="overflow-y: auto;">
                         <div class="row g-3">
-                            @if($ownerCarwashes->count() > 1)
+                            @if(!$hasCarwashes)
+                            <div class="col-12">
+                                <div class="alert alert-warning mb-0">
+                                    <i class="ti ti-alert-triangle me-2"></i>
+                                    You need to register a carwash first before adding categories.
+                                    <a href="{{ route('owner.mycarwash') }}" class="alert-link">Register Carwash</a>
+                                </div>
+                            </div>
+                            @elseif($ownerCarwashes->count() > 1)
                             <div class="col-12">
                                 <label class="form-label">Carwash <span class="text-danger">*</span></label>
                                 <select wire:model="carwash_id" class="form-select @error('carwash_id') is-invalid @enderror">
@@ -165,6 +173,13 @@
                                 @error('carwash_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             @endif
+                            @error('carwash_id')
+                                @if($ownerCarwashes->count() <= 1)
+                                <div class="col-12">
+                                    <div class="alert alert-danger mb-0">{{ $message }}</div>
+                                </div>
+                                @endif
+                            @enderror
 
                             <div class="col-12">
                                 <label class="form-label">Category Name <span class="text-danger">*</span></label>
@@ -203,7 +218,7 @@
                         <button type="button" wire:click="closeModal" class="btn btn-outline-secondary">
                             <i class="ti ti-x me-1"></i> Cancel
                         </button>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" @if(!$hasCarwashes) disabled @endif>
                             <span wire:loading.remove wire:target="save">
                                 <i class="ti ti-{{ $editMode ? 'check' : 'plus' }} me-1"></i>
                                 {{ $editMode ? 'Update Category' : 'Create Category' }}

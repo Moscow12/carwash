@@ -242,21 +242,21 @@ class Index extends Component
         // Sales metrics
         $totalRevenue = sales::whereIn('carwash_id', $carwashIds)
             ->where('payment_status', 'paid')
-            ->sum(DB::raw('CAST(price AS DECIMAL(10,2))'));
+            ->sum(DB::raw('CAST(total_amount AS DECIMAL(10,2))'));
 
         $thisMonthRevenue = sales::whereIn('carwash_id', $carwashIds)
             ->where('payment_status', 'paid')
-            ->where('date', '>=', $startOfMonth)
-            ->sum(DB::raw('CAST(price AS DECIMAL(10,2))'));
+            ->where('sale_date', '>=', $startOfMonth)
+            ->sum(DB::raw('CAST(total_amount AS DECIMAL(10,2))'));
 
         $lastMonthRevenue = sales::whereIn('carwash_id', $carwashIds)
             ->where('payment_status', 'paid')
-            ->whereBetween('date', [$startOfLastMonth, $endOfLastMonth])
-            ->sum(DB::raw('CAST(price AS DECIMAL(10,2))'));
+            ->whereBetween('sale_date', [$startOfLastMonth, $endOfLastMonth])
+            ->sum(DB::raw('CAST(total_amount AS DECIMAL(10,2))'));
 
         $totalSales = sales::whereIn('carwash_id', $carwashIds)->count();
         $thisMonthSales = sales::whereIn('carwash_id', $carwashIds)
-            ->where('date', '>=', $startOfMonth)
+            ->where('sale_date', '>=', $startOfMonth)
             ->count();
 
         // Customer metrics
