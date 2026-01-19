@@ -20,28 +20,28 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'Admin User',
             'email' => 'admin@gmail.com',
-            'password' => bcrypt('admin@2314'),
+            'password' => 'admin@2314',
             'role' => 'admin',
             'status' => 'active',
         ]);
         User::factory()->create([
             'name' => 'Owner User',
             'email' => 'owner@gmail.com',
-            'password' => bcrypt('password'),
+            'password' => 'password',
             'role' => 'owner',
             'status' => 'active',
         ]);
         User::factory()->create([
             'name' => 'Customer User',
             'email' => 'customer@gmail.com',
-            'password' => bcrypt('password'),
+            'password' => 'password',
             'role' => 'customer',
             'status' => 'active',
         ]);
         User::factory()->create([
             'name' => 'Staff User',
             'email' => 'staff@gmail.com',
-            'password' => bcrypt('password'),
+            'password' => 'password',
             'role' => 'staff',
             'status' => 'active',
         ]);
