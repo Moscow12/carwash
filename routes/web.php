@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Artisan;
 
 // Site Pages
 use App\Livewire\Sitepg\Home;
@@ -70,49 +69,6 @@ use App\Livewire\Owner\Settings\Setup as OwnerSettings;
 
 Route::get('/admin/login', AdminLogin::class)->name('admin.login');
 Route::post('/admin/login', [LoginController::class, 'login'])->name('admin.login.post');
-
-// Debug route - remove after testing
-Route::get('/auth-test', function () {
-    if (Auth::check()) {
-        return 'Logged in as: ' . Auth::user()->email . ' (Role: ' . Auth::user()->role . ') <a href="/admin">Admin</a> | <a href="/owner">Owner</a> | <a href="/customer">Customer</a>';
-    }
-    return 'Not logged in. <a href="/admin/login">Login</a>';
-});
-
-// Session debug route - REMOVE AFTER FIXING
-Route::get('/debug-session', function () {
-    return [
-        'authenticated' => Auth::check(),
-        'user' => Auth::user()?->email,
-        'session_driver' => config('session.driver'),
-        'session_secure' => config('session.secure'),
-        'session_domain' => config('session.domain'),
-        'session_same_site' => config('session.same_site'),
-        'app_url' => config('app.url'),
-        'is_https' => request()->secure(),
-        'session_id' => session()->getId(),
-        'has_session' => session()->isStarted(),
-    ];
-});
-
-// Clear cache route - REMOVE AFTER FIXING
-Route::get('/clear-all-cache', function () {
-    Artisan::call('config:clear');
-    Artisan::call('cache:clear');
-    Artisan::call('route:clear');
-    Artisan::call('view:clear');
-    return 'All caches cleared! <a href="/admin/login">Go to login</a>';
-});
-
-// Simple test login - REMOVE AFTER FIXING
-Route::get('/test-login', function () {
-    $user = \App\Models\User::where('email', 'admin@gmail.com')->first();
-    if ($user) {
-        Auth::login($user, true);
-        return redirect('/debug-session');
-    }
-    return 'User not found';
-});
 
 Route::post('/logout', function () {
     Auth::logout();
