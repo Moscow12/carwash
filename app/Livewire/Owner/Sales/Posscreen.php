@@ -593,10 +593,44 @@ class Posscreen extends Component
 
             $statusMsg = $paymentStatus === 'partial' ? ' (Partial Payment)' : '';
             session()->flash('message', 'Sale completed successfully!' . $statusMsg . ' Invoice: ' . $sale->invoice_number);
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+            $errorMessage = $this->getCustomErrorMessage($e);
+            session()->flash('error', $errorMessage);
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error processing sale: ' . $e->getMessage());
+            session()->flash('error', 'An error occurred while processing the sale. Please try again.');
         }
+    }
+
+    private function getCustomErrorMessage(\Illuminate\Database\QueryException $e): string
+    {
+        $message = $e->getMessage();
+
+        // Check for common database errors and return user-friendly messages
+        if (str_contains($message, 'customer_id')) {
+            return 'Please select a customer or ensure customer data is valid.';
+        }
+        if (str_contains($message, 'staff_id')) {
+            return 'Please select a valid staff member.';
+        }
+        if (str_contains($message, 'item_id')) {
+            return 'One or more items in your cart are invalid. Please refresh and try again.';
+        }
+        if (str_contains($message, 'payment_method_id')) {
+            return 'Please select a valid payment method.';
+        }
+        if (str_contains($message, 'carwash_id')) {
+            return 'Please select a carwash first.';
+        }
+        if (str_contains($message, 'Duplicate entry')) {
+            return 'This transaction appears to be a duplicate. Please refresh the page.';
+        }
+        if (str_contains($message, 'cannot be null')) {
+            return 'Please fill in all required fields.';
+        }
+
+        return 'An error occurred while processing the sale. Please check your inputs and try again.';
     }
 
     private function updateItemBalance($itemId, $quantity, $transactionType)
