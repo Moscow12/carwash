@@ -21,8 +21,7 @@ class LoginController extends Controller
 
             Log::info('Login successful for: ' . $request->email);
 
-            // Direct redirect to dashboard
-            return redirect('/admin');
+            return redirect($this->getDashboardRoute());
         }
 
         Log::warning('Login failed for: ' . $request->email);
@@ -30,5 +29,16 @@ class LoginController extends Controller
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ])->onlyInput('email');
+    }
+
+    protected function getDashboardRoute(): string
+    {
+        return match (Auth::user()->role) {
+            'admin' => route('admin.dashboard'),
+            'owner' => route('owner.dashboard'),
+            'customer' => route('customer.dashboard'),
+            'staff' => route('owner.dashboard'),
+            default => route('site.home'),
+        };
     }
 }
