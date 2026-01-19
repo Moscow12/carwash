@@ -70,14 +70,14 @@ use App\Livewire\Owner\Settings\Setup as OwnerSettings;
 Route::get('/admin/login', AdminLogin::class)->name('admin.login');
 Route::post('/admin/login', [LoginController::class, 'login'])->name('admin.login.post');
 
-Route::post('/logout', function () {
+Route::match(['get', 'post'], '/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
     return redirect()->route('admin.login');
 })->name('logout');
 
-Route::post('/admin/logout', function () {
+Route::match(['get', 'post'], '/admin/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
