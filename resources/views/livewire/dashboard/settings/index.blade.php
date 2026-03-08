@@ -248,6 +248,28 @@
                                 </div>
                             </div>
 
+                            <!-- Module Management -->
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0">
+                                                <div class="avatar avatar-md bg-purple-subtle text-purple rounded" style="background-color: rgba(147, 51, 234, 0.1) !important; color: rgb(147, 51, 234) !important;">
+                                                    <i class="ti ti-puzzle fs-4"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <h6 class="mb-1">Module Management</h6>
+                                                <p class="text-muted small mb-3">Create, enable, and manage application modules</p>
+                                                <a href="{{ route('admin.modules') }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="ti ti-puzzle me-1"></i>Manage Modules
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- System Info -->
                             <div class="col-md-6">
                                 <div class="card border">
