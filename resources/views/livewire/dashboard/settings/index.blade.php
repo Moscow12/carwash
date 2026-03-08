@@ -19,6 +19,13 @@
         </div>
     @endif
 
+    @if (session()->has('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="ti ti-alert-circle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <div class="row">
         <!-- Sidebar Tabs -->
         <div class="col-lg-3 mb-4">
@@ -200,8 +207,13 @@
                                             <div class="flex-grow-1 ms-3">
                                                 <h6 class="mb-1">Cache Management</h6>
                                                 <p class="text-muted small mb-3">Clear application and configuration cache</p>
-                                                <button type="button" class="btn btn-sm btn-outline-info" disabled>
-                                                    <i class="ti ti-refresh me-1"></i>Clear Cache
+                                                <button type="button" wire:click="clearCache" class="btn btn-sm btn-outline-info" wire:confirm="Are you sure you want to clear all caches?">
+                                                    <span wire:loading.remove wire:target="clearCache">
+                                                        <i class="ti ti-refresh me-1"></i>Clear Cache
+                                                    </span>
+                                                    <span wire:loading wire:target="clearCache">
+                                                        <span class="spinner-border spinner-border-sm me-1"></span>Clearing...
+                                                    </span>
                                                 </button>
                                             </div>
                                         </div>
@@ -222,8 +234,13 @@
                                             <div class="flex-grow-1 ms-3">
                                                 <h6 class="mb-1">Database Backup</h6>
                                                 <p class="text-muted small mb-3">Create and manage database backups</p>
-                                                <button type="button" class="btn btn-sm btn-outline-success" disabled>
-                                                    <i class="ti ti-download me-1"></i>Create Backup
+                                                <button type="button" wire:click="createBackup" class="btn btn-sm btn-outline-success" wire:confirm="This will create a database backup. Continue?">
+                                                    <span wire:loading.remove wire:target="createBackup">
+                                                        <i class="ti ti-download me-1"></i>Create Backup
+                                                    </span>
+                                                    <span wire:loading wire:target="createBackup">
+                                                        <span class="spinner-border spinner-border-sm me-1"></span>Creating...
+                                                    </span>
                                                 </button>
                                             </div>
                                         </div>
@@ -244,11 +261,63 @@
                                             <div class="flex-grow-1 ms-3">
                                                 <h6 class="mb-1">System Information</h6>
                                                 <p class="text-muted small mb-3">View server and application details</p>
-                                                <button type="button" class="btn btn-sm btn-outline-warning" disabled>
-                                                    <i class="ti ti-info-circle me-1"></i>View Info
+                                                <button type="button" wire:click="toggleSystemInfo" class="btn btn-sm btn-outline-warning">
+                                                    <i class="ti ti-{{ $showSystemInfo ? 'eye-off' : 'info-circle' }} me-1"></i>
+                                                    {{ $showSystemInfo ? 'Hide Info' : 'View Info' }}
                                                 </button>
                                             </div>
                                         </div>
+
+                                        @if ($showSystemInfo)
+                                            <div class="mt-3 pt-3 border-top">
+                                                <table class="table table-sm table-borderless mb-0">
+                                                    <tr>
+                                                        <td class="text-muted" style="width: 50%;">PHP Version</td>
+                                                        <td class="fw-semibold">{{ $systemInfo['php_version'] }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted">Laravel Version</td>
+                                                        <td class="fw-semibold">{{ $systemInfo['laravel_version'] }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted">Server Software</td>
+                                                        <td class="fw-semibold">{{ $systemInfo['server_software'] }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted">Database</td>
+                                                        <td class="fw-semibold">{{ $systemInfo['database_type'] }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted">Environment</td>
+                                                        <td>
+                                                            <span class="badge bg-{{ $systemInfo['app_env'] === 'production' ? 'success' : 'warning' }}-subtle text-{{ $systemInfo['app_env'] === 'production' ? 'success' : 'warning' }}">
+                                                                {{ ucfirst($systemInfo['app_env']) }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted">Debug Mode</td>
+                                                        <td class="fw-semibold">{{ $systemInfo['app_debug'] }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted">Free Disk Space</td>
+                                                        <td class="fw-semibold">{{ $systemInfo['disk_free_space'] }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted">Memory Limit</td>
+                                                        <td class="fw-semibold">{{ $systemInfo['memory_limit'] }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted">Max Upload Size</td>
+                                                        <td class="fw-semibold">{{ $systemInfo['max_upload_size'] }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted">Timezone</td>
+                                                        <td class="fw-semibold">{{ $systemInfo['timezone'] }}</td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
