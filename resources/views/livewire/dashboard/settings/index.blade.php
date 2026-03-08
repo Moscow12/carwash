@@ -34,6 +34,9 @@
                         <button wire:click="setTab('password')" class="nav-link text-start rounded-0 {{ $activeTab === 'password' ? 'active' : '' }}">
                             <i class="ti ti-lock me-2"></i>Change Password
                         </button>
+                        <button wire:click="setTab('tools')" class="nav-link text-start rounded-0 {{ $activeTab === 'tools' ? 'active' : '' }}">
+                            <i class="ti ti-tool me-2"></i>System Tools
+                        </button>
                     </div>
                 </div>
             </div>
@@ -150,6 +153,106 @@
                                 </div>
                             </div>
                         </form>
+                    </div>
+                </div>
+            @endif
+
+            <!-- System Tools -->
+            @if ($activeTab === 'tools')
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">System Tools</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <!-- Log Viewer -->
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0">
+                                                <div class="avatar avatar-md bg-primary-subtle text-primary rounded">
+                                                    <i class="ti ti-file-text fs-4"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <h6 class="mb-1">Log Viewer</h6>
+                                                <p class="text-muted small mb-3">View and analyze application logs in real-time</p>
+                                                <a href="/log-viewer" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                    <i class="ti ti-external-link me-1"></i>Open Log Viewer
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cache Management -->
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0">
+                                                <div class="avatar avatar-md bg-info-subtle text-info rounded">
+                                                    <i class="ti ti-refresh fs-4"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <h6 class="mb-1">Cache Management</h6>
+                                                <p class="text-muted small mb-3">Clear application and configuration cache</p>
+                                                <button type="button" class="btn btn-sm btn-outline-info" disabled>
+                                                    <i class="ti ti-refresh me-1"></i>Clear Cache
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Database Backup -->
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0">
+                                                <div class="avatar avatar-md bg-success-subtle text-success rounded">
+                                                    <i class="ti ti-database fs-4"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <h6 class="mb-1">Database Backup</h6>
+                                                <p class="text-muted small mb-3">Create and manage database backups</p>
+                                                <button type="button" class="btn btn-sm btn-outline-success" disabled>
+                                                    <i class="ti ti-download me-1"></i>Create Backup
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- System Info -->
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0">
+                                                <div class="avatar avatar-md bg-warning-subtle text-warning rounded">
+                                                    <i class="ti ti-info-circle fs-4"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <h6 class="mb-1">System Information</h6>
+                                                <p class="text-muted small mb-3">View server and application details</p>
+                                                <button type="button" class="btn btn-sm btn-outline-warning" disabled>
+                                                    <i class="ti ti-info-circle me-1"></i>View Info
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             @endif

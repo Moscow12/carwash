@@ -165,6 +165,14 @@
                         <span class="text">Settings</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class='nav-link {{ request()->is("admin/log-viewer*") ? "active" : "" }}' href='/log-viewer'>
+                        <span class="nav-icon">
+                            <i class="ti ti-file-text fs-5"></i>
+                        </span>
+                        <span class="text">Log Viewer</span>
+                    </a>
+                </li>
             </ul>
         </div>
 
