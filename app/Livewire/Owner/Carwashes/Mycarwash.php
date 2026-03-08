@@ -79,25 +79,25 @@ class Mycarwash extends Component
 
     public function updatedRegionId($value)
     {
-        $this->allDistricts = $value ? districts::where('region_id', $value)->orderBy('name')->get() : [];
+        $this->allDistricts = $value ? districts::where('region_id', $value)->orderBy('name')->get() : collect([]);
         $this->district_id = '';
         $this->ward_id = '';
         $this->street_id = '';
-        $this->allWards = [];
-        $this->allStreets = [];
+        $this->allWards = collect([]);
+        $this->allStreets = collect([]);
     }
 
     public function updatedDistrictId($value)
     {
-        $this->allWards = $value ? wards::where('district_id', $value)->orderBy('name')->get() : [];
+        $this->allWards = $value ? wards::where('district_id', $value)->orderBy('name')->get() : collect([]);
         $this->ward_id = '';
         $this->street_id = '';
-        $this->allStreets = [];
+        $this->allStreets = collect([]);
     }
 
     public function updatedWardId($value)
     {
-        $this->allStreets = $value ? street::where('ward_id', $value)->orderBy('name')->get() : [];
+        $this->allStreets = $value ? street::where('ward_id', $value)->orderBy('name')->get() : collect([]);
         $this->street_id = '';
     }
 
@@ -194,9 +194,9 @@ class Mycarwash extends Component
             'district_id', 'ward_id', 'street_id'
         ]);
         $this->status = 'active';
-        $this->allDistricts = [];
-        $this->allWards = [];
-        $this->allStreets = [];
+        $this->allDistricts = collect([]);
+        $this->allWards = collect([]);
+        $this->allStreets = collect([]);
         $this->resetValidation();
     }
 
