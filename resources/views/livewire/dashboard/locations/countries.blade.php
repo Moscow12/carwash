@@ -11,14 +11,31 @@
                 </ol>
             </nav>
         </div>
-        <button wire:click="openModal" class="btn btn-primary">
-            <i class="ti ti-plus me-1"></i>Add Country
-        </button>
+        <div>
+            <button wire:click="syncFromAPI" class="btn btn-success me-2" wire:loading.attr="disabled">
+                <span wire:loading.remove wire:target="syncFromAPI">
+                    <i class="ti ti-refresh me-1"></i>Sync from API
+                </span>
+                <span wire:loading wire:target="syncFromAPI">
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>Syncing...
+                </span>
+            </button>
+            <button wire:click="openModal" class="btn btn-primary">
+                <i class="ti ti-plus me-1"></i>Add Country
+            </button>
+        </div>
     </div>
 
     @if (session()->has('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="ti ti-check me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="ti ti-alert-circle me-2"></i>{{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
