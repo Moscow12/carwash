@@ -7,11 +7,14 @@
         </div>
         <div class="d-flex gap-2 align-items-center">
             @if(count($ownerCarwashes) > 1)
-                <select wire:model.live="selectedCarwash" class="form-select" style="width: 200px;">
-                    @foreach($ownerCarwashes as $carwash)
-                        <option value="{{ $carwash->id }}">{{ $carwash->name }}</option>
-                    @endforeach
-                </select>
+                <div style="width: 200px;">
+                    <x-forms.select2
+                        name="selectedCarwash"
+                        :options="$ownerCarwashes"
+                        wire:model.live="selectedCarwash"
+                        wrapper="false"
+                    />
+                </div>
             @endif
             <button wire:click="resetToDefaults" class="btn btn-outline-secondary">
                 <i class="ti ti-refresh me-1"></i> Reset to Defaults
@@ -97,13 +100,12 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Currency</label>
-                                <select wire:model="currency" class="form-select">
-                                    <option value="TZS">TZS - Tanzanian Shilling</option>
-                                    <option value="USD">USD - US Dollar</option>
-                                    <option value="EUR">EUR - Euro</option>
-                                    <option value="KES">KES - Kenyan Shilling</option>
-                                    <option value="UGX">UGX - Ugandan Shilling</option>
-                                </select>
+                                <x-forms.select2
+                                    name="currency"
+                                    :options="[['id' => 'TZS', 'name' => 'TZS - Tanzanian Shilling'], ['id' => 'USD', 'name' => 'USD - US Dollar'], ['id' => 'EUR', 'name' => 'EUR - Euro'], ['id' => 'KES', 'name' => 'KES - Kenyan Shilling'], ['id' => 'UGX', 'name' => 'UGX - Ugandan Shilling']]"
+                                    wire:model="currency"
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Currency Symbol</label>
@@ -111,34 +113,39 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Symbol Position</label>
-                                <select wire:model="currency_position" class="form-select">
-                                    <option value="before">Before Amount (TZS 100)</option>
-                                    <option value="after">After Amount (100 TZS)</option>
-                                </select>
+                                <x-forms.select2
+                                    name="currency_position"
+                                    :options="[['id' => 'before', 'name' => 'Before Amount (TZS 100)'], ['id' => 'after', 'name' => 'After Amount (100 TZS)']]"
+                                    wire:model="currency_position"
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Decimal Places</label>
-                                <select wire:model="decimal_places" class="form-select">
-                                    <option value="0">0</option>
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                </select>
+                                <x-forms.select2
+                                    name="decimal_places"
+                                    :options="[['id' => '0', 'name' => '0'], ['id' => '1', 'name' => '1'], ['id' => '2', 'name' => '2'], ['id' => '3', 'name' => '3']]"
+                                    wire:model="decimal_places"
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Thousand Separator</label>
-                                <select wire:model="thousand_separator" class="form-select">
-                                    <option value=",">, (Comma)</option>
-                                    <option value=".">. (Period)</option>
-                                    <option value=" ">(Space)</option>
-                                </select>
+                                <x-forms.select2
+                                    name="thousand_separator"
+                                    :options="[['id' => ',', 'name' => ', (Comma)'], ['id' => '.', 'name' => '. (Period)'], ['id' => ' ', 'name' => '(Space)']]"
+                                    wire:model="thousand_separator"
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Decimal Separator</label>
-                                <select wire:model="decimal_separator" class="form-select">
-                                    <option value=".">. (Period)</option>
-                                    <option value=",">, (Comma)</option>
-                                </select>
+                                <x-forms.select2
+                                    name="decimal_separator"
+                                    :options="[['id' => '.', 'name' => '. (Period)'], ['id' => ',', 'name' => ', (Comma)']]"
+                                    wire:model="decimal_separator"
+                                    wrapper="false"
+                                />
                             </div>
                         </div>
                     @endif
@@ -566,14 +573,13 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Default Payment Method</label>
-                                <select wire:model="default_payment_method" class="form-select">
-                                    <option value="">Select default method</option>
-                                    @foreach($availablePaymentMethods as $method)
-                                        @if($method['status'] === 'active')
-                                            <option value="{{ $method['id'] }}">{{ $method['name'] }}</option>
-                                        @endif
-                                    @endforeach
-                                </select>
+                                <x-forms.select2
+                                    name="default_payment_method"
+                                    :options="collect($availablePaymentMethods)->filter(fn($m) => $m['status'] === 'active')->values()->toArray()"
+                                    wire:model="default_payment_method"
+                                    placeholder="Select default method"
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-md-6">
                                 <div class="form-check form-switch mt-4">
@@ -607,12 +613,12 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Dashboard Start Date</label>
-                                <select wire:model="dashboard_start_date" class="form-select">
-                                    <option value="today">Today</option>
-                                    <option value="week">This Week</option>
-                                    <option value="month">This Month</option>
-                                    <option value="year">This Year</option>
-                                </select>
+                                <x-forms.select2
+                                    name="dashboard_start_date"
+                                    :options="[['id' => 'today', 'name' => 'Today'], ['id' => 'week', 'name' => 'This Week'], ['id' => 'month', 'name' => 'This Month'], ['id' => 'year', 'name' => 'This Year']]"
+                                    wire:model="dashboard_start_date"
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Show on Dashboard</label>
@@ -644,37 +650,39 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Date Format</label>
-                                <select wire:model="date_format" class="form-select">
-                                    <option value="Y-m-d">2024-12-29 (Y-m-d)</option>
-                                    <option value="d-m-Y">29-12-2024 (d-m-Y)</option>
-                                    <option value="m/d/Y">12/29/2024 (m/d/Y)</option>
-                                    <option value="d/m/Y">29/12/2024 (d/m/Y)</option>
-                                    <option value="M d, Y">Dec 29, 2024</option>
-                                    <option value="d M Y">29 Dec 2024</option>
-                                </select>
+                                <x-forms.select2
+                                    name="date_format"
+                                    :options="[['id' => 'Y-m-d', 'name' => '2024-12-29 (Y-m-d)'], ['id' => 'd-m-Y', 'name' => '29-12-2024 (d-m-Y)'], ['id' => 'm/d/Y', 'name' => '12/29/2024 (m/d/Y)'], ['id' => 'd/m/Y', 'name' => '29/12/2024 (d/m/Y)'], ['id' => 'M d, Y', 'name' => 'Dec 29, 2024'], ['id' => 'd M Y', 'name' => '29 Dec 2024']]"
+                                    wire:model="date_format"
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Time Format</label>
-                                <select wire:model="time_format" class="form-select">
-                                    <option value="H:i">24-hour (14:30)</option>
-                                    <option value="h:i A">12-hour (02:30 PM)</option>
-                                </select>
+                                <x-forms.select2
+                                    name="time_format"
+                                    :options="[['id' => 'H:i', 'name' => '24-hour (14:30)'], ['id' => 'h:i A', 'name' => '12-hour (02:30 PM)']]"
+                                    wire:model="time_format"
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Timezone</label>
-                                <select wire:model="timezone" class="form-select">
-                                    <option value="Africa/Dar_es_Salaam">Africa/Dar_es_Salaam (EAT)</option>
-                                    <option value="Africa/Nairobi">Africa/Nairobi (EAT)</option>
-                                    <option value="Africa/Kampala">Africa/Kampala (EAT)</option>
-                                    <option value="UTC">UTC</option>
-                                </select>
+                                <x-forms.select2
+                                    name="timezone"
+                                    :options="[['id' => 'Africa/Dar_es_Salaam', 'name' => 'Africa/Dar_es_Salaam (EAT)'], ['id' => 'Africa/Nairobi', 'name' => 'Africa/Nairobi (EAT)'], ['id' => 'Africa/Kampala', 'name' => 'Africa/Kampala (EAT)'], ['id' => 'UTC', 'name' => 'UTC']]"
+                                    wire:model="timezone"
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Language</label>
-                                <select wire:model="language" class="form-select">
-                                    <option value="en">English</option>
-                                    <option value="sw">Swahili</option>
-                                </select>
+                                <x-forms.select2
+                                    name="language"
+                                    :options="[['id' => 'en', 'name' => 'English'], ['id' => 'sw', 'name' => 'Swahili']]"
+                                    wire:model="language"
+                                    wrapper="false"
+                                />
                             </div>
                         </div>
                     @endif
@@ -754,13 +762,13 @@
                             @if($sms_enabled)
                                 <div class="col-md-6">
                                     <label class="form-label">SMS Provider</label>
-                                    <select wire:model="sms_provider" class="form-select">
-                                        <option value="">Select Provider</option>
-                                        <option value="nexmo">Nexmo</option>
-                                        <option value="twilio">Twilio</option>
-                                        <option value="africastalking">Africa's Talking</option>
-                                        <option value="beem">Beem Africa</option>
-                                    </select>
+                                    <x-forms.select2
+                                        name="sms_provider"
+                                        :options="[['id' => '', 'name' => 'Select Provider'], ['id' => 'nexmo', 'name' => 'Nexmo'], ['id' => 'twilio', 'name' => 'Twilio'], ['id' => 'africastalking', 'name' => 'Africa\'s Talking'], ['id' => 'beem', 'name' => 'Beem Africa']]"
+                                        wire:model="sms_provider"
+                                        placeholder="Select Provider"
+                                        wrapper="false"
+                                    />
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Sender ID</label>
@@ -978,10 +986,12 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Status</label>
-                            <select wire:model="paymentMethodStatus" class="form-select">
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
+                            <x-forms.select2
+                                name="paymentMethodStatus"
+                                :options="[['id' => 'active', 'name' => 'Active'], ['id' => 'inactive', 'name' => 'Inactive']]"
+                                wire:model="paymentMethodStatus"
+                                wrapper="false"
+                            />
                         </div>
                     </div>
                     <div class="modal-footer">

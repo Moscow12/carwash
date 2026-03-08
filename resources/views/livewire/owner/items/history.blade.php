@@ -1,21 +1,3 @@
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
-<script src="{{ asset('assets/libs/choices.js/public/assets/scripts/choices.min.js') }}"></script>
-<style>
-    .choices__inner {
-        min-height: 44px;
-        padding: 7px 10px 3px;
-        background-color: var(--bs-body-bg);
-        border-color: var(--bs-border-color);
-        border-radius: var(--bs-border-radius);
-    }
-    .choices__list--dropdown {
-        z-index: 1050;
-    }
-    .choices[data-type*=select-one] .choices__inner {
-        padding-bottom: 7px;
-    }
-</style>
-
 <div class="container-fluid py-4">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -36,93 +18,29 @@
             @endif
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">Business Location:</label>
-                    <div wire:ignore>
-                        <select id="carwashSelect" class="form-select">
-                            <option value="">Select Location</option>
-                            @foreach($carwashes as $carwash)
-                                <option value="{{ $carwash->id }}" {{ $selectedCarwash == $carwash->id ? 'selected' : '' }}>{{ $carwash->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    <x-forms.select2
+                        name="selectedCarwash"
+                        label="Business Location"
+                        placeholder="Select Location"
+                        :options="$carwashes->pluck('name', 'id')"
+                        wire:model.live="selectedCarwash"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Product:</label>
-                    <div wire:ignore>
-                        <select id="itemSelect" class="form-select">
-                            <option value="">Select Product</option>
-                            @foreach($itemsList as $listItem)
-                                <option value="{{ $listItem->id }}" {{ $itemId == $listItem->id ? 'selected' : '' }}>{{ $listItem->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    <x-forms.select2
+                        name="itemId"
+                        label="Product"
+                        placeholder="Select Product"
+                        :options="collect($itemsList)->pluck('name', 'id')"
+                        wire:model.live="itemId"
+                        wrapper="false"
+                    />
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            let carwashChoices = null;
-            let itemChoices = null;
-
-            // Initialize Carwash/Location Select
-            const carwashSelect = document.getElementById('carwashSelect');
-            if (carwashSelect) {
-                carwashChoices = new Choices(carwashSelect, {
-                    searchEnabled: true,
-                    searchPlaceholderValue: 'Search location...',
-                    placeholderValue: 'Select Location',
-                    itemSelectText: '',
-                    shouldSort: false,
-                    allowHTML: true,
-                });
-
-                carwashSelect.addEventListener('change', function(e) {
-                    Livewire.dispatch('setCarwash', { carwashId: e.target.value });
-                });
-            }
-
-            // Initialize Item/Product Select
-            const itemSelect = document.getElementById('itemSelect');
-            if (itemSelect) {
-                itemChoices = new Choices(itemSelect, {
-                    searchEnabled: true,
-                    searchPlaceholderValue: 'Search product...',
-                    placeholderValue: 'Select Product',
-                    itemSelectText: '',
-                    shouldSort: false,
-                    allowHTML: true,
-                });
-
-                itemSelect.addEventListener('change', function(e) {
-                    Livewire.dispatch('setItem', { itemId: e.target.value });
-                });
-            }
-
-            // Listen for Livewire updates to refresh item list
-            Livewire.on('itemsUpdated', (data) => {
-                if (itemChoices) {
-                    const items = data[0].items;
-                    const selectedItemId = data[0].selectedItemId;
-
-                    itemChoices.clearStore();
-                    itemChoices.setChoices(
-                        [{ value: '', label: 'Select Product', selected: !selectedItemId }].concat(
-                            items.map(item => ({
-                                value: item.id,
-                                label: item.name,
-                                selected: item.id === selectedItemId
-                            }))
-                        ),
-                        'value',
-                        'label',
-                        true
-                    );
-                }
-            });
-        });
-    </script>
 
     @if($item && $itemId)
         <!-- Summary Card -->
@@ -198,25 +116,23 @@
                 <div class="row g-3 mb-3 align-items-end">
                     <div class="col-md-2">
                         <label class="form-label small">Show</label>
-                        <select wire:model.live="perPage" class="form-select">
-                            <option value="10">10</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
+                        <x-forms.select2
+                            name="perPage"
+                            placeholder="Show entries"
+                            :options="collect(['10' => '10', '25' => '25', '50' => '50', '100' => '100'])"
+                            wire:model.live="perPage"
+                            wrapper="false"
+                        />
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small">Type</label>
-                        <select wire:model.live="typeFilter" class="form-select">
-                            <option value="">All Types</option>
-                            <option value="sale">Sale</option>
-                            <option value="purchase">Purchase</option>
-                            <option value="restock">Restock</option>
-                            <option value="adjustment">Adjustment</option>
-                            <option value="initial_stock">Initial Stock</option>
-                            <option value="return">Return</option>
-                            <option value="refund">Refund</option>
-                        </select>
+                        <x-forms.select2
+                            name="typeFilter"
+                            placeholder="All Types"
+                            :options="collect(['' => 'All Types', 'sale' => 'Sale', 'purchase' => 'Purchase', 'restock' => 'Restock', 'adjustment' => 'Adjustment', 'initial_stock' => 'Initial Stock', 'return' => 'Return', 'refund' => 'Refund'])"
+                            wire:model.live="typeFilter"
+                            wrapper="false"
+                        />
                     </div>
                     <div class="col-md-7">
                         <div class="btn-group btn-group-sm">

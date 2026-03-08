@@ -10,12 +10,13 @@
                     <input type="text" wire:model.live="search" class="form-control" placeholder="Search items...">
                 </div>
                 <div class="col-md-4">
-                    <select wire:model.live="selectedCarwash" class="form-select">
-                        <option value="">All Carwashes</option>
-                        @foreach($carwashes as $carwash)
-                        <option value="{{ $carwash->id }}">{{ $carwash->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="selectedCarwash"
+                        placeholder="All Carwashes"
+                        :options="$carwashes->pluck('name', 'id')"
+                        wire:model.live="selectedCarwash"
+                        wrapper="false"
+                    />
                 </div>
             </div>
         </div>

@@ -41,27 +41,32 @@
             <div class="row g-3">
                 <!-- Staff Filter -->
                 <div class="col-md-3">
-                    <label class="form-label">Staff:</label>
-                    <select class="form-select" wire:model.live="staff_id">
-                        <option value="">All Staff</option>
-                        @foreach($staffList as $staff)
-                            <option value="{{ $staff['id'] }}">
-                                {{ $staff['name'] }} - {{ $staff['position'] ?? 'N/A' }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="staff_id"
+                        label="Staff"
+                        :options="$staffList"
+                        wire:model.live="staff_id"
+                        placeholder="All Staff"
+                        wrapper="false"
+                    />
                 </div>
 
                 <!-- Date Filter Presets -->
                 <div class="col-md-3">
-                    <label class="form-label">Period:</label>
-                    <select class="form-select" wire:model.live="date_filter">
-                        <option value="day">Today</option>
-                        <option value="week">This Week</option>
-                        <option value="month">This Month</option>
-                        <option value="year">This Year</option>
-                        <option value="custom">Custom Range</option>
-                    </select>
+                    <x-forms.select2
+                        name="date_filter"
+                        label="Period"
+                        :options="[
+                            ['id' => 'day', 'name' => 'Today'],
+                            ['id' => 'week', 'name' => 'This Week'],
+                            ['id' => 'month', 'name' => 'This Month'],
+                            ['id' => 'year', 'name' => 'This Year'],
+                            ['id' => 'custom', 'name' => 'Custom Range']
+                        ]"
+                        wire:model.live="date_filter"
+                        placeholder="Select Period"
+                        wrapper="false"
+                    />
                 </div>
 
                 <!-- Date Range (shown when custom) -->

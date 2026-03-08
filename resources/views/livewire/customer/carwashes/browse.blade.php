@@ -11,12 +11,13 @@
                     <input type="text" wire:model.live="search" class="form-control" placeholder="Search carwashes...">
                 </div>
                 <div class="col-md-6">
-                    <select wire:model.live="selectedRegion" class="form-select">
-                        <option value="">All Regions</option>
-                        @foreach($regions as $region)
-                        <option value="{{ $region->id }}">{{ $region->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="selectedRegion"
+                        :options="$regions"
+                        wire:model.live="selectedRegion"
+                        placeholder="All Regions"
+                        wrapper="false"
+                    />
                 </div>
             </div>
         </div>

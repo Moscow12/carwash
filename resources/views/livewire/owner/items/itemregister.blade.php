@@ -43,38 +43,44 @@
                 @if($ownerCarwashes->count() > 1)
                 <div class="col-md-2">
                     <label class="form-label small text-muted mb-1">Carwash</label>
-                    <select wire:model.live="filterCarwash" class="form-select">
-                        <option value="">All Carwashes</option>
-                        @foreach($ownerCarwashes as $carwash)
-                            <option value="{{ $carwash->id }}">{{ $carwash->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="filterCarwash"
+                        placeholder="All Carwashes"
+                        :options="$ownerCarwashes->pluck('name', 'id')"
+                        wire:model.live="filterCarwash"
+                        wrapper="false"
+                    />
                 </div>
                 @endif
                 <div class="col-md-2">
                     <label class="form-label small text-muted mb-1">Category</label>
-                    <select wire:model.live="filterCategory" class="form-select">
-                        <option value="">All Categories</option>
-                        @foreach($filterCategories as $cat)
-                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="filterCategory"
+                        placeholder="All Categories"
+                        :options="$filterCategories->pluck('name', 'id')"
+                        wire:model.live="filterCategory"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small text-muted mb-1">Type</label>
-                    <select wire:model.live="filterType" class="form-select">
-                        <option value="">All Types</option>
-                        <option value="Service">Service</option>
-                        <option value="product">Product</option>
-                    </select>
+                    <x-forms.select2
+                        name="filterType"
+                        placeholder="All Types"
+                        :options="collect(['' => 'All Types', 'Service' => 'Service', 'product' => 'Product'])"
+                        wire:model.live="filterType"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small text-muted mb-1">Status</label>
-                    <select wire:model.live="filterStatus" class="form-select">
-                        <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
+                    <x-forms.select2
+                        name="filterStatus"
+                        placeholder="All Status"
+                        :options="collect(['' => 'All Status', 'active' => 'Active', 'inactive' => 'Inactive'])"
+                        wire:model.live="filterStatus"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-1 text-end">
                     <span class="badge bg-primary">{{ $items->total() }}</span>
@@ -242,26 +248,29 @@
                         <div class="row g-3 mb-4">
                             @if($ownerCarwashes->count() > 1)
                             <div class="col-md-6">
-                                <label class="form-label">Carwash <span class="text-danger">*</span></label>
-                                <select wire:model.live="carwash_id" class="form-select @error('carwash_id') is-invalid @enderror">
-                                    <option value="">Select Carwash</option>
-                                    @foreach($ownerCarwashes as $carwash)
-                                        <option value="{{ $carwash->id }}">{{ $carwash->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('carwash_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="carwash_id"
+                                    label="Carwash"
+                                    placeholder="Select Carwash"
+                                    :options="$ownerCarwashes->pluck('name', 'id')"
+                                    wire:model.live="carwash_id"
+                                    required
+                                    wrapper="false"
+                                />
                             </div>
                             @endif
 
                             <div class="col-md-6">
-                                <label class="form-label">Category <span class="text-danger">*</span></label>
-                                <select wire:model="category_id" class="form-select @error('category_id') is-invalid @enderror" {{ empty($availableCategories) ? 'disabled' : '' }}>
-                                    <option value="">Select Category</option>
-                                    @foreach($availableCategories as $cat)
-                                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('category_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="category_id"
+                                    label="Category"
+                                    placeholder="Select Category"
+                                    :options="collect($availableCategories)->pluck('name', 'id')"
+                                    wire:model="category_id"
+                                    required
+                                    :disabled="empty($availableCategories)"
+                                    wrapper="false"
+                                />
                             </div>
 
                             <div class="col-md-6">
@@ -287,12 +296,15 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Type <span class="text-danger">*</span></label>
-                                <select wire:model="type" class="form-select @error('type') is-invalid @enderror">
-                                    <option value="Service">Service</option>
-                                    <option value="product">Product</option>
-                                </select>
-                                @error('type') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="type"
+                                    label="Type"
+                                    placeholder="Select Type"
+                                    :options="collect(['Service' => 'Service', 'product' => 'Product'])"
+                                    wire:model="type"
+                                    required
+                                    wrapper="false"
+                                />
                             </div>
 
                             <div class="col-12">
@@ -330,14 +342,15 @@
                         </h6>
                         <div class="row g-3 mb-4">
                             <div class="col-md-4">
-                                <label class="form-label">Unit <span class="text-danger">*</span></label>
-                                <select wire:model="unit_id" class="form-select @error('unit_id') is-invalid @enderror">
-                                    <option value="">Select Unit</option>
-                                    @foreach($availableUnits as $u)
-                                        <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->symbol }})</option>
-                                    @endforeach
-                                </select>
-                                @error('unit_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="unit_id"
+                                    label="Unit"
+                                    placeholder="Select Unit"
+                                    :options="collect($availableUnits)->mapWithKeys(fn($u) => [$u->id => $u->name . ' (' . $u->symbol . ')'])"
+                                    wire:model="unit_id"
+                                    required
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Commission</label>
@@ -345,13 +358,14 @@
                                 @error('commission') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Commission Type</label>
-                                <select wire:model="commission_type" class="form-select @error('commission_type') is-invalid @enderror">
-                                    <option value="">Select Type</option>
-                                    <option value="fixed">Fixed Amount</option>
-                                    <option value="percentage">Percentage</option>
-                                </select>
-                                @error('commission_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="commission_type"
+                                    label="Commission Type"
+                                    placeholder="Select Commission Type"
+                                    :options="collect(['' => 'Select Type', 'fixed' => 'Fixed Amount', 'percentage' => 'Percentage'])"
+                                    wire:model="commission_type"
+                                    wrapper="false"
+                                />
                             </div>
                         </div>
 

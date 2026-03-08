@@ -144,29 +144,31 @@
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <select wire:model.live="selectedCarwash" class="form-select">
-                        <option value="">All Carwashes</option>
-                        @foreach($ownerCarwashes as $carwash)
-                            <option value="{{ $carwash['id'] }}">{{ $carwash['name'] }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="selectedCarwash"
+                        :options="$ownerCarwashes"
+                        wire:model.live="selectedCarwash"
+                        placeholder="All Carwashes"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-2">
-                    <select wire:model.live="purchaseStatusFilter" class="form-select">
-                        <option value="">All Purchase Status</option>
-                        <option value="received">Received</option>
-                        <option value="pending">Pending</option>
-                        <option value="canceled">Canceled</option>
-                    </select>
+                    <x-forms.select2
+                        name="purchaseStatusFilter"
+                        :options="[['id' => '', 'name' => 'All Purchase Status'], ['id' => 'received', 'name' => 'Received'], ['id' => 'pending', 'name' => 'Pending'], ['id' => 'canceled', 'name' => 'Canceled']]"
+                        wire:model.live="purchaseStatusFilter"
+                        placeholder="All Purchase Status"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-2">
-                    <select wire:model.live="paymentStatusFilter" class="form-select">
-                        <option value="">All Payment Status</option>
-                        <option value="paid">Paid</option>
-                        <option value="unpaid">Unpaid</option>
-                        <option value="pending">Pending</option>
-                        <option value="refunded">Refunded</option>
-                    </select>
+                    <x-forms.select2
+                        name="paymentStatusFilter"
+                        :options="[['id' => '', 'name' => 'All Payment Status'], ['id' => 'paid', 'name' => 'Paid'], ['id' => 'unpaid', 'name' => 'Unpaid'], ['id' => 'pending', 'name' => 'Pending'], ['id' => 'refunded', 'name' => 'Refunded']]"
+                        wire:model.live="paymentStatusFilter"
+                        placeholder="All Payment Status"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-3 text-end">
                     <span class="text-muted small">{{ $purchases->total() }} purchase(s)</span>
@@ -321,15 +323,14 @@
                             {{-- Item --}}
                             <div class="col-md-6">
                                 <label class="form-label">Product <span class="text-danger">*</span></label>
-                                <select wire:model="item_id" class="form-select @error('item_id') is-invalid @enderror">
-                                    <option value="">Select Product</option>
-                                    @foreach($availableItems as $item)
-                                        <option value="{{ $item['id'] }}">
-                                            {{ $item['name'] }} (Stock: {{ $this->getItemBalance($item['id']) }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('item_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="item_id"
+                                    :options="collect($availableItems)->map(fn($item) => ['id' => $item['id'], 'name' => $item['name'] . ' (Stock: ' . $this->getItemBalance($item['id']) . ')'])"
+                                    wire:model="item_id"
+                                    placeholder="Select Product"
+                                    wrapper="false"
+                                />
+                                @error('item_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                                 @if(count($availableItems) === 0)
                                     <small class="text-warning">
                                         <i class="ti ti-alert-triangle me-1"></i>
@@ -341,13 +342,14 @@
                             {{-- Supplier --}}
                             <div class="col-md-6">
                                 <label class="form-label">Supplier <span class="text-danger">*</span></label>
-                                <select wire:model="supplier_id" class="form-select @error('supplier_id') is-invalid @enderror">
-                                    <option value="">Select Supplier</option>
-                                    @foreach($availableSuppliers as $supplier)
-                                        <option value="{{ $supplier['id'] }}">{{ $supplier['name'] }}</option>
-                                    @endforeach
-                                </select>
-                                @error('supplier_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="supplier_id"
+                                    :options="$availableSuppliers"
+                                    wire:model="supplier_id"
+                                    placeholder="Select Supplier"
+                                    wrapper="false"
+                                />
+                                @error('supplier_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
 
                             {{-- Quantity --}}
@@ -379,12 +381,13 @@
                             {{-- Purchase Status --}}
                             <div class="col-md-6">
                                 <label class="form-label">Purchase Status <span class="text-danger">*</span></label>
-                                <select wire:model="purchase_status" class="form-select @error('purchase_status') is-invalid @enderror">
-                                    <option value="pending">Pending</option>
-                                    <option value="received">Received</option>
-                                    <option value="canceled">Canceled</option>
-                                </select>
-                                @error('purchase_status') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="purchase_status"
+                                    :options="[['id' => 'pending', 'name' => 'Pending'], ['id' => 'received', 'name' => 'Received'], ['id' => 'canceled', 'name' => 'Canceled']]"
+                                    wire:model="purchase_status"
+                                    wrapper="false"
+                                />
+                                @error('purchase_status') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                                 <small class="text-muted">
                                     <i class="ti ti-info-circle me-1"></i>
                                     "Received" updates stock balance
@@ -394,14 +397,13 @@
                             {{-- Payment Status --}}
                             <div class="col-md-6">
                                 <label class="form-label">Payment Status <span class="text-danger">*</span></label>
-                                <select wire:model="payment_status" class="form-select @error('payment_status') is-invalid @enderror">
-                                    <option value="unpaid">Unpaid</option>
-                                    <option value="paid">Paid</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="refunded">Refunded</option>
-                                    <option value="canceled">Canceled</option>
-                                </select>
-                                @error('payment_status') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="payment_status"
+                                    :options="[['id' => 'unpaid', 'name' => 'Unpaid'], ['id' => 'paid', 'name' => 'Paid'], ['id' => 'pending', 'name' => 'Pending'], ['id' => 'refunded', 'name' => 'Refunded'], ['id' => 'canceled', 'name' => 'Canceled']]"
+                                    wire:model="payment_status"
+                                    wrapper="false"
+                                />
+                                @error('payment_status') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
 
                             {{-- Notes --}}

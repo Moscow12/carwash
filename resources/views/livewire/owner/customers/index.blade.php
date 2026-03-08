@@ -80,20 +80,23 @@
             <div class="row g-3 align-items-end">
                 <div class="col-md-4">
                     <label class="form-label small">Carwash</label>
-                    <select wire:model.live="selectedCarwash" class="form-select">
-                        <option value="">All Carwashes</option>
-                        @foreach($carwashes as $carwash)
-                            <option value="{{ $carwash->id }}">{{ $carwash->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="selectedCarwash"
+                        :options="$carwashes"
+                        wire:model.live="selectedCarwash"
+                        placeholder="All Carwashes"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Status</label>
-                    <select wire:model.live="statusFilter" class="form-select">
-                        <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
+                    <x-forms.select2
+                        name="statusFilter"
+                        :options="[['id' => '', 'name' => 'All Status'], ['id' => 'active', 'name' => 'Active'], ['id' => 'inactive', 'name' => 'Inactive']]"
+                        wire:model.live="statusFilter"
+                        placeholder="All Status"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-5">
                     <label class="form-label small">Search</label>
@@ -236,22 +239,25 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Carwash <span class="text-danger">*</span></label>
-                                <select wire:model="carwash_id" class="form-select @error('carwash_id') is-invalid @enderror">
-                                    <option value="">Select Carwash</option>
-                                    @foreach($carwashes as $carwash)
-                                        <option value="{{ $carwash->id }}">{{ $carwash->name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-forms.select2
+                                    name="carwash_id"
+                                    :options="$carwashes"
+                                    wire:model="carwash_id"
+                                    placeholder="Select Carwash"
+                                    wrapper="false"
+                                />
                                 @error('carwash_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Status</label>
-                                <select wire:model="status" class="form-select">
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
+                                <x-forms.select2
+                                    name="status"
+                                    :options="[['id' => 'active', 'name' => 'Active'], ['id' => 'inactive', 'name' => 'Inactive']]"
+                                    wire:model="status"
+                                    wrapper="false"
+                                />
                             </div>
                         </div>
                     </div>

@@ -330,11 +330,14 @@
             </div>
             <div class="d-flex gap-2 align-items-center">
                 @if(count($ownerCarwashes) > 1)
-                <select wire:model.live="selectedCarwash" class="form-select form-select-sm" style="width: auto; max-width: 150px;">
-                    @foreach($ownerCarwashes as $cw)
-                        <option value="{{ $cw['id'] }}">{{ $cw['name'] }}</option>
-                    @endforeach
-                </select>
+                <x-forms.select2
+                    name="selectedCarwash"
+                    :options="collect($ownerCarwashes)"
+                    wire:model.live="selectedCarwash"
+                    wrapper="false"
+                    class="form-select form-select-sm"
+                    style="width: auto; max-width: 150px;"
+                />
                 @endif
                 <a href="{{ route('owner.dashboard') }}" class="btn btn-sm btn-outline-secondary d-none d-md-inline-flex">
                     <i class="ti ti-arrow-left me-1"></i> Back
@@ -380,24 +383,27 @@
                     <div class="col-12 col-md-8">
                         <div class="input-group">
                             <span class="input-group-text"><i class="ti ti-user"></i></span>
-                            <select wire:model="customer_id" class="form-select">
-                                <option value="">Walk-In Customer</option>
-                                @foreach($availableCustomers as $customer)
-                                    <option value="{{ $customer['id'] }}">{{ $customer['name'] }} ({{ $customer['phone'] }})</option>
-                                @endforeach
-                            </select>
+                            <x-forms.select2
+                                name="customer_id"
+                                :options="$availableCustomers"
+                                wire:model="customer_id"
+                                placeholder="Walk-In Customer"
+                                wrapper="false"
+                                class="form-select"
+                            />
                             <button wire:click="openCustomerModal" class="btn btn-primary" title="Add Customer">
                                 <i class="ti ti-plus"></i>
                             </button>
                         </div>
                     </div>
                     <div class="col-12 col-md-4">
-                        <select wire:model="selectedStaff" class="form-select">
-                            <option value="">Select Staff</option>
-                            @foreach($availableStaffs as $staff)
-                                <option value="{{ $staff['id'] }}">{{ $staff['name'] }}</option>
-                            @endforeach
-                        </select>
+                        <x-forms.select2
+                            name="selectedStaff"
+                            :options="$availableStaffs"
+                            wire:model="selectedStaff"
+                            placeholder="Select Staff"
+                            wrapper="false"
+                        />
                     </div>
                 </div>
             </div>
@@ -493,12 +499,13 @@
                         </div>
                     </div>
                     <div class="col-5 col-md-6">
-                        <select wire:model.live="selectedCategory" class="form-select">
-                            <option value="">All</option>
-                            @foreach($availableCategories as $category)
-                                <option value="{{ $category['id'] }}">{{ $category['name'] }}</option>
-                            @endforeach
-                        </select>
+                        <x-forms.select2
+                            name="selectedCategory"
+                            :options="$availableCategories"
+                            wire:model.live="selectedCategory"
+                            placeholder="All"
+                            wrapper="false"
+                        />
                     </div>
                 </div>
             </div>
@@ -683,12 +690,14 @@
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label small mb-1">Payment Method <span class="text-danger">*</span></label>
-                                                <select wire:model.live="paymentRows.{{ $index }}.payment_method_id" class="form-select form-select-sm">
-                                                    <option value="">Select Method</option>
-                                                    @foreach($availablePaymentMethods as $method)
-                                                        <option value="{{ $method['id'] }}">{{ $method['name'] }}</option>
-                                                    @endforeach
-                                                </select>
+                                                <x-forms.select2
+                                                    name="paymentRows.{{ $index }}.payment_method_id"
+                                                    :options="$availablePaymentMethods"
+                                                    wire:model.live="paymentRows.{{ $index }}.payment_method_id"
+                                                    placeholder="Select Method"
+                                                    wrapper="false"
+                                                    class="form-select-sm"
+                                                />
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label small mb-1">Note</label>

@@ -47,24 +47,26 @@
 
                 <!-- Customer -->
                 <div class="col-md-3">
-                    <label class="form-label">Customer:</label>
-                    <select class="form-select" wire:model.live="customer_id">
-                        <option value="">All Customers</option>
-                        @foreach($customersList as $customer)
-                            <option value="{{ $customer['id'] }}">{{ $customer['name'] }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="customer_id"
+                        label="Customer"
+                        :options="$customersList"
+                        wire:model.live="customer_id"
+                        placeholder="All Customers"
+                        wrapper="false"
+                    />
                 </div>
 
                 <!-- Category -->
                 <div class="col-md-3">
-                    <label class="form-label">Category:</label>
-                    <select class="form-select" wire:model.live="category_id">
-                        <option value="">All Categories</option>
-                        @foreach($categories as $cat)
-                            <option value="{{ $cat['id'] }}">{{ $cat['name'] }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="category_id"
+                        label="Category"
+                        :options="$categories"
+                        wire:model.live="category_id"
+                        placeholder="All Categories"
+                        wrapper="false"
+                    />
                 </div>
 
                 <!-- Payment Method -->

@@ -80,20 +80,23 @@
             <div class="row g-3 align-items-end">
                 <div class="col-md-4">
                     <label class="form-label small">Carwash</label>
-                    <select wire:model.live="selectedCarwash" class="form-select">
-                        <option value="">All Carwashes</option>
-                        @foreach($carwashes as $carwash)
-                            <option value="{{ $carwash->id }}">{{ $carwash->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="selectedCarwash"
+                        :options="$carwashes"
+                        wire:model.live="selectedCarwash"
+                        placeholder="All Carwashes"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Status</label>
-                    <select wire:model.live="statusFilter" class="form-select">
-                        <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
+                    <x-forms.select2
+                        name="statusFilter"
+                        :options="[['id' => '', 'name' => 'All Status'], ['id' => 'active', 'name' => 'Active'], ['id' => 'inactive', 'name' => 'Inactive']]"
+                        wire:model.live="statusFilter"
+                        placeholder="All Status"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-5">
                     <label class="form-label small">Search</label>
@@ -245,18 +248,21 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
-                                <select wire:model="payment_mode" class="form-select">
-                                    <option value="commission">Commission Based</option>
-                                    <option value="salary">Monthly Salary</option>
-                                    <option value="hourly">Hourly Rate</option>
-                                </select>
+                                <x-forms.select2
+                                    name="payment_mode"
+                                    :options="[['id' => 'commission', 'name' => 'Commission Based'], ['id' => 'salary', 'name' => 'Monthly Salary'], ['id' => 'hourly', 'name' => 'Hourly Rate']]"
+                                    wire:model="payment_mode"
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Commission Type</label>
-                                <select wire:model="commission_type" class="form-select">
-                                    <option value="fixed">Fixed Amount</option>
-                                    <option value="percentage">Percentage</option>
-                                </select>
+                                <x-forms.select2
+                                    name="commission_type"
+                                    :options="[['id' => 'fixed', 'name' => 'Fixed Amount'], ['id' => 'percentage', 'name' => 'Percentage']]"
+                                    wire:model="commission_type"
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Amount</label>
@@ -273,22 +279,25 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Carwash <span class="text-danger">*</span></label>
-                                <select wire:model="carwash_id" class="form-select @error('carwash_id') is-invalid @enderror">
-                                    <option value="">Select Carwash</option>
-                                    @foreach($carwashes as $carwash)
-                                        <option value="{{ $carwash->id }}">{{ $carwash->name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-forms.select2
+                                    name="carwash_id"
+                                    :options="$carwashes"
+                                    wire:model="carwash_id"
+                                    placeholder="Select Carwash"
+                                    wrapper="false"
+                                />
                                 @error('carwash_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Status</label>
-                                <select wire:model="status" class="form-select">
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
+                                <x-forms.select2
+                                    name="status"
+                                    :options="[['id' => 'active', 'name' => 'Active'], ['id' => 'inactive', 'name' => 'Inactive']]"
+                                    wire:model="status"
+                                    wrapper="false"
+                                />
                             </div>
                         </div>
                     </div>

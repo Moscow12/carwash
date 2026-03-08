@@ -66,13 +66,14 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <select wire:model.live="carwash_id" class="form-select @error('carwash_id') is-invalid @enderror">
-                        <option value="">Select Carwash</option>
-                        @foreach($ownerCarwashes as $carwash)
-                            <option value="{{ $carwash['id'] }}">{{ $carwash['name'] }}</option>
-                        @endforeach
-                    </select>
-                    @error('carwash_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <x-forms.select2
+                        name="carwash_id"
+                        placeholder="Select carwash"
+                        :options="collect($ownerCarwashes)->pluck('name', 'id')"
+                        wire:model.live="carwash_id"
+                        wrapper="false"
+                    />
+                    @error('carwash_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
 
                     @if($carwash_id && count($availableCategories) > 0)
                         <div class="mt-3">

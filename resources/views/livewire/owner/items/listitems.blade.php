@@ -80,38 +80,43 @@
             <div class="row g-3">
                 <div class="col-md-3">
                     <label class="form-label small">Product Type:</label>
-                    <select wire:model.live="typeFilter" class="form-select">
-                        <option value="">All</option>
-                        <option value="Service">Service</option>
-                        <option value="product">Product</option>
-                    </select>
+                    <x-forms.select2
+                        name="typeFilter"
+                        placeholder="All"
+                        :options="collect(['' => 'All', 'Service' => 'Service', 'product' => 'Product'])"
+                        wire:model.live="typeFilter"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Category:</label>
-                    <select wire:model.live="categoryFilter" class="form-select">
-                        <option value="">All</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}">{{ $category->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="categoryFilter"
+                        placeholder="All"
+                        :options="$categories->pluck('name', 'id')"
+                        wire:model.live="categoryFilter"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Unit:</label>
-                    <select wire:model.live="unitFilter" class="form-select">
-                        <option value="">All</option>
-                        @foreach($units as $unit)
-                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="unitFilter"
+                        placeholder="All"
+                        :options="$units->pluck('name', 'id')"
+                        wire:model.live="unitFilter"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Business Location:</label>
-                    <select wire:model.live="selectedCarwash" class="form-select">
-                        <option value="">All</option>
-                        @foreach($carwashes as $carwash)
-                            <option value="{{ $carwash->id }}">{{ $carwash->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="selectedCarwash"
+                        placeholder="All"
+                        :options="$carwashes->pluck('name', 'id')"
+                        wire:model.live="selectedCarwash"
+                        wrapper="false"
+                    />
                 </div>
             </div>
         </div>
@@ -140,12 +145,13 @@
             <div class="row g-3 mb-3 align-items-end">
                 <div class="col-md-2">
                     <label class="form-label small">Show</label>
-                    <select wire:model.live="perPage" class="form-select">
-                        <option value="10">10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
+                    <x-forms.select2
+                        name="perPage"
+                        placeholder="Show entries"
+                        :options="collect(['10' => '10', '25' => '25', '50' => '50', '100' => '100'])"
+                        wire:model.live="perPage"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-4">
                     <div class="btn-group btn-group-sm">
@@ -497,11 +503,15 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Stock Type <span class="text-danger">*</span></label>
-                            <select wire:model="stockType" class="form-select">
-                                <option value="in">Stock In (Add)</option>
-                                <option value="out">Stock Out (Remove)</option>
-                            </select>
+                            <x-forms.select2
+                                name="stockType"
+                                label="Stock Type"
+                                placeholder="Select Stock Type"
+                                :options="collect(['in' => 'Stock In (Add)', 'out' => 'Stock Out (Remove)'])"
+                                wire:model="stockType"
+                                required
+                                wrapper="false"
+                            />
                         </div>
 
                         <div class="mb-3">

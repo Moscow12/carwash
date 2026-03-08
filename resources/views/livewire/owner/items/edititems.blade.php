@@ -48,12 +48,14 @@
                                 @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Type <span class="text-danger">*</span></label>
-                                <select wire:model="type" class="form-select @error('type') is-invalid @enderror">
-                                    <option value="Service">Service</option>
-                                    <option value="product">Product</option>
-                                </select>
-                                @error('type') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="type"
+                                    label="Type"
+                                    :options="collect(['Service' => 'Service', 'product' => 'Product'])"
+                                    wire:model="type"
+                                    required
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-md-8">
                                 <label class="form-label">Barcode / SKU</label>
@@ -66,12 +68,14 @@
                                 @error('barcode') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Status <span class="text-danger">*</span></label>
-                                <select wire:model="status" class="form-select @error('status') is-invalid @enderror">
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-                                @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="status"
+                                    label="Status"
+                                    :options="collect(['active' => 'Active', 'inactive' => 'Inactive'])"
+                                    wire:model="status"
+                                    required
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Description <span class="text-danger">*</span></label>
@@ -130,13 +134,14 @@
                                 @error('commission') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Commission Type</label>
-                                <select wire:model="commission_type" class="form-select @error('commission_type') is-invalid @enderror">
-                                    <option value="">Select Type</option>
-                                    <option value="fixed">Fixed Amount</option>
-                                    <option value="percentage">Percentage</option>
-                                </select>
-                                @error('commission_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="commission_type"
+                                    label="Commission Type"
+                                    placeholder="Select Type"
+                                    :options="collect(['' => 'Select Type', 'fixed' => 'Fixed Amount', 'percentage' => 'Percentage'])"
+                                    wire:model="commission_type"
+                                    wrapper="false"
+                                />
                             </div>
                         </div>
                     </div>
@@ -152,34 +157,36 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label">Carwash <span class="text-danger">*</span></label>
-                            <select wire:model.live="carwash_id" class="form-select @error('carwash_id') is-invalid @enderror">
-                                <option value="">Select Carwash</option>
-                                @foreach($ownerCarwashes as $carwash)
-                                    <option value="{{ $carwash->id }}">{{ $carwash->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('carwash_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <x-forms.select2
+                                name="carwash_id"
+                                label="Carwash"
+                                :options="$ownerCarwashes->pluck('name', 'id')"
+                                wire:model.live="carwash_id"
+                                required
+                                wrapper="false"
+                            />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Category <span class="text-danger">*</span></label>
-                            <select wire:model="category_id" class="form-select @error('category_id') is-invalid @enderror">
-                                <option value="">Select Category</option>
-                                @foreach($availableCategories as $cat)
-                                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('category_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <x-forms.select2
+                                name="category_id"
+                                label="Category"
+                                placeholder="Select category"
+                                :options="$availableCategories->pluck('name', 'id')"
+                                wire:model="category_id"
+                                required
+                                wrapper="false"
+                            />
                         </div>
                         <div>
-                            <label class="form-label">Unit <span class="text-danger">*</span></label>
-                            <select wire:model="unit_id" class="form-select @error('unit_id') is-invalid @enderror">
-                                <option value="">Select Unit</option>
-                                @foreach($availableUnits as $unit)
-                                    <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('unit_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <x-forms.select2
+                                name="unit_id"
+                                label="Unit"
+                                placeholder="Select unit"
+                                :options="$availableUnits->pluck('name', 'id')"
+                                wire:model="unit_id"
+                                required
+                                wrapper="false"
+                            />
                         </div>
                     </div>
                 </div>

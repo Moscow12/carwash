@@ -83,13 +83,14 @@
             <!-- Filters -->
             <div class="row g-3 mb-4">
                 <div class="col-md-3">
-                    <label class="form-label small">Carwash</label>
-                    <select wire:model.live="selectedCarwash" class="form-select">
-                        <option value="">Select Carwash</option>
-                        @foreach($carwashes as $carwash)
-                            <option value="{{ $carwash->id }}">{{ $carwash->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="selectedCarwash"
+                        label="Carwash"
+                        :options="$carwashes"
+                        wire:model.live="selectedCarwash"
+                        placeholder="Select Carwash"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small">Show</label>

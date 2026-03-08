@@ -37,24 +37,26 @@
             <div class="row g-3">
                 <!-- Category -->
                 <div class="col-md-3">
-                    <label class="form-label">Category:</label>
-                    <select class="form-select" wire:model.live="category_id">
-                        <option value="">All Categories</option>
-                        @foreach($categories as $cat)
-                            <option value="{{ $cat['id'] }}">{{ $cat['name'] }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="category_id"
+                        label="Category"
+                        :options="$categories"
+                        wire:model.live="category_id"
+                        placeholder="All Categories"
+                        wrapper="false"
+                    />
                 </div>
 
                 <!-- Unit -->
                 <div class="col-md-3">
-                    <label class="form-label">Unit:</label>
-                    <select class="form-select" wire:model.live="unit_id">
-                        <option value="">All Units</option>
-                        @foreach($units as $u)
-                            <option value="{{ $u['id'] }}">{{ $u['name'] }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="unit_id"
+                        label="Unit"
+                        :options="$units"
+                        wire:model.live="unit_id"
+                        placeholder="All Units"
+                        wrapper="false"
+                    />
                 </div>
 
                 <!-- Search -->

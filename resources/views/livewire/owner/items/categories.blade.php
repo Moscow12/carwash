@@ -41,12 +41,13 @@
                 </div>
                 @if($ownerCarwashes->count() > 1)
                 <div class="col-md-4">
-                    <select wire:model.live="filterCarwash" class="form-select">
-                        <option value="">All Carwashes</option>
-                        @foreach($ownerCarwashes as $carwash)
-                            <option value="{{ $carwash->id }}">{{ $carwash->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="filterCarwash"
+                        placeholder="All Carwashes"
+                        :options="$ownerCarwashes->pluck('name', 'id')"
+                        wire:model.live="filterCarwash"
+                        wrapper="false"
+                    />
                 </div>
                 @endif
                 <div class="col-md-4 text-end">
@@ -163,14 +164,14 @@
                             </div>
                             @elseif($ownerCarwashes->count() > 1)
                             <div class="col-12">
-                                <label class="form-label">Carwash <span class="text-danger">*</span></label>
-                                <select wire:model="carwash_id" class="form-select @error('carwash_id') is-invalid @enderror">
-                                    <option value="">Select Carwash</option>
-                                    @foreach($ownerCarwashes as $carwash)
-                                        <option value="{{ $carwash->id }}">{{ $carwash->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('carwash_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="carwash_id"
+                                    label="Carwash"
+                                    :options="$ownerCarwashes->pluck('name', 'id')"
+                                    wire:model="carwash_id"
+                                    required
+                                    wrapper="false"
+                                />
                             </div>
                             @endif
                             @error('carwash_id')

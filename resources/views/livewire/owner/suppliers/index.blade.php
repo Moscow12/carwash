@@ -87,11 +87,13 @@
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <select wire:model.live="statusFilter" class="form-select">
-                        <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
+                    <x-forms.select2
+                        name="statusFilter"
+                        :options="[['id' => '', 'name' => 'All Status'], ['id' => 'active', 'name' => 'Active'], ['id' => 'inactive', 'name' => 'Inactive']]"
+                        wire:model.live="statusFilter"
+                        placeholder="All Status"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-4 text-end">
                     <span class="text-muted small">{{ $suppliers->total() }} supplier(s)</span>
@@ -251,11 +253,13 @@
                         {{-- Status --}}
                         <div class="mb-3">
                             <label class="form-label">Status <span class="text-danger">*</span></label>
-                            <select wire:model="status" class="form-select @error('status') is-invalid @enderror">
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                            @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <x-forms.select2
+                                name="status"
+                                :options="[['id' => 'active', 'name' => 'Active'], ['id' => 'inactive', 'name' => 'Inactive']]"
+                                wire:model="status"
+                                wrapper="false"
+                            />
+                            @error('status') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="d-flex gap-2 pt-3">

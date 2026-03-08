@@ -57,7 +57,8 @@ $wireModel = collect($attributes->getAttributes())
         <select
             name="{{ $name }}"
             id="{{ $name }}"
-            class="form-select @error($name) is-invalid @enderror"
+            class="form-select select2 @error($name) is-invalid @enderror"
+            data-placeholder="Select {{ strtolower($label ?? ucfirst($name)) }}"
             {{ $attributes->except(['class']) }}
             @if(!$wireModel) wire:model.defer="{{ $name }}" @endif
             @if($required) required @endif

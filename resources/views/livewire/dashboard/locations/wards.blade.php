@@ -97,16 +97,14 @@
                     </div>
                     <form wire:submit.prevent="save">
                         <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label">District</label>
-                                <select wire:model="district_id" class="form-select @error('district_id') is-invalid @enderror">
-                                    <option value="">Select District</option>
-                                    @foreach ($districts as $district)
-                                        <option value="{{ $district->id }}">{{ $district->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('district_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            </div>
+                            <x-forms.select2
+                                name="district_id"
+                                label="District"
+                                placeholder="Search and select a district"
+                                :options="$districts->pluck('name', 'id')"
+                                wire:model="district_id"
+                                wrapper="false"
+                            />
                             <div class="mb-3">
                                 <label class="form-label">Ward Name</label>
                                 <input type="text" wire:model="name" class="form-control @error('name') is-invalid @enderror" placeholder="e.g., Kikuyu">

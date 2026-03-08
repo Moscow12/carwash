@@ -94,49 +94,54 @@
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-3">
-                    <label class="form-label small">Business Location:</label>
-                    <select wire:model.live="selectedCarwash" class="form-select">
-                        <option value="">All locations</option>
-                        @foreach($carwashes as $carwash)
-                            <option value="{{ $carwash->id }}">{{ $carwash->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="selectedCarwash"
+                        label="Business Location"
+                        :options="$carwashes"
+                        wire:model.live="selectedCarwash"
+                        placeholder="All locations"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label small">Expense for:</label>
-                    <select wire:model.live="expenseForFilter" class="form-select">
-                        <option value="">All</option>
-                        @foreach($staffs as $staff)
-                            <option value="{{ $staff->id }}">{{ $staff->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="expenseForFilter"
+                        label="Expense for"
+                        :options="$staffs"
+                        wire:model.live="expenseForFilter"
+                        placeholder="All"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label small">Contact:</label>
-                    <select wire:model.live="contactFilter" class="form-select">
-                        <option value="">All</option>
-                        @foreach($suppliers as $supplier)
-                            <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="contactFilter"
+                        label="Contact"
+                        :options="$suppliers"
+                        wire:model.live="contactFilter"
+                        placeholder="All"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label small">Expense Category:</label>
-                    <select wire:model.live="categoryFilter" class="form-select">
-                        <option value="">All</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}">{{ $category->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="categoryFilter"
+                        label="Expense Category"
+                        :options="$categories"
+                        wire:model.live="categoryFilter"
+                        placeholder="All"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label small">Sub category:</label>
-                    <select wire:model.live="subcategoryFilter" class="form-select">
-                        <option value="">All</option>
-                        @foreach($subcategories as $subcategory)
-                            <option value="{{ $subcategory->id }}">{{ $subcategory->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-forms.select2
+                        name="subcategoryFilter"
+                        label="Sub category"
+                        :options="$subcategories"
+                        wire:model.live="subcategoryFilter"
+                        placeholder="All"
+                        wrapper="false"
+                    />
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Date Range:</label>
@@ -147,13 +152,18 @@
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label small">Payment Status:</label>
-                    <select wire:model.live="paymentStatusFilter" class="form-select">
-                        <option value="">All</option>
-                        <option value="paid">Paid</option>
-                        <option value="partial">Partial</option>
-                        <option value="pending">Pending</option>
-                    </select>
+                    <x-forms.select2
+                        name="paymentStatusFilter"
+                        label="Payment Status"
+                        :options="[
+                            ['id' => 'paid', 'name' => 'Paid'],
+                            ['id' => 'partial', 'name' => 'Partial'],
+                            ['id' => 'pending', 'name' => 'Pending']
+                        ]"
+                        wire:model.live="paymentStatusFilter"
+                        placeholder="All"
+                        wrapper="false"
+                    />
                 </div>
             </div>
         </div>

@@ -318,12 +318,14 @@
                                 @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Status <span class="text-danger">*</span></label>
-                                <select wire:model="status" class="form-select @error('status') is-invalid @enderror">
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-                                @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="status"
+                                    label="Status"
+                                    placeholder="Select status"
+                                    :options="['active' => 'Active', 'inactive' => 'Inactive']"
+                                    wire:model="status"
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Address <span class="text-danger">*</span></label>
@@ -347,43 +349,44 @@
                         </h6>
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <label class="form-label">Region <span class="text-danger">*</span></label>
-                                <select wire:model.live="region_id" class="form-select @error('region_id') is-invalid @enderror">
-                                    <option value="">Select Region</option>
-                                    @foreach($allRegions as $region)
-                                        <option value="{{ $region->id }}">{{ $region->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('region_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="region_id"
+                                    label="Region"
+                                    placeholder="Select region"
+                                    :options="$allRegions->pluck('name', 'id')"
+                                    wire:model.live="region_id"
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">District <span class="text-danger">*</span></label>
-                                <select wire:model.live="district_id" class="form-select @error('district_id') is-invalid @enderror" {{ empty($allDistricts) ? 'disabled' : '' }}>
-                                    <option value="">Select District</option>
-                                    @foreach($allDistricts as $district)
-                                        <option value="{{ $district->id }}">{{ $district->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('district_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="district_id"
+                                    label="District"
+                                    placeholder="Select district"
+                                    :options="$allDistricts->pluck('name', 'id')"
+                                    wire:model.live="district_id"
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Ward <span class="text-danger">*</span></label>
-                                <select wire:model.live="ward_id" class="form-select @error('ward_id') is-invalid @enderror" {{ empty($allWards) ? 'disabled' : '' }}>
-                                    <option value="">Select Ward</option>
-                                    @foreach($allWards as $ward)
-                                        <option value="{{ $ward->id }}">{{ $ward->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('ward_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.select2
+                                    name="ward_id"
+                                    label="Ward"
+                                    placeholder="Select ward"
+                                    :options="$allWards->pluck('name', 'id')"
+                                    wire:model.live="ward_id"
+                                    wrapper="false"
+                                />
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Street</label>
-                                <select wire:model="street_id" class="form-select" {{ empty($allStreets) ? 'disabled' : '' }}>
-                                    <option value="">Select Street (Optional)</option>
-                                    @foreach($allStreets as $street)
-                                        <option value="{{ $street->id }}">{{ $street->name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-forms.select2
+                                    name="street_id"
+                                    label="Street"
+                                    placeholder="Select street (Optional)"
+                                    :options="$allStreets->pluck('name', 'id')"
+                                    wire:model="street_id"
+                                    wrapper="false"
+                                />
                             </div>
                         </div>
 

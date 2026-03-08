@@ -14,13 +14,13 @@
         <div class="card-header bg-transparent">
             <div class="row align-items-center">
                 <div class="col-md-4">
-                    <select wire:model.live="statusFilter" class="form-select">
-                        <option value="">All Statuses</option>
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
+                    <x-forms.select2
+                        name="statusFilter"
+                        :options="[['id' => '', 'name' => 'All Statuses'], ['id' => 'pending', 'name' => 'Pending'], ['id' => 'confirmed', 'name' => 'Confirmed'], ['id' => 'completed', 'name' => 'Completed'], ['id' => 'cancelled', 'name' => 'Cancelled']]"
+                        wire:model.live="statusFilter"
+                        placeholder="All Statuses"
+                        wrapper="false"
+                    />
                 </div>
             </div>
         </div>
