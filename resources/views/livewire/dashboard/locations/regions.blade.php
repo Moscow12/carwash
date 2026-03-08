@@ -11,9 +11,12 @@
                 </ol>
             </nav>
         </div>
-        <button wire:click="openModal" class="btn btn-primary">
-            <i class="ti ti-plus me-1"></i>Add Region
-        </button>
+        <div>
+            @livewire('dashboard.locations.import-locations')
+            <button wire:click="openModal" class="btn btn-primary ms-2">
+                <i class="ti ti-plus me-1"></i>Add Region
+            </button>
+        </div>
     </div>
 
     @if (session()->has('success'))
