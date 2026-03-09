@@ -22,7 +22,6 @@ use App\Livewire\Dashboard\Locations\CWards;
 use App\Livewire\Dashboard\Locations\Streets;
 use App\Livewire\Dashboard\Settings\Index as SettingsIndex;
 use App\Livewire\Dashboard\Carwashes\Index as AdminCarwashes;
-use App\Livewire\Dashboard\Modules\Index as ModulesIndex;
 
 // Owner Pages
 use App\Livewire\Owner\Dashboard as OwnerDashboard;
@@ -105,9 +104,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
     // Settings
     Route::get('/settings', SettingsIndex::class)->name('admin.settings');
-
-    // Modules
-    Route::get('/modules', ModulesIndex::class)->name('admin.modules');
 });
 
 // Owner Dashboard (Protected Routes - Owner Only)

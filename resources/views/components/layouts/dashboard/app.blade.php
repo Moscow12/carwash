@@ -158,14 +158,6 @@
                     <hr class="mx-5 nav-line mb-1" />
                 </li>
                 <li class="nav-item">
-                    <a class='nav-link {{ request()->routeIs("admin.modules*") ? "active" : "" }}' href='{{ route("admin.modules") }}'>
-                        <span class="nav-icon">
-                            <i class="ti ti-puzzle fs-5"></i>
-                        </span>
-                        <span class="text">Modules</span>
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a class='nav-link {{ request()->routeIs("admin.settings*") ? "active" : "" }}' href='{{ route("admin.settings") }}'>
                         <span class="nav-icon">
                             <i class="ti ti-settings fs-5"></i>
