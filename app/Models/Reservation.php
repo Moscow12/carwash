@@ -15,7 +15,7 @@ class Reservation extends Model
 
     protected $fillable = [
         'reservation_no',
-        'carwash_id',
+        'business_id',
         'branch_id',
         'guest_id',
         'room_type_id',
@@ -45,9 +45,9 @@ class Reservation extends Model
     ];
 
     // Relationships
-    public function carwash(): BelongsTo
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function branch(): BelongsTo

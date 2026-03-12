@@ -14,7 +14,7 @@ class PosOrder extends Model
 
     protected $fillable = [
         'order_no',
-        'carwash_id',
+        'business_id',
         'outlet_id',
         'session_id',
         'table_id',
@@ -44,9 +44,9 @@ class PosOrder extends Model
     ];
 
     // Relationships
-    public function carwash(): BelongsTo
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function outlet(): BelongsTo

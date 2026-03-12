@@ -41,9 +41,15 @@ class items extends Model
     ];
 
     // Relationships
+    public function business(): BelongsTo
+    {
+        return $this->belongsTo(Business::class, 'business_id');
+    }
+
+    // Legacy support - deprecated, use business() instead
     public function carwash(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->business();
     }
 
     public function category(): BelongsTo
@@ -102,9 +108,15 @@ class items extends Model
         return $query->where('type', 'product');
     }
 
+    public function scopeByBusiness(Builder $query, string $businessId): Builder
+    {
+        return $query->where('business_id', $businessId);
+    }
+
+    // Legacy support - deprecated, use scopeByBusiness() instead
     public function scopeByCarwash(Builder $query, string $carwashId): Builder
     {
-        return $query->where('carwash_id', $carwashId);
+        return $this->scopeByBusiness($query, $carwashId);
     }
 
     public function scopeByCategory(Builder $query, string $categoryId): Builder

@@ -46,9 +46,15 @@ class purchase extends Model
         return $this->belongsTo(suplier::class, 'supplier_id');
     }
 
+    public function business()
+    {
+        return $this->belongsTo(Business::class, 'business_id');
+    }
+
+    // Legacy support
     public function carwash()
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->business();
     }
 
     // Scopes - Purchase Status
@@ -83,9 +89,15 @@ class purchase extends Model
         return $query->where('payment_status', 'pending');
     }
 
+    public function scopeForBusiness($query, $businessId)
+    {
+        return $query->where('business_id', $businessId);
+    }
+
+    // Legacy support
     public function scopeForCarwash($query, $carwashId)
     {
-        return $query->where('carwash_id', $carwashId);
+        return $this->scopeForBusiness($query, $carwashId);
     }
 
     // Computed Attributes

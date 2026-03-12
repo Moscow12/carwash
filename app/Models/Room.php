@@ -13,7 +13,7 @@ class Room extends Model
     use HasUuids;
 
     protected $fillable = [
-        'carwash_id',
+        'business_id',
         'branch_id',
         'room_type_id',
         'number',
@@ -30,9 +30,9 @@ class Room extends Model
     ];
 
     // Relationships
-    public function carwash(): BelongsTo
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function branch(): BelongsTo

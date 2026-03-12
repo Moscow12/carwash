@@ -14,7 +14,7 @@ class HotelInvoice extends Model
 
     protected $fillable = [
         'invoice_no',
-        'carwash_id',
+        'business_id',
         'folio_id',
         'pos_order_id',
         'invoice_date',
@@ -38,9 +38,9 @@ class HotelInvoice extends Model
     ];
 
     // Relationships
-    public function carwash(): BelongsTo
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function folio(): BelongsTo
