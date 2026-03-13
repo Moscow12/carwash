@@ -66,6 +66,7 @@ use App\Livewire\Owner\Reports\Sales;
 use App\Livewire\Owner\Reports\Stock;
 use App\Livewire\Owner\Reports\Staffcommisions;
 use App\Livewire\Owner\Sales\Posscreen;
+use App\Livewire\Owner\Settings\Hotelsettings;
 use App\Livewire\Owner\Settings\Setup as OwnerSettings;
 
 Route::get('/admin/login', AdminLogin::class)->name('admin.login');
@@ -125,6 +126,7 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/upload-items', Uploaditems::class)->name('owner.uploaditems');
     Route::get('/pos-screen', Posscreen::class)->name('owner.posscreen');
     Route::get('/settings', OwnerSettings::class)->name('owner.settings');
+    Route::get('/settings/hotel', Hotelsettings::class)->name('owner.settings.hotel');
     Route::get('/expenses/categories', Category::class)->name('owner.expenses.categories');
     Route::get('/expenses', Expenses::class)->name('owner.expenses');
     Route::get('/list-items', Listitems::class)->name('owner.list-items');

@@ -189,12 +189,6 @@
     <div class="nav-heading">Configuration</div>
     <hr class="mx-5 nav-line mb-1" />
   </li>
-  <li class="nav-item">
-    <a class='nav-link {{ request()->routeIs("owner.settings*") ? "active" : "" }}' href="{{ route('owner.settings') }}">
-      <span class="nav-icon"><i class="ti ti-settings fs-5"></i></span>
-      <span class="text">Settings</span>
-    </a>
-  </li>
   <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.settings*') || request()->routeIs('owner.settings*') ? 'active' : '' }}"
       href="#!"
@@ -207,12 +201,12 @@
     <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.settings*') || request()->routeIs('owner.settings*') ? 'show' : '' }}">
       <li class="nav-item">
         <a class='dropdown-item {{ request()->routeIs("owner.settings") ? "active" : "" }}' href="{{ route('owner.settings') }}">
-          <i class="ti ti-package me-2"></i> List all settings
+          <i class="ti ti-package me-2"></i> System Settings
         </a>
       </li>
       <li class="nav-item">
-        <a class='dropdown-item {{ request()->routeIs("owner.settings.categories") ? "active" : "" }}' href="{{ route('owner.settings.categories') }}">
-          <i class="ti ti-ruler-2 me-2"></i>Category and Sub Category
+        <a class='dropdown-item {{ request()->routeIs("owner.settings.hotel") ? "active" : "" }}' href="{{ route('owner.settings.hotel') }}">
+          <i class="ti ti-ruler-2 me-2"></i>Hotel Management Settings
         </a>
       </li>
     </ul>

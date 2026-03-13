@@ -19,6 +19,7 @@ class Business extends Model
         'name',
         'address',
         'status',
+        'type',
         'description',
         'logo',
         'whatsapp',
