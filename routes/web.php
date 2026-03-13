@@ -62,6 +62,12 @@ use App\Livewire\Owner\Hotel\Frontdesk;
 use App\Livewire\Owner\Hotel\Reservations;
 use App\Livewire\Owner\Hotel\Checkin;
 use App\Livewire\Owner\Hotel\Checkout;
+use App\Livewire\Owner\Hotel\RoomTypes;
+use App\Livewire\Owner\Hotel\Rooms;
+use App\Livewire\Owner\Hotel\RatePlans;
+use App\Livewire\Owner\Hotel\Guests;
+use App\Livewire\Owner\Hotel\HousekeepingTasks;
+use App\Livewire\Owner\Hotel\BookingSources;
 use App\Livewire\Owner\Items\Edititems;
 use App\Livewire\Owner\Items\History;
 use App\Livewire\Owner\Items\Listitems;
@@ -145,18 +151,18 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/hotel/room-status', Addhotel::class)->name('owner.hotel.room-status');
 
     // Rooms & Inventory
-    Route::get('/hotel/room-types', Addhotel::class)->name('owner.hotel.room-types');
-    Route::get('/hotel/rooms', Addhotel::class)->name('owner.hotel.rooms');
-    Route::get('/hotel/rate-plans', Addhotel::class)->name('owner.hotel.rate-plans');
+    Route::get('/hotel/room-types', RoomTypes::class)->name('owner.hotel.room-types');
+    Route::get('/hotel/rooms', Rooms::class)->name('owner.hotel.rooms');
+    Route::get('/hotel/rate-plans', RatePlans::class)->name('owner.hotel.rate-plans');
     Route::get('/hotel/availability', Addhotel::class)->name('owner.hotel.availability');
 
     // Guests
-    Route::get('/hotel/guests', Addhotel::class)->name('owner.hotel.guests');
+    Route::get('/hotel/guests', Guests::class)->name('owner.hotel.guests');
     Route::get('/hotel/guest-documents', Addhotel::class)->name('owner.hotel.guest-documents');
     Route::get('/hotel/communication-log', Addhotel::class)->name('owner.hotel.communication-log');
 
     // Housekeeping
-    Route::get('/hotel/housekeeping/tasks', Addhotel::class)->name('owner.hotel.housekeeping.tasks');
+    Route::get('/hotel/housekeeping/tasks', HousekeepingTasks::class)->name('owner.hotel.housekeeping.tasks');
     Route::get('/hotel/housekeeping/status', Addhotel::class)->name('owner.hotel.housekeeping.status');
     Route::get('/hotel/lost-found', Addhotel::class)->name('owner.hotel.lost-found');
 
@@ -185,7 +191,7 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/hotel/reports/guest-history', Addhotel::class)->name('owner.hotel.reports.guest-history');
 
     // Channels & Integrations
-    Route::get('/hotel/booking-sources', Addhotel::class)->name('owner.hotel.booking-sources');
+    Route::get('/hotel/booking-sources', BookingSources::class)->name('owner.hotel.booking-sources');
     Route::get('/hotel/channel-mapping', Addhotel::class)->name('owner.hotel.channel-mapping');
 
     Route::get('/expenses/categories', Category::class)->name('owner.expenses.categories');
