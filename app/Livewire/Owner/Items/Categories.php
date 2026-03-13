@@ -54,7 +54,7 @@ class Categories extends Component
         $this->resetPage();
     }
 
-    public function updatingFilterCarwash()
+    public function updatingFilterBusiness()
     {
         $this->resetPage();
     }
@@ -108,10 +108,10 @@ class Categories extends Component
     {
         $this->validate();
 
-        // Verify carwash ownership
+        // Verify business ownership
         $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
         if (!$businessIds->contains($this->business_id)) {
-            session()->flash('error', 'Invalid carwash selected.');
+            session()->flash('error', 'Invalid business selected.');
             return;
         }
 

@@ -166,7 +166,7 @@ class Index extends Component
 
         $this->paymentSaleId = $saleId;
 
-        // Load payment methods for this carwash
+        // Load payment methods for this business
         $this->availablePaymentMethods = payment_method::where('business_id', $sale->business_id)
             ->where('status', 'active')
             ->get()

@@ -48,7 +48,7 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function updatedSelectedCarwash()
+    public function updatedSelectedBusiness()
     {
         $this->resetPage();
         $this->business_id = $this->selectedBusiness;

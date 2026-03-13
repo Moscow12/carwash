@@ -74,7 +74,7 @@ class Expenses extends Component
         $this->resetPage();
     }
 
-    public function updatedSelectedCarwash()
+    public function updatedSelectedBusiness()
     {
         $this->resetPage();
         $this->categoryFilter = '';
@@ -188,7 +188,7 @@ class Expenses extends Component
         ]);
 
         if (!$this->selectedBusiness) {
-            session()->flash('error', 'Please select a carwash first.');
+            session()->flash('error', 'Please select a business first.');
             return;
         }
 

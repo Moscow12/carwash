@@ -122,7 +122,7 @@ class Edititems extends Component
         $this->loadCategories();
     }
 
-    public function updatedCarwashId($value)
+    public function updatedBusinessId($value)
     {
         $this->loadCategories();
         $this->category_id = '';
@@ -170,7 +170,7 @@ class Edititems extends Component
     {
         $this->validate();
 
-        // Custom barcode uniqueness validation per carwash
+        // Custom barcode uniqueness validation per business
         if ($this->barcode) {
             $exists = items::where('barcode', $this->barcode)
                 ->where('business_id', $this->business_id)
@@ -178,15 +178,15 @@ class Edititems extends Component
                 ->exists();
 
             if ($exists) {
-                $this->addError('barcode', 'This barcode is already used by another item in this carwash.');
+                $this->addError('barcode', 'This barcode is already used by another item in this business.');
                 return;
             }
         }
 
-        // Verify carwash ownership
+        // Verify business ownership
         $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
         if (!$businessIds->contains($this->business_id)) {
-            session()->flash('error', 'Invalid carwash selected.');
+            session()->flash('error', 'Invalid business selected.');
             return;
         }
 

@@ -71,7 +71,7 @@ class Index extends Component
         }
     }
 
-    public function updatedSelectedCarwash()
+    public function updatedSelectedBusiness()
     {
         $this->loadItems();
         $this->resetPage();
@@ -142,7 +142,7 @@ class Index extends Component
             'purchase_status' => 'required|in:received,pending,canceled',
         ]);
 
-        // Verify item belongs to selected carwash
+        // Verify item belongs to selected business
         $item = items::where('id', $this->item_id)
             ->where('business_id', $this->selectedBusiness)
             ->first();

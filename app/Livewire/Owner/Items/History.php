@@ -51,7 +51,7 @@ class History extends Component
         $this->loadStats();
     }
 
-    public function updatedSelectedCarwash()
+    public function updatedSelectedBusiness()
     {
         $this->resetPage();
         $this->itemId = '';
@@ -65,11 +65,11 @@ class History extends Component
         ]);
     }
 
-    #[On('setCarwash')]
-    public function setCarwash($businessId)
+    #[On('setBusiness')]
+    public function setBusiness($businessId)
     {
         $this->selectedBusiness = $businessId;
-        $this->updatedSelectedCarwash();
+        $this->updatedSelectedBusiness();
     }
 
     #[On('setItem')]

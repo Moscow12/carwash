@@ -14,7 +14,7 @@ class Setup extends Component
 {
     use WithFileUploads;
 
-    // Carwash selection
+    // Business selection
     public $selectedBusiness = '';
     public $ownerBusinesses = [];
 
@@ -192,7 +192,7 @@ class Setup extends Component
         $this->pos_keyboard_shortcuts = CarwashSetting::getDefaultKeyboardShortcuts();
     }
 
-    public function updatedSelectedCarwash()
+    public function updatedSelectedBusiness()
     {
         $this->loadSettings();
     }
@@ -344,7 +344,7 @@ class Setup extends Component
     public function saveSettings()
     {
         if (!$this->selectedBusiness) {
-            session()->flash('error', 'Please select a carwash first.');
+            session()->flash('error', 'Please select a business first.');
             return;
         }
 
@@ -534,7 +534,7 @@ class Setup extends Component
         ]);
 
         if (!$this->selectedBusiness) {
-            session()->flash('error', 'Please select a carwash first.');
+            session()->flash('error', 'Please select a business first.');
             return;
         }
 

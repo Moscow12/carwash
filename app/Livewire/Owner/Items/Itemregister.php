@@ -98,13 +98,13 @@ class Itemregister extends Component
         }
     }
 
-    public function updatedCarwashId($value)
+    public function updatedBusinessId($value)
     {
         $this->loadCategories();
         $this->category_id = '';
     }
 
-    public function updatedFilterCarwash($value)
+    public function updatedFilterBusiness($value)
     {
         $this->resetPage();
     }
@@ -212,7 +212,7 @@ class Itemregister extends Component
     {
         $this->validate();
 
-        // Custom barcode uniqueness validation per carwash
+        // Custom barcode uniqueness validation per business
         if ($this->barcode) {
             $query = items::where('barcode', $this->barcode)
                 ->where('business_id', $this->business_id);
@@ -222,15 +222,15 @@ class Itemregister extends Component
             }
 
             if ($query->exists()) {
-                $this->addError('barcode', 'This barcode is already used by another item in this carwash.');
+                $this->addError('barcode', 'This barcode is already used by another item in this business.');
                 return;
             }
         }
 
-        // Verify carwash ownership
+        // Verify business ownership
         $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
         if (!$businessIds->contains($this->business_id)) {
-            session()->flash('error', 'Invalid carwash selected.');
+            session()->flash('error', 'Invalid business selected.');
             return;
         }
 
@@ -357,7 +357,7 @@ class Itemregister extends Component
             ->latest()
             ->paginate(10);
 
-        // Get categories for filter based on selected carwash
+        // Get categories for filter based on selected business
         $filterCategories = $this->filterBusiness
             ? category::where('business_id', $this->filterBusiness)->where('status', 'active')->get()
             : category::whereIn('business_id', $businessIds)->where('status', 'active')->get();

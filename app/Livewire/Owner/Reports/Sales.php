@@ -73,15 +73,15 @@ class Sales extends Component
         $owner = Auth::user();
         $businessCollection = $owner->ownedBusinesses()->get();
 
-        $this->carwashes = $businessCollection->map(function ($business) {
+        $this->businesses = $businessCollection->map(function ($business) {
             return [
                 'id' => $business->id,
                 'name' => $business->name,
             ];
         })->toArray();
 
-        if (count($this->carwashes) > 0 && empty($this->business_id)) {
-            $this->business_id = $this->carwashes[0]['id'];
+        if (count($this->businesses) > 0 && empty($this->business_id)) {
+            $this->business_id = $this->businesses[0]['id'];
         }
 
         // Set default date range to current year
@@ -95,7 +95,7 @@ class Sales extends Component
         $this->loadFilterData();
     }
 
-    public function updatedCarwashId()
+    public function updatedBusinessId()
     {
         $this->loadFilterData();
         $this->resetPage();

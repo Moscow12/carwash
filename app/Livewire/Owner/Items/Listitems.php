@@ -56,7 +56,7 @@ class Listitems extends Component
         $this->resetPage();
     }
 
-    public function updatedSelectedCarwash()
+    public function updatedSelectedBusiness()
     {
         $this->resetPage();
         $this->categoryFilter = '';

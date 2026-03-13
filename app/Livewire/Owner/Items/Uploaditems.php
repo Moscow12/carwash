@@ -48,7 +48,7 @@ class Uploaditems extends Component
         }
     }
 
-    public function updatedCarwashId($value)
+    public function updatedBusinessId($value)
     {
         $this->loadCategories();
         $this->reset(['parsedItems', 'parseErrors', 'showPreview', 'importComplete']);
@@ -122,10 +122,10 @@ class Uploaditems extends Component
             'business_id' => 'required|exists:businesses,id',
         ]);
 
-        // Verify carwash ownership
+        // Verify business ownership
         $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
         if (!$businessIds->contains($this->business_id)) {
-            session()->flash('error', 'Invalid carwash selected.');
+            session()->flash('error', 'Invalid business selected.');
             return;
         }
 
@@ -225,7 +225,7 @@ class Uploaditems extends Component
         if (!empty($data['category_name'])) {
             $category = collect($this->availableCategories)->firstWhere('name', $data['category_name']);
             if (!$category) {
-                $errors[] = "Row {$rowNumber}: Category '{$data['category_name']}' not found for this carwash";
+                $errors[] = "Row {$rowNumber}: Category '{$data['category_name']}' not found for this business";
             }
         } else {
             $errors[] = "Row {$rowNumber}: Category name is required";

@@ -72,21 +72,21 @@ class Profitandloss extends Component
         $businessCollection = $owner->ownedBusinesses()->get();
 
         // Convert to array for Livewire serialization
-        $this->carwashes = $businessCollection->map(function ($business) {
+        $this->businesses = $businessCollection->map(function ($business) {
             return [
                 'id' => $business->id,
                 'name' => $business->name,
             ];
         })->toArray();
 
-        if (count($this->carwashes) > 0 && empty($this->business_id)) {
-            $this->business_id = $this->carwashes[0]['id'];
+        if (count($this->businesses) > 0 && empty($this->business_id)) {
+            $this->business_id = $this->businesses[0]['id'];
         }
 
         $this->calculateReport();
     }
 
-    public function updatedCarwashId()
+    public function updatedBusinessId()
     {
         $this->calculateReport();
     }
@@ -257,7 +257,7 @@ class Profitandloss extends Component
 
     protected function calculateStockValues($startDate, $endDate)
     {
-        // Get all items for this carwash
+        // Get all items for this business
         $items = items::where('business_id', $this->business_id)->get();
 
         $openingPurchase = 0;

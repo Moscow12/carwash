@@ -22,7 +22,7 @@ class Details extends Component
 
     public function mount($id)
     {
-        $this->carwash = Business::with(['regions', 'districts', 'wards', 'streets'])
+        $this->business = Business::with(['regions', 'districts', 'wards', 'streets'])
             ->findOrFail($id);
 
         $this->services = items::where('business_id', $id)

@@ -20,7 +20,7 @@ use App\Models\item_balance;
 #[Layout('components.layouts.app-owner')]
 class Posscreen extends Component
 {
-    // Carwash selection
+    // Business selection
     public $selectedBusiness = '';
     public $ownerBusinesses = [];
 
@@ -92,7 +92,7 @@ class Posscreen extends Component
         }
     }
 
-    public function updatedSelectedCarwash()
+    public function updatedSelectedBusiness()
     {
         $this->loadData();
         $this->clearCart();
@@ -624,7 +624,7 @@ class Posscreen extends Component
             return 'Please select a valid payment method.';
         }
         if (str_contains($message, 'business_id')) {
-            return 'Please select a carwash first.';
+            return 'Please select a business first.';
         }
         if (str_contains($message, 'Duplicate entry')) {
             return 'This transaction appears to be a duplicate. Please refresh the page.';
@@ -689,8 +689,8 @@ class Posscreen extends Component
         $this->lastSale = $sale->toArray();
         $this->lastSaleItems = $sale->items->toArray();
         $this->lastSalePayments = $sale->payments->toArray();
-        $this->carwashInfo = $sale->business ? $sale->business->toArray() : null;
-        $this->carwashSettings = $sale->business && $sale->business->settings ? $sale->business->settings->toArray() : null;
+        $this->businessInfo = $sale->business ? $sale->business->toArray() : null;
+        $this->businessSettings = $sale->business && $sale->business->settings ? $sale->business->settings->toArray() : null;
         $this->showReceiptModal = true;
     }
 
@@ -700,8 +700,8 @@ class Posscreen extends Component
         $this->lastSale = null;
         $this->lastSaleItems = [];
         $this->lastSalePayments = [];
-        $this->carwashInfo = null;
-        $this->carwashSettings = null;
+        $this->businessInfo = null;
+        $this->businessSettings = null;
     }
 
     public function printReceipt()

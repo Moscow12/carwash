@@ -195,4 +195,26 @@
       <span class="text">Settings</span>
     </a>
   </li>
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.settings*') || request()->routeIs('owner.settings*') ? 'active' : '' }}"
+      href="#!"
+      role="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="{{ request()->routeIs('owner.settings*') || request()->routeIs('owner.settings*') ? 'true' : 'false' }}">
+      <span class="nav-icon"><i class="ti ti-car-garage fs-5"></i></span>
+      <span class="text">Settings</span>
+    </a>
+    <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.settings*') || request()->routeIs('owner.settings*') ? 'show' : '' }}">
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.settings") ? "active" : "" }}' href="{{ route('owner.settings') }}">
+          <i class="ti ti-package me-2"></i> List all settings
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.settings.categories") ? "active" : "" }}' href="{{ route('owner.settings.categories') }}">
+          <i class="ti ti-ruler-2 me-2"></i>Category and Sub Category
+        </a>
+      </li>
+    </ul>
+  </li>
 </ul>
