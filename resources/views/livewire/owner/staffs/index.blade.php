@@ -92,7 +92,7 @@
                     <label class="form-label small">Status</label>
                     <x-forms.select2
                         name="statusFilter"
-                        :options="[['id' => '', 'name' => 'All Status'], ['id' => 'active', 'name' => 'Active'], ['id' => 'inactive', 'name' => 'Inactive']]"
+                        :options="collect(['' => 'All Status', 'active' => 'Active', 'inactive' => 'Inactive'])"
                         wire:model.live="statusFilter"
                         placeholder="All Status"
                         wrapper="false"
@@ -250,7 +250,7 @@
                                 <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
                                 <x-forms.select2
                                     name="payment_mode"
-                                    :options="[['id' => 'commission', 'name' => 'Commission Based'], ['id' => 'salary', 'name' => 'Monthly Salary'], ['id' => 'hourly', 'name' => 'Hourly Rate']]"
+                                    :options="collect(['commission' => 'Commission Based', 'salary' => 'Monthly Salary', 'hourly' => 'Hourly Rate'])"
                                     wire:model="payment_mode"
                                     wrapper="false"
                                 />
@@ -259,7 +259,7 @@
                                 <label class="form-label">Commission Type</label>
                                 <x-forms.select2
                                     name="commission_type"
-                                    :options="[['id' => 'fixed', 'name' => 'Fixed Amount'], ['id' => 'percentage', 'name' => 'Percentage']]"
+                                    :options="collect(['fixed' => 'Fixed Amount', 'percentage' => 'Percentage'])"
                                     wire:model="commission_type"
                                     wrapper="false"
                                 />
@@ -281,7 +281,7 @@
                                 <label class="form-label">Business <span class="text-danger">*</span></label>
                                 <x-forms.select2
                                     name="business_id"
-                                    :options="$businesses"
+                                    :options="collect($businesses)"
                                     wire:model="business_id"
                                     placeholder="Select Business"
                                     wrapper="false"
@@ -294,7 +294,7 @@
                                 <label class="form-label">Status</label>
                                 <x-forms.select2
                                     name="status"
-                                    :options="[['id' => 'active', 'name' => 'Active'], ['id' => 'inactive', 'name' => 'Inactive']]"
+                                    :options="collect(['active' => 'Active', 'inactive' => 'Inactive'])"
                                     wire:model="status"
                                     wrapper="false"
                                 />

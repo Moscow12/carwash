@@ -160,7 +160,7 @@ class Posscreen extends Component
         $this->availableStaffs = staffs::where('business_id', $this->selectedBusiness)
             ->where('status', 'active')
             ->orderBy('name')
-            ->get()
+            ->pluck('name', 'id')
             ->toArray();
     }
 
@@ -598,9 +598,11 @@ class Posscreen extends Component
             DB::rollBack();
             $errorMessage = $this->getCustomErrorMessage($e);
             session()->flash('error', $errorMessage);
+            \Log::error('Sale Query Error: ' . $e->getMessage());
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'An error occurred while processing the sale. Please try again.');
+            session()->flash('error', 'An error occurred while processing the sale: ' . $e->getMessage());
+            \Log::error('Sale Processing Error: ' . $e->getMessage());
         }
     }
 
@@ -679,7 +681,7 @@ class Posscreen extends Component
     // Receipt methods
     public function showReceipt($saleId)
     {
-        $sale = sales::with(['customer', 'user', 'items.item', 'payments.paymentMethod', 'carwash.settings'])
+        $sale = sales::with(['customer', 'user', 'items.item', 'payments.paymentMethod', 'business.settings'])
             ->find($saleId);
 
         if (!$sale) return;
@@ -687,8 +689,8 @@ class Posscreen extends Component
         $this->lastSale = $sale->toArray();
         $this->lastSaleItems = $sale->items->toArray();
         $this->lastSalePayments = $sale->payments->toArray();
-        $this->carwashInfo = $sale->carwash ? $sale->business->toArray() : null;
-        $this->carwashSettings = $sale->carwash && $sale->business->settings ? $sale->business->settings->toArray() : null;
+        $this->carwashInfo = $sale->business ? $sale->business->toArray() : null;
+        $this->carwashSettings = $sale->business && $sale->business->settings ? $sale->business->settings->toArray() : null;
         $this->showReceiptModal = true;
     }
 

@@ -196,7 +196,7 @@ class Index extends Component
     {
         $this->loadStats();
 
-        $businesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
+        $businesses = Auth::user()->ownedBusinesses()->orderBy('name')->pluck('name', 'id');
 
         $staffs = staffs::query()
             ->when($this->selectedBusiness, fn($q) => $q->where('business_id', $this->selectedBusiness))

@@ -988,7 +988,7 @@
                             <label class="form-label">Status</label>
                             <x-forms.select2
                                 name="paymentMethodStatus"
-                                :options="[['id' => 'active', 'name' => 'Active'], ['id' => 'inactive', 'name' => 'Inactive']]"
+                                :options="['active' => 'Active', 'inactive' => 'Inactive']"
                                 wire:model="paymentMethodStatus"
                                 wrapper="false"
                             />

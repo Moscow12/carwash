@@ -399,7 +399,7 @@
                     <div class="col-12 col-md-4">
                         <x-forms.select2
                             name="selectedStaff"
-                            :options="$availableStaffs"
+                            :options="collect($availableStaffs)"
                             wire:model="selectedStaff"
                             placeholder="Select Staff"
                             wrapper="false"
