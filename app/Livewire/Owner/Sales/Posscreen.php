@@ -21,8 +21,8 @@ use App\Models\item_balance;
 class Posscreen extends Component
 {
     // Carwash selection
-    public $selectedCarwash = '';
-    public $ownerCarwashes = [];
+    public $selectedBusiness = '';
+    public $ownerBusinesses = [];
 
     // Product filters
     public $search = '';
@@ -78,16 +78,16 @@ class Posscreen extends Component
     public $lastSale = null;
     public $lastSaleItems = [];
     public $lastSalePayments = [];
-    public $carwashInfo = null;
-    public $carwashSettings = null;
+    public $businessInfo = null;
+    public $businessSettings = null;
 
     public function mount()
     {
-        $this->ownerCarwashes = Auth::user()->ownedCarwashes()->orderBy('name')->get();
+        $this->ownerBusinesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
 
-        $firstCarwash = $this->ownerCarwashes->first();
-        if ($firstCarwash) {
-            $this->selectedCarwash = $firstCarwash->id;
+        $firstBusiness = $this->ownerBusinesses->first();
+        if ($firstBusiness) {
+            $this->selectedBusiness = $firstBusiness->id;
             $this->loadData();
         }
     }
@@ -110,7 +110,7 @@ class Posscreen extends Component
 
     public function loadData()
     {
-        if (!$this->selectedCarwash) return;
+        if (!$this->selectedBusiness) return;
 
         $this->loadItems();
         $this->loadCategories();
@@ -121,12 +121,12 @@ class Posscreen extends Component
 
     public function loadItems()
     {
-        if (!$this->selectedCarwash) {
+        if (!$this->selectedBusiness) {
             $this->availableItems = [];
             return;
         }
 
-        $this->availableItems = items::where('carwash_id', $this->selectedCarwash)
+        $this->availableItems = items::where('business_id', $this->selectedBusiness)
             ->where('status', 'active')
             ->when($this->selectedCategory, fn($q) => $q->where('category_id', $this->selectedCategory))
             ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))
@@ -138,7 +138,7 @@ class Posscreen extends Component
 
     public function loadCategories()
     {
-        $this->availableCategories = category::where('carwash_id', $this->selectedCarwash)
+        $this->availableCategories = category::where('business_id', $this->selectedBusiness)
             ->where('status', 'active')
             ->orderBy('name')
             ->get()
@@ -147,16 +147,17 @@ class Posscreen extends Component
 
     public function loadCustomers()
     {
-        $this->availableCustomers = customers::where('carwash_id', $this->selectedCarwash)
+        $this->availableCustomers = customers::where('business_id', $this->selectedBusiness)
             ->where('status', 'active')
             ->orderBy('name')
             ->get()
+            ->pluck('name', 'id')
             ->toArray();
     }
 
     public function loadStaffs()
     {
-        $this->availableStaffs = staffs::where('carwash_id', $this->selectedCarwash)
+        $this->availableStaffs = staffs::where('business_id', $this->selectedBusiness)
             ->where('status', 'active')
             ->orderBy('name')
             ->get()
@@ -165,7 +166,7 @@ class Posscreen extends Component
 
     public function loadPaymentMethods()
     {
-        $this->availablePaymentMethods = payment_method::where('carwash_id', $this->selectedCarwash)
+        $this->availablePaymentMethods = payment_method::where('business_id', $this->selectedBusiness)
             ->where('status', 'active')
             ->orderBy('name')
             ->get()
@@ -338,7 +339,7 @@ class Posscreen extends Component
                 'name' => $this->newCustomerName,
                 'phone' => $this->newCustomerPhone,
                 'email' => $this->newCustomerEmail ?: null,
-                'carwash_id' => $this->selectedCarwash,
+                'business_id' => $this->selectedBusiness,
                 'user_id' => Auth::id(),
                 'status' => 'active',
             ]);
@@ -530,7 +531,7 @@ class Posscreen extends Component
 
             // Create sale
             $sale = sales::create([
-                'carwash_id' => $this->selectedCarwash,
+                'business_id' => $this->selectedBusiness,
                 'sale_status' => 'completed',
                 'sale_type' => 'in-store',
                 'sale_date' => now(),
@@ -620,7 +621,7 @@ class Posscreen extends Component
         if (str_contains($message, 'payment_method_id')) {
             return 'Please select a valid payment method.';
         }
-        if (str_contains($message, 'carwash_id')) {
+        if (str_contains($message, 'business_id')) {
             return 'Please select a carwash first.';
         }
         if (str_contains($message, 'Duplicate entry')) {
@@ -636,7 +637,7 @@ class Posscreen extends Component
     private function updateItemBalance($itemId, $quantity, $transactionType)
     {
         $lastBalance = item_balance::where('item_id', $itemId)
-            ->where('carwash_id', $this->selectedCarwash)
+            ->where('business_id', $this->selectedBusiness)
             ->latest()
             ->first();
 
@@ -646,7 +647,7 @@ class Posscreen extends Component
         item_balance::create([
             'item_id' => $itemId,
             'user_id' => Auth::id(),
-            'carwash_id' => $this->selectedCarwash,
+            'business_id' => $this->selectedBusiness,
             'previous_balance' => $previousBalance,
             'current_balance' => $newBalance,
             'quantity_changed' => abs($quantity),
@@ -659,7 +660,7 @@ class Posscreen extends Component
     // Recent sales
     public function openRecentModal()
     {
-        $this->recentSales = sales::where('carwash_id', $this->selectedCarwash)
+        $this->recentSales = sales::where('business_id', $this->selectedBusiness)
             ->with(['customer', 'user', 'items.item'])
             ->latest()
             ->take(10)
@@ -686,8 +687,8 @@ class Posscreen extends Component
         $this->lastSale = $sale->toArray();
         $this->lastSaleItems = $sale->items->toArray();
         $this->lastSalePayments = $sale->payments->toArray();
-        $this->carwashInfo = $sale->carwash ? $sale->carwash->toArray() : null;
-        $this->carwashSettings = $sale->carwash && $sale->carwash->settings ? $sale->carwash->settings->toArray() : null;
+        $this->carwashInfo = $sale->carwash ? $sale->business->toArray() : null;
+        $this->carwashSettings = $sale->carwash && $sale->business->settings ? $sale->business->settings->toArray() : null;
         $this->showReceiptModal = true;
     }
 

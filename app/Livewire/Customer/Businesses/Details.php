@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Livewire\Customer\Carwashes;
+namespace App\Livewire\Customer\Businesses;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Auth;
-use App\Models\carwashes;
+use App\Models\Business;
 use App\Models\Booking;
 use App\Models\items;
 
 #[Layout('components.layouts.app-customer')]
 class Details extends Component
 {
-    public $carwash;
+    public $business;
     public $services = [];
     public $selectedService = '';
     public $bookingDate = '';
@@ -22,10 +22,10 @@ class Details extends Component
 
     public function mount($id)
     {
-        $this->carwash = carwashes::with(['regions', 'districts', 'wards', 'streets'])
+        $this->carwash = Business::with(['regions', 'districts', 'wards', 'streets'])
             ->findOrFail($id);
 
-        $this->services = items::where('carwash_id', $id)
+        $this->services = items::where('business_id', $id)
             ->where('status', 'active')
             ->where('type', 'Service')
             ->get();
@@ -53,7 +53,7 @@ class Details extends Component
 
         Booking::create([
             'customer_id' => Auth::id(),
-            'carwash_id' => $this->carwash->id,
+            'business_id' => $this->business->id,
             'item_id' => $this->selectedService,
             'booking_date' => $this->bookingDate,
             'plate_number' => $this->plateNumber,
@@ -67,6 +67,6 @@ class Details extends Component
 
     public function render()
     {
-        return view('livewire.customer.carwashes.details');
+        return view('livewire.customer.businesses.details');
     }
 }

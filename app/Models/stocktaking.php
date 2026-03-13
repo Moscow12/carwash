@@ -14,7 +14,7 @@ class stocktaking extends Model
     protected $fillable = [
         'item_id',
         'user_id',
-        'carwash_id',
+        'business_id',
         'quantity',
         'price',
         'stocktaking_status',
@@ -37,9 +37,9 @@ class stocktaking extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function carwash()
+    public function business()
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     // Scopes
@@ -58,9 +58,9 @@ class stocktaking extends Model
         return $query->where('stocktaking_status', 'canceled');
     }
 
-    public function scopeForCarwash($query, $carwashId)
+    public function scopeForBusiness($query, $businessId)
     {
-        return $query->where('carwash_id', $carwashId);
+        return $query->where('business_id', $businessId);
     }
 
     // Helpers

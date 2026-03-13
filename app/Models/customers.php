@@ -17,7 +17,7 @@ class customers extends Model
         'phone',
         'address',
         'status',
-        'carwash_id',
+        'business_id',
         'user_id',
     ];
 
@@ -25,12 +25,6 @@ class customers extends Model
     public function business()
     {
         return $this->belongsTo(Business::class, 'business_id');
-    }
-
-    // Legacy support
-    public function carwash()
-    {
-        return $this->business();
     }
 
     public function user()
@@ -57,12 +51,6 @@ class customers extends Model
     public function scopeForBusiness($query, $businessId)
     {
         return $query->where('business_id', $businessId);
-    }
-
-    // Legacy support
-    public function scopeForCarwash($query, $carwashId)
-    {
-        return $this->scopeForBusiness($query, $carwashId);
     }
 
     // Computed attributes

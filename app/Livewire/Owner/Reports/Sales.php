@@ -8,7 +8,7 @@ use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\carwashes;
+use App\Models\Business;
 use App\Models\sales as SalesModel;
 use App\Models\sales_item;
 use App\Models\items;
@@ -25,7 +25,7 @@ class Sales extends Component
 
     // Filters
     #[Url]
-    public $carwash_id = '';
+    public $business_id = '';
 
     #[Url]
     public $search = '';
@@ -58,7 +58,7 @@ class Sales extends Component
     public $showFilters = true;
 
     // Data
-    public $carwashes = [];
+    public $businesses = [];
     public $categories = [];
     public $customersList = [];
 
@@ -71,17 +71,17 @@ class Sales extends Component
     public function mount()
     {
         $owner = Auth::user();
-        $carwashCollection = $owner->ownedCarwashes()->get();
+        $businessCollection = $owner->ownedBusinesses()->get();
 
-        $this->carwashes = $carwashCollection->map(function ($carwash) {
+        $this->carwashes = $businessCollection->map(function ($business) {
             return [
-                'id' => $carwash->id,
-                'name' => $carwash->name,
+                'id' => $business->id,
+                'name' => $business->name,
             ];
         })->toArray();
 
-        if (count($this->carwashes) > 0 && empty($this->carwash_id)) {
-            $this->carwash_id = $this->carwashes[0]['id'];
+        if (count($this->carwashes) > 0 && empty($this->business_id)) {
+            $this->business_id = $this->carwashes[0]['id'];
         }
 
         // Set default date range to current year
@@ -157,19 +157,19 @@ class Sales extends Component
 
     protected function loadFilterData()
     {
-        if (empty($this->carwash_id)) {
+        if (empty($this->business_id)) {
             return;
         }
 
         // Load categories
-        $this->categories = category::where('carwash_id', $this->carwash_id)
+        $this->categories = category::where('business_id', $this->business_id)
             ->where('status', 'active')
             ->get()
             ->map(fn($c) => ['id' => $c->id, 'name' => $c->name])
             ->toArray();
 
         // Load customers
-        $this->customersList = customers::where('carwash_id', $this->carwash_id)
+        $this->customersList = customers::where('business_id', $this->business_id)
             ->get()
             ->map(fn($c) => ['id' => $c->id, 'name' => $c->name])
             ->toArray();
@@ -202,7 +202,7 @@ class Sales extends Component
             ->join('sales', 'sales_items.sale_id', '=', 'sales.id')
             ->join('items', 'sales_items.item_id', '=', 'items.id')
             ->leftJoin('customers', 'sales.customer_id', '=', 'customers.id')
-            ->where('sales.carwash_id', $this->carwash_id)
+            ->where('sales.business_id', $this->business_id)
             ->where('sales.sale_status', 'completed')
             ->whereBetween('sales.sale_date', [$startDateTime, $endDateTime]);
 

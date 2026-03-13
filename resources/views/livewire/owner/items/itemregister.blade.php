@@ -18,7 +18,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="mb-1">Items / Services</h3>
-            <p class="text-muted mb-0">Manage products and services for your carwashes</p>
+            <p class="text-muted mb-0">Manage products and services for your businesses</p>
         </div>
         <button wire:click="openModal" class="btn btn-primary">
             <i class="ti ti-plus me-1"></i> Add Item
@@ -40,14 +40,14 @@
                                placeholder="Search items...">
                     </div>
                 </div>
-                @if($ownerCarwashes->count() > 1)
+                @if($ownerBusinesses->count() > 1)
                 <div class="col-md-2">
-                    <label class="form-label small text-muted mb-1">Carwash</label>
+                    <label class="form-label small text-muted mb-1">Business</label>
                     <x-forms.select2
-                        name="filterCarwash"
-                        placeholder="All Carwashes"
-                        :options="$ownerCarwashes->pluck('name', 'id')"
-                        wire:model.live="filterCarwash"
+                        name="filterBusiness"
+                        placeholder="All Businesses"
+                        :options="collect($ownerBusinesses)->pluck('name', 'id')"
+                        wire:model.live="filterBusiness"
                         wrapper="false"
                     />
                 </div>
@@ -167,10 +167,10 @@
                         </div>
                     </div>
 
-                    @if($ownerCarwashes->count() > 1)
+                    @if($ownerBusinesses->count() > 1)
                     <div class="mt-2 pt-2 border-top">
                         <small class="text-muted">
-                            <i class="ti ti-building-store me-1"></i>{{ $item->carwash->name ?? '-' }}
+                            <i class="ti ti-building-store me-1"></i>{{ $item->business->name ?? '-' }}
                         </small>
                     </div>
                     @endif
@@ -246,14 +246,14 @@
                             <i class="ti ti-info-circle me-1"></i> Basic Information
                         </h6>
                         <div class="row g-3 mb-4">
-                            @if($ownerCarwashes->count() > 1)
+                            @if($ownerBusinesses->count() > 1)
                             <div class="col-md-6">
                                 <x-forms.select2
-                                    name="carwash_id"
-                                    label="Carwash"
-                                    placeholder="Select Carwash"
-                                    :options="$ownerCarwashes->pluck('name', 'id')"
-                                    wire:model.live="carwash_id"
+                                    name="business_id"
+                                    label="Business"
+                                    placeholder="Select Business"
+                                    :options="collect($ownerBusinesses)->pluck('name', 'id')"
+                                    wire:model.live="business_id"
                                     required
                                     wrapper="false"
                                 />

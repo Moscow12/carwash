@@ -54,11 +54,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Get carwashes owned by this user
+     * Get businesses owned by this user
      */
-    public function ownedCarwashes(): HasMany
+    public function ownedBusinesses(): HasMany
     {
-        return $this->hasMany(carwashes::class, 'owner_id');
+        return $this->hasMany(Business::class, 'owner_id');
     }
 
     /**

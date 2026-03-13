@@ -10,7 +10,7 @@ use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\items;
-use App\Models\carwashes;
+use App\Models\Business;
 use App\Models\category;
 use App\Models\unit;
 
@@ -20,7 +20,7 @@ class Itemregister extends Component
     use WithPagination, WithFileUploads;
 
     public $search = '';
-    public $filterCarwash = '';
+    public $filterBusiness = '';
     public $filterCategory = '';
     public $filterType = '';
     public $filterStatus = '';
@@ -68,8 +68,8 @@ class Itemregister extends Component
     #[Rule('required|in:active,inactive')]
     public $status = 'active';
 
-    #[Rule('required|exists:carwashes,id')]
-    public $carwash_id = '';
+    #[Rule('required|exists:businesses,id')]
+    public $business_id = '';
 
     #[Rule('required|exists:categories,id')]
     public $category_id = '';
@@ -82,18 +82,18 @@ class Itemregister extends Component
 
     public $existingImage = null;
 
-    public $ownerCarwashes = [];
+    public $ownerBusinesses = [];
     public $availableCategories = [];
     public $availableUnits = [];
 
     public function mount()
     {
-        $this->ownerCarwashes = Auth::user()->ownedCarwashes()->orderBy('name')->get();
+        $this->ownerBusinesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
         $this->availableUnits = unit::where('status', 'active')->orderBy('name')->get();
 
-        if ($this->ownerCarwashes->count() === 1) {
-            $this->carwash_id = $this->ownerCarwashes->first()->id;
-            $this->filterCarwash = $this->carwash_id;
+        if ($this->ownerBusinesses->count() === 1) {
+            $this->business_id = $this->ownerBusinesses->first()->id;
+            $this->filterBusiness = $this->business_id;
             $this->loadCategories();
         }
     }
@@ -111,8 +111,8 @@ class Itemregister extends Component
 
     public function loadCategories()
     {
-        if ($this->carwash_id) {
-            $this->availableCategories = category::where('carwash_id', $this->carwash_id)
+        if ($this->business_id) {
+            $this->availableCategories = category::where('business_id', $this->business_id)
                 ->where('status', 'active')
                 ->orderBy('name')
                 ->get();
@@ -150,7 +150,7 @@ class Itemregister extends Component
         $this->commission = $item->commission ?? '';
         $this->commission_type = $item->commission_type ?? '';
         $this->status = $item->status;
-        $this->carwash_id = $item->carwash_id;
+        $this->business_id = $item->business_id;
         $this->category_id = $item->category_id;
         $this->unit_id = $item->unit_id;
         $this->existingImage = $item->image;
@@ -172,8 +172,8 @@ class Itemregister extends Component
         $item = items::findOrFail($this->itemId);
 
         // Verify ownership
-        $carwashIds = Auth::user()->ownedCarwashes()->pluck('id');
-        if (!$carwashIds->contains($item->carwash_id)) {
+        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        if (!$businessIds->contains($item->business_id)) {
             session()->flash('error', 'Unauthorized action.');
             $this->showDeleteModal = false;
             return;
@@ -195,8 +195,8 @@ class Itemregister extends Component
         $item = items::findOrFail($id);
 
         // Verify ownership
-        $carwashIds = Auth::user()->ownedCarwashes()->pluck('id');
-        if (!$carwashIds->contains($item->carwash_id)) {
+        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        if (!$businessIds->contains($item->business_id)) {
             session()->flash('error', 'Unauthorized action.');
             return;
         }
@@ -215,7 +215,7 @@ class Itemregister extends Component
         // Custom barcode uniqueness validation per carwash
         if ($this->barcode) {
             $query = items::where('barcode', $this->barcode)
-                ->where('carwash_id', $this->carwash_id);
+                ->where('business_id', $this->business_id);
 
             if ($this->editMode && $this->itemId) {
                 $query->where('id', '!=', $this->itemId);
@@ -228,8 +228,8 @@ class Itemregister extends Component
         }
 
         // Verify carwash ownership
-        $carwashIds = Auth::user()->ownedCarwashes()->pluck('id');
-        if (!$carwashIds->contains($this->carwash_id)) {
+        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        if (!$businessIds->contains($this->business_id)) {
             session()->flash('error', 'Invalid carwash selected.');
             return;
         }
@@ -247,7 +247,7 @@ class Itemregister extends Component
             'commission' => $this->commission ?: null,
             'commission_type' => $this->commission ? $this->commission_type : null,
             'status' => $this->status,
-            'carwash_id' => $this->carwash_id,
+            'business_id' => $this->business_id,
             'category_id' => $this->category_id,
             'unit_id' => $this->unit_id,
         ];
@@ -314,12 +314,12 @@ class Itemregister extends Component
         $this->require_plate_number = 'no';
         $this->status = 'active';
 
-        if ($this->ownerCarwashes->count() === 1) {
-            $this->carwash_id = $this->ownerCarwashes->first()->id;
+        if ($this->ownerBusinesses->count() === 1) {
+            $this->business_id = $this->ownerBusinesses->first()->id;
             $this->loadCategories();
         } else {
-            $this->carwash_id = $this->filterCarwash ?: '';
-            if ($this->carwash_id) {
+            $this->business_id = $this->filterBusiness ?: '';
+            if ($this->business_id) {
                 $this->loadCategories();
             } else {
                 $this->availableCategories = [];
@@ -331,9 +331,9 @@ class Itemregister extends Component
 
     public function render()
     {
-        $carwashIds = Auth::user()->ownedCarwashes()->pluck('id');
+        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
 
-        $items = items::whereIn('carwash_id', $carwashIds)
+        $items = items::whereIn('business_id', $businessIds)
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%')
@@ -341,8 +341,8 @@ class Itemregister extends Component
                       ->orWhere('barcode', 'like', '%' . $this->search . '%');
                 });
             })
-            ->when($this->filterCarwash, function ($query) {
-                $query->where('carwash_id', $this->filterCarwash);
+            ->when($this->filterBusiness, function ($query) {
+                $query->where('business_id', $this->filterBusiness);
             })
             ->when($this->filterCategory, function ($query) {
                 $query->where('category_id', $this->filterCategory);
@@ -353,14 +353,14 @@ class Itemregister extends Component
             ->when($this->filterStatus, function ($query) {
                 $query->where('status', $this->filterStatus);
             })
-            ->with(['carwash', 'category', 'unit'])
+            ->with(['business', 'category', 'unit'])
             ->latest()
             ->paginate(10);
 
         // Get categories for filter based on selected carwash
-        $filterCategories = $this->filterCarwash
-            ? category::where('carwash_id', $this->filterCarwash)->where('status', 'active')->get()
-            : category::whereIn('carwash_id', $carwashIds)->where('status', 'active')->get();
+        $filterCategories = $this->filterBusiness
+            ? category::where('business_id', $this->filterBusiness)->where('status', 'active')->get()
+            : category::whereIn('business_id', $businessIds)->where('status', 'active')->get();
 
         return view('livewire.owner.items.itemregister', [
             'items' => $items,

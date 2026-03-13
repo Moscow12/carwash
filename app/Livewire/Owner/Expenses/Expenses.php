@@ -18,7 +18,7 @@ class Expenses extends Component
     use WithPagination;
 
     // Filters
-    public $selectedCarwash = '';
+    public $selectedBusiness = '';
     public $categoryFilter = '';
     public $subcategoryFilter = '';
     public $paymentStatusFilter = '';
@@ -58,9 +58,9 @@ class Expenses extends Component
 
     public function mount()
     {
-        $firstCarwash = Auth::user()->ownedCarwashes()->first();
-        if ($firstCarwash) {
-            $this->selectedCarwash = $firstCarwash->id;
+        $firstBusiness = Auth::user()->ownedBusinesses()->first();
+        if ($firstBusiness) {
+            $this->selectedBusiness = $firstBusiness->id;
         }
 
         // Set default date range to current year
@@ -98,7 +98,7 @@ class Expenses extends Component
 
     public function loadStats()
     {
-        if (!$this->selectedCarwash) {
+        if (!$this->selectedBusiness) {
             $this->totalExpenses = 0;
             $this->totalAmount = 0;
             $this->totalPaid = 0;
@@ -106,7 +106,7 @@ class Expenses extends Component
             return;
         }
 
-        $baseQuery = ExpenseModel::where('carwash_id', $this->selectedCarwash);
+        $baseQuery = ExpenseModel::where('business_id', $this->selectedBusiness);
 
         if ($this->dateFrom && $this->dateTo) {
             $baseQuery->inDateRange($this->dateFrom, $this->dateTo);
@@ -122,8 +122,8 @@ class Expenses extends Component
     {
         $this->resetForm();
         $this->expense_date = Carbon::now()->format('Y-m-d');
-        if ($this->selectedCarwash) {
-            $this->reference_no = ExpenseModel::generateReferenceNo($this->selectedCarwash);
+        if ($this->selectedBusiness) {
+            $this->reference_no = ExpenseModel::generateReferenceNo($this->selectedBusiness);
         }
         $this->showModal = true;
     }
@@ -187,7 +187,7 @@ class Expenses extends Component
             'payment_status' => 'required|in:pending,partial,paid',
         ]);
 
-        if (!$this->selectedCarwash) {
+        if (!$this->selectedBusiness) {
             session()->flash('error', 'Please select a carwash first.');
             return;
         }
@@ -200,8 +200,8 @@ class Expenses extends Component
 
             $data = [
                 'expense_date' => $this->expense_date,
-                'reference_no' => $this->reference_no ?: ExpenseModel::generateReferenceNo($this->selectedCarwash),
-                'carwash_id' => $this->selectedCarwash,
+                'reference_no' => $this->reference_no ?: ExpenseModel::generateReferenceNo($this->selectedBusiness),
+                'business_id' => $this->selectedBusiness,
                 'category_id' => $this->category_id ?: null,
                 'subcategory_id' => $this->subcategory_id ?: null,
                 'total_amount' => $this->total_amount,
@@ -266,11 +266,11 @@ class Expenses extends Component
 
     public function getCategories()
     {
-        if (!$this->selectedCarwash) {
+        if (!$this->selectedBusiness) {
             return collect();
         }
 
-        return expense_category::where('carwash_id', $this->selectedCarwash)
+        return expense_category::where('business_id', $this->selectedBusiness)
             ->parentCategories()
             ->active()
             ->orderBy('name')
@@ -279,11 +279,11 @@ class Expenses extends Component
 
     public function getSubcategories($parentId = null)
     {
-        if (!$this->selectedCarwash) {
+        if (!$this->selectedBusiness) {
             return collect();
         }
 
-        $query = expense_category::where('carwash_id', $this->selectedCarwash)
+        $query = expense_category::where('business_id', $this->selectedBusiness)
             ->subCategories()
             ->active()
             ->orderBy('name');
@@ -297,11 +297,11 @@ class Expenses extends Component
 
     public function getStaffs()
     {
-        if (!$this->selectedCarwash) {
+        if (!$this->selectedBusiness) {
             return collect();
         }
 
-        return staffs::where('carwash_id', $this->selectedCarwash)
+        return staffs::where('business_id', $this->selectedBusiness)
             ->active()
             ->orderBy('name')
             ->get();
@@ -316,15 +316,15 @@ class Expenses extends Component
     {
         $this->loadStats();
 
-        $carwashes = Auth::user()->ownedCarwashes()->orderBy('name')->get();
+        $businesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
 
         $expenses = collect();
         $paidCount = 0;
         $grandTotal = 0;
         $grandPaymentDue = 0;
 
-        if ($this->selectedCarwash) {
-            $query = ExpenseModel::where('carwash_id', $this->selectedCarwash)
+        if ($this->selectedBusiness) {
+            $query = ExpenseModel::where('business_id', $this->selectedBusiness)
                 ->when($this->categoryFilter, fn($q) => $q->where('category_id', $this->categoryFilter))
                 ->when($this->subcategoryFilter, fn($q) => $q->where('subcategory_id', $this->subcategoryFilter))
                 ->when($this->paymentStatusFilter, fn($q) => $q->where('payment_status', $this->paymentStatusFilter))
@@ -339,7 +339,7 @@ class Expenses extends Component
                             ->orWhere('contact', 'like', "%{$this->search}%");
                     });
                 })
-                ->with(['category', 'subcategory', 'carwash', 'addedByUser', 'expenseForStaff', 'contactSupplier'])
+                ->with(['category', 'subcategory', 'business', 'addedByUser', 'expenseForStaff', 'contactSupplier'])
                 ->orderBy('expense_date', 'desc')
                 ->orderBy('created_at', 'desc');
 
@@ -353,7 +353,7 @@ class Expenses extends Component
 
         return view('livewire.owner.expenses.expenses', [
             'expenses' => $expenses,
-            'carwashes' => $carwashes,
+            'businesses' => $businesses,
             'categories' => $this->getCategories(),
             'subcategories' => $this->getSubcategories($this->categoryFilter ?: $this->category_id),
             'staffs' => $this->getStaffs(),

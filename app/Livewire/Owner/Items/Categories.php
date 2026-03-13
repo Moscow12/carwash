@@ -9,7 +9,7 @@ use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\Models\category;
-use App\Models\carwashes;
+use App\Models\Business;
 
 #[Layout('components.layouts.app-owner')]
 class Categories extends Component
@@ -17,7 +17,7 @@ class Categories extends Component
     use WithPagination;
 
     public $search = '';
-    public $filterCarwash = '';
+    public $filterBusiness = '';
     public $showModal = false;
     public $showDeleteModal = false;
     public $editMode = false;
@@ -32,20 +32,20 @@ class Categories extends Component
     #[Rule('required|in:active,inactive')]
     public $status = 'active';
 
-    #[Rule('required|exists:carwashes,id')]
-    public $carwash_id = '';
+    #[Rule('required|exists:businesses,id')]
+    public $business_id = '';
 
-    public $ownerCarwashes = [];
-    public $hasCarwashes = false;
+    public $ownerBusinesses = [];
+    public $hasBusinesses = false;
 
     public function mount()
     {
-        $this->ownerCarwashes = Auth::user()->ownedCarwashes()->orderBy('name')->get();
-        $this->hasCarwashes = $this->ownerCarwashes->count() > 0;
+        $this->ownerBusinesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
+        $this->hasBusinesses = $this->ownerBusinesses->count() > 0;
 
-        if ($this->ownerCarwashes->count() === 1) {
-            $this->carwash_id = $this->ownerCarwashes->first()->id;
-            $this->filterCarwash = $this->carwash_id;
+        if ($this->ownerBusinesses->count() === 1) {
+            $this->business_id = $this->ownerBusinesses->first()->id;
+            $this->filterBusiness = $this->business_id;
         }
     }
 
@@ -74,7 +74,7 @@ class Categories extends Component
         $this->name = $category->name;
         $this->description = $category->description ?? '';
         $this->status = $category->status;
-        $this->carwash_id = $category->carwash_id;
+        $this->business_id = $category->business_id;
 
         $this->editMode = true;
         $this->showModal = true;
@@ -91,8 +91,8 @@ class Categories extends Component
         $category = category::findOrFail($this->categoryId);
 
         // Verify ownership
-        $carwashIds = Auth::user()->ownedCarwashes()->pluck('id');
-        if (!$carwashIds->contains($category->carwash_id)) {
+        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        if (!$businessIds->contains($category->business_id)) {
             session()->flash('error', 'Unauthorized action.');
             $this->showDeleteModal = false;
             return;
@@ -109,8 +109,8 @@ class Categories extends Component
         $this->validate();
 
         // Verify carwash ownership
-        $carwashIds = Auth::user()->ownedCarwashes()->pluck('id');
-        if (!$carwashIds->contains($this->carwash_id)) {
+        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        if (!$businessIds->contains($this->business_id)) {
             session()->flash('error', 'Invalid carwash selected.');
             return;
         }
@@ -120,7 +120,7 @@ class Categories extends Component
             'slug' => Str::slug($this->name),
             'description' => $this->description ?: null,
             'status' => $this->status,
-            'carwash_id' => $this->carwash_id,
+            'business_id' => $this->business_id,
         ];
 
         if ($this->editMode) {
@@ -152,10 +152,10 @@ class Categories extends Component
         $this->reset(['categoryId', 'name', 'description', 'status']);
         $this->status = 'active';
 
-        if ($this->ownerCarwashes->count() === 1) {
-            $this->carwash_id = $this->ownerCarwashes->first()->id;
+        if ($this->ownerBusinesses->count() === 1) {
+            $this->business_id = $this->ownerBusinesses->first()->id;
         } else {
-            $this->carwash_id = $this->filterCarwash ?: '';
+            $this->business_id = $this->filterBusiness ?: '';
         }
 
         $this->resetValidation();
@@ -163,16 +163,16 @@ class Categories extends Component
 
     public function render()
     {
-        $carwashIds = Auth::user()->ownedCarwashes()->pluck('id');
+        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
 
-        $categories = category::whereIn('carwash_id', $carwashIds)
+        $categories = category::whereIn('business_id', $businessIds)
             ->when($this->search, function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%');
             })
-            ->when($this->filterCarwash, function ($query) {
-                $query->where('carwash_id', $this->filterCarwash);
+            ->when($this->filterBusiness, function ($query) {
+                $query->where('business_id', $this->filterBusiness);
             })
-            ->with('carwash')
+            ->with('business')
             ->latest()
             ->paginate(10);
 

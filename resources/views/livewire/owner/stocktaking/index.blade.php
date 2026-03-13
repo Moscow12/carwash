@@ -111,10 +111,10 @@
                 </div>
                 <div class="col-md-3">
                     <x-forms.select2
-                        name="selectedCarwash"
-                        :options="$ownerCarwashes"
-                        wire:model.live="selectedCarwash"
-                        placeholder="All Carwashes"
+                        name="selectedBusiness"
+                        :options="$ownerBusinesses"
+                        wire:model.live="selectedBusiness"
+                        placeholder="All Businesses"
                         wrapper="false"
                     />
                 </div>
@@ -398,7 +398,7 @@
                         @else
                         <div class="alert alert-warning mt-4">
                             <i class="ti ti-alert-triangle me-2"></i>
-                            No products found for the selected carwash. Only items with type "product" can be imported.
+                            No products found for the selected business. Only items with type "product" can be imported.
                         </div>
                         @endif
 

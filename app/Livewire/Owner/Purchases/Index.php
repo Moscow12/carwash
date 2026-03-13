@@ -22,7 +22,7 @@ class Index extends Component
 
     // Filters
     public $search = '';
-    public $selectedCarwash = '';
+    public $selectedBusiness = '';
     public $purchaseStatusFilter = '';
     public $paymentStatusFilter = '';
 
@@ -55,18 +55,18 @@ class Index extends Component
     public $notes = '';
 
     // Data
-    public $ownerCarwashes = [];
+    public $ownerBusinesses = [];
     public $availableItems = [];
     public $availableSuppliers = [];
 
     public function mount()
     {
-        $this->ownerCarwashes = Auth::user()->ownedCarwashes()->orderBy('name')->get();
+        $this->ownerBusinesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
         $this->availableSuppliers = suplier::orderBy('name')->get();
 
-        $firstCarwash = $this->ownerCarwashes->first();
-        if ($firstCarwash) {
-            $this->selectedCarwash = $firstCarwash->id;
+        $firstBusiness = $this->ownerBusinesses->first();
+        if ($firstBusiness) {
+            $this->selectedBusiness = $firstBusiness->id;
             $this->loadItems();
         }
     }
@@ -94,8 +94,8 @@ class Index extends Component
 
     public function loadItems()
     {
-        if ($this->selectedCarwash) {
-            $this->availableItems = items::where('carwash_id', $this->selectedCarwash)
+        if ($this->selectedBusiness) {
+            $this->availableItems = items::where('business_id', $this->selectedBusiness)
                 ->where('type', 'product')
                 ->where('status', 'active')
                 ->orderBy('name')
@@ -144,7 +144,7 @@ class Index extends Component
 
         // Verify item belongs to selected carwash
         $item = items::where('id', $this->item_id)
-            ->where('carwash_id', $this->selectedCarwash)
+            ->where('business_id', $this->selectedBusiness)
             ->first();
 
         if (!$item) {
@@ -186,7 +186,7 @@ class Index extends Component
                     'item_id' => $this->item_id,
                     'user_id' => Auth::id(),
                     'supplier_id' => $this->supplier_id,
-                    'carwash_id' => $this->selectedCarwash,
+                    'business_id' => $this->selectedBusiness,
                     'quantity' => $this->quantity,
                     'price' => $this->price,
                     'discount' => $this->discount ?: null,
@@ -214,7 +214,7 @@ class Index extends Component
     private function updateItemBalance($itemId, $quantity, $transactionType)
     {
         $lastBalance = item_balance::where('item_id', $itemId)
-            ->where('carwash_id', $this->selectedCarwash)
+            ->where('business_id', $this->selectedBusiness)
             ->latest()
             ->first();
 
@@ -224,7 +224,7 @@ class Index extends Component
         item_balance::create([
             'item_id' => $itemId,
             'user_id' => Auth::id(),
-            'carwash_id' => $this->selectedCarwash,
+            'business_id' => $this->selectedBusiness,
             'previous_balance' => $previousBalance,
             'current_balance' => $newBalance,
             'quantity_changed' => $quantity,
@@ -243,7 +243,7 @@ class Index extends Component
         try {
             // Reverse balance if was received
             if ($purchase->purchase_status === 'received') {
-                $this->selectedCarwash = $purchase->carwash_id;
+                $this->selectedBusiness = $purchase->business_id;
                 $this->updateItemBalance($purchase->item_id, -$purchase->quantity, 'adjustment');
             }
 
@@ -269,10 +269,10 @@ class Index extends Component
 
             // Handle balance updates
             if ($previousStatus !== 'received' && $status === 'received') {
-                $this->selectedCarwash = $purchase->carwash_id;
+                $this->selectedBusiness = $purchase->business_id;
                 $this->updateItemBalance($purchase->item_id, $purchase->quantity, 'purchase');
             } elseif ($previousStatus === 'received' && $status !== 'received') {
-                $this->selectedCarwash = $purchase->carwash_id;
+                $this->selectedBusiness = $purchase->business_id;
                 $this->updateItemBalance($purchase->item_id, -$purchase->quantity, 'adjustment');
             }
 
@@ -310,7 +310,7 @@ class Index extends Component
     public function getItemBalance($itemId)
     {
         $lastBalance = item_balance::where('item_id', $itemId)
-            ->where('carwash_id', $this->selectedCarwash)
+            ->where('business_id', $this->selectedBusiness)
             ->latest()
             ->first();
 
@@ -319,10 +319,10 @@ class Index extends Component
 
     public function render()
     {
-        $carwashIds = Auth::user()->ownedCarwashes()->pluck('id');
+        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
 
-        $purchases = purchase::whereIn('carwash_id', $carwashIds)
-            ->when($this->selectedCarwash, fn($q) => $q->where('carwash_id', $this->selectedCarwash))
+        $purchases = purchase::whereIn('business_id', $businessIds)
+            ->when($this->selectedBusiness, fn($q) => $q->where('business_id', $this->selectedBusiness))
             ->when($this->purchaseStatusFilter, fn($q) => $q->where('purchase_status', $this->purchaseStatusFilter))
             ->when($this->paymentStatusFilter, fn($q) => $q->where('payment_status', $this->paymentStatusFilter))
             ->when($this->search, function ($q) {
@@ -331,13 +331,13 @@ class Index extends Component
                           ->orWhereHas('supplier', fn($q) => $q->where('name', 'like', "%{$this->search}%"));
                 });
             })
-            ->with(['carwash', 'item', 'supplier', 'user'])
+            ->with(['business', 'item', 'supplier', 'user'])
             ->latest()
             ->paginate(10);
 
         // Summary stats
-        $baseQuery = purchase::whereIn('carwash_id', $carwashIds)
-            ->when($this->selectedCarwash, fn($q) => $q->where('carwash_id', $this->selectedCarwash));
+        $baseQuery = purchase::whereIn('business_id', $businessIds)
+            ->when($this->selectedBusiness, fn($q) => $q->where('business_id', $this->selectedBusiness));
 
         $stats = [
             // Purchase Status

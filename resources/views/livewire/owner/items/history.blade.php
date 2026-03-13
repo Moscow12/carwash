@@ -19,11 +19,11 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <x-forms.select2
-                        name="selectedCarwash"
+                        name="selectedBusiness"
                         label="Business Location"
                         placeholder="Select Location"
-                        :options="$carwashes->pluck('name', 'id')"
-                        wire:model.live="selectedCarwash"
+                        :options="$businesses->pluck('name', 'id')"
+                        wire:model.live="selectedBusiness"
                         wrapper="false"
                     />
                 </div>

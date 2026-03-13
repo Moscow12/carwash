@@ -14,7 +14,7 @@ class expenses extends Model
     protected $fillable = [
         'reference_no',
         'expense_date',
-        'carwash_id',
+        'business_id',
         'category_id',
         'subcategory_id',
         'total_amount',
@@ -46,9 +46,9 @@ class expenses extends Model
     ];
 
     // Relationships
-    public function carwash()
+    public function business()
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function category()
@@ -97,9 +97,9 @@ class expenses extends Model
         return $query->where('payment_status', 'partial');
     }
 
-    public function scopeForCarwash($query, $carwashId)
+    public function scopeForBusiness($query, $businessId)
     {
-        return $query->where('carwash_id', $carwashId);
+        return $query->where('business_id', $businessId);
     }
 
     public function scopeInDateRange($query, $startDate, $endDate)
@@ -179,10 +179,10 @@ class expenses extends Model
     }
 
     // Generate reference number
-    public static function generateReferenceNo($carwashId)
+    public static function generateReferenceNo($businessId)
     {
         $year = date('Y');
-        $count = self::where('carwash_id', $carwashId)
+        $count = self::where('business_id', $businessId)
             ->whereYear('created_at', $year)
             ->count() + 1;
 

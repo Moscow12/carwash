@@ -55,27 +55,27 @@
                 </div>
             </div>
 
-            {{-- Step 2: Select Carwash --}}
+            {{-- Step 2: Select Business --}}
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-transparent">
                     <div class="d-flex align-items-center">
                         <div class="avatar avatar-sm bg-primary text-white rounded me-2 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
                             <span class="fw-bold">2</span>
                         </div>
-                        <h6 class="mb-0">Select Carwash</h6>
+                        <h6 class="mb-0">Select Business</h6>
                     </div>
                 </div>
                 <div class="card-body">
                     <x-forms.select2
-                        name="carwash_id"
-                        placeholder="Select carwash"
-                        :options="collect($ownerCarwashes)->pluck('name', 'id')"
-                        wire:model.live="carwash_id"
+                        name="business_id"
+                        placeholder="Select business"
+                        :options="collect($ownerBusinesses)->pluck('name', 'id')"
+                        wire:model.live="business_id"
                         wrapper="false"
                     />
-                    @error('carwash_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    @error('business_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
 
-                    @if($carwash_id && count($availableCategories) > 0)
+                    @if($business_id && count($availableCategories) > 0)
                         <div class="mt-3">
                             <small class="text-muted d-block mb-2">Available Categories:</small>
                             <div class="d-flex flex-wrap gap-1">
@@ -84,7 +84,7 @@
                                 @endforeach
                             </div>
                         </div>
-                    @elseif($carwash_id && count($availableCategories) === 0)
+                    @elseif($business_id && count($availableCategories) === 0)
                         <div class="alert alert-warning mt-3 mb-0 py-2">
                             <small><i class="ti ti-alert-triangle me-1"></i> No categories found. Please create categories first.</small>
                         </div>
@@ -104,14 +104,14 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <input type="file" wire:model="file" class="form-control @error('file') is-invalid @enderror" accept=".csv,.txt" {{ !$carwash_id ? 'disabled' : '' }}>
+                        <input type="file" wire:model="file" class="form-control @error('file') is-invalid @enderror" accept=".csv,.txt" {{ !$business_id ? 'disabled' : '' }}>
                         @error('file') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         <div wire:loading wire:target="file" class="text-primary small mt-2">
                             <span class="spinner-border spinner-border-sm me-1"></span> Uploading file...
                         </div>
                     </div>
 
-                    <button wire:click="parseFile" class="btn btn-primary w-100" {{ !$carwash_id || !$file ? 'disabled' : '' }}>
+                    <button wire:click="parseFile" class="btn btn-primary w-100" {{ !$business_id || !$file ? 'disabled' : '' }}>
                         <span wire:loading.remove wire:target="parseFile">
                             <i class="ti ti-file-analytics me-2"></i> Parse & Preview
                         </span>
@@ -318,7 +318,7 @@
                                 <div class="card bg-light border-0">
                                     <div class="card-body py-2 px-3 text-center">
                                         <i class="ti ti-building-store text-primary fs-4 d-block mb-1"></i>
-                                        <small class="text-muted">Select Carwash</small>
+                                        <small class="text-muted">Select Business</small>
                                     </div>
                                 </div>
                             </div>

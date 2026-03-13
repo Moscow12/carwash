@@ -15,7 +15,7 @@ class expense_category extends Model
         'name',
         'code',
         'parent_id',
-        'carwash_id',
+        'business_id',
         'status',
     ];
 
@@ -25,9 +25,9 @@ class expense_category extends Model
     ];
 
     // Relationships
-    public function carwash()
+    public function business()
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function parent()

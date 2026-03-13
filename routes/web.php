@@ -21,11 +21,11 @@ use App\Livewire\Dashboard\Locations\CDistricts;
 use App\Livewire\Dashboard\Locations\CWards;
 use App\Livewire\Dashboard\Locations\Streets;
 use App\Livewire\Dashboard\Settings\Index as SettingsIndex;
-use App\Livewire\Dashboard\Carwashes\Index as AdminCarwashes;
+use App\Livewire\Dashboard\Businesses\Index as AdminBusinesses;
 
 // Owner Pages
 use App\Livewire\Owner\Dashboard as OwnerDashboard;
-use App\Livewire\Owner\Carwashes\Index as OwnerCarwashes;
+use App\Livewire\Owner\Businesses\Index as OwnerBusinesses;
 use App\Livewire\Owner\Items\Index as OwnerItems;
 use App\Livewire\Owner\Staffs\Index as OwnerStaffs;
 use App\Livewire\Owner\Customers\Index as OwnerCustomers;
@@ -33,15 +33,15 @@ use App\Livewire\Owner\Sales\Index as OwnerSales;
 use App\Livewire\Owner\Purchases\Index as OwnerPurchases;
 use App\Livewire\Owner\Stocktaking\Index as OwnerStocktaking;
 use App\Livewire\Owner\Suppliers\Index as OwnerSuppliers;
-use App\Livewire\Owner\Carwashes\Mycarwash;
+use App\Livewire\Owner\Businesses\Mybusiness;
 use App\Livewire\Owner\Items\Categories;
 use App\Livewire\Owner\Items\Itemregister;
 use App\Livewire\Owner\Items\Uploaditems;
 
 // Customer Pages
 use App\Livewire\Customer\Dashboard as CustomerDashboard;
-use App\Livewire\Customer\Carwashes\Browse as BrowseCarwashes;
-use App\Livewire\Customer\Carwashes\Details as CarwashDetails;
+use App\Livewire\Customer\Businesses\Browse as BrowseBusinesses;
+use App\Livewire\Customer\Businesses\Details as BusinessDetails;
 use App\Livewire\Customer\Bookings\Index as MyBookings;
 use App\Livewire\Customer\Profile\Index as CustomerProfile;
 
@@ -92,8 +92,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     // User Management
     Route::get('/users', UsersIndex::class)->name('admin.users');
 
-    // Carwash Management
-    Route::get('/carwashes', AdminCarwashes::class)->name('admin.carwashes');
+    // Business Management
+    Route::get('/businesses', AdminBusinesses::class)->name('admin.businesses');
 
     // Location Management
     Route::get('/countries', CCountries::class)->name('admin.countries');
@@ -109,7 +109,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 // Owner Dashboard (Protected Routes - Owner Only)
 Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/', OwnerDashboard::class)->name('owner.dashboard');
-    Route::get('/carwashes', OwnerCarwashes::class)->name('owner.carwashes');
+    Route::get('/businesses', OwnerBusinesses::class)->name('owner.businesses');
     Route::get('/items', OwnerItems::class)->name('owner.items');
     Route::get('/items/edit/{itemId}', Edititems::class)->name('owner.items.edit');
     Route::get('/staffs', OwnerStaffs::class)->name('owner.staffs');
@@ -119,7 +119,7 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/stocktaking', OwnerStocktaking::class)->name('owner.stocktaking');
     Route::get('/suppliers', OwnerSuppliers::class)->name('owner.suppliers');
     Route::get('/units', Units::class)->name('owner.units');
-    Route::get('/my-carwash', Mycarwash::class)->name('owner.mycarwash');
+    Route::get('/my-business', Mybusiness::class)->name('owner.mybusiness');
     Route::get('/categories', Categories::class)->name('owner.categories');
     Route::get('/item-register', Itemregister::class)->name('owner.itemregister');
     Route::get('/upload-items', Uploaditems::class)->name('owner.uploaditems');
@@ -139,8 +139,8 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
 // Customer Dashboard (Protected Routes - Customer Only)
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->group(function () {
     Route::get('/', CustomerDashboard::class)->name('customer.dashboard');
-    Route::get('/carwashes', BrowseCarwashes::class)->name('customer.carwashes');
-    Route::get('/carwashes/{id}', CarwashDetails::class)->name('customer.carwash.details');
+    Route::get('/businesses', BrowseBusinesses::class)->name('customer.businesses');
+    Route::get('/businesses/{id}', BusinessDetails::class)->name('customer.business.details');
     Route::get('/bookings', MyBookings::class)->name('customer.bookings');
     Route::get('/profile', CustomerProfile::class)->name('customer.profile');
 });

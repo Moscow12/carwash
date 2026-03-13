@@ -10,11 +10,11 @@
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h3 class="mb-1">My Carwashes</h3>
-            <p class="text-muted mb-0">Manage your carwash locations and track performance</p>
+            <h3 class="mb-1">My Businesses</h3>
+            <p class="text-muted mb-0">Manage your business locations and track performance</p>
         </div>
         <button wire:click="openModal" class="btn btn-primary">
-            <i class="ti ti-plus me-1"></i> Add Carwash
+            <i class="ti ti-plus me-1"></i> Add Business
         </button>
     </div>
 
@@ -137,11 +137,11 @@
                         <div class="col">
                             <div class="row text-center">
                                 <div class="col-md-3 col-6 border-end border-white-25">
-                                    <h3 class="mb-0">{{ $metrics['totalCarwashes'] }}</h3>
-                                    <small class="opacity-75">Total Carwashes</small>
+                                    <h3 class="mb-0">{{ $metrics['totalBusinesses'] }}</h3>
+                                    <small class="opacity-75">Total Businesses</small>
                                 </div>
                                 <div class="col-md-3 col-6 border-end-md border-white-25">
-                                    <h3 class="mb-0">{{ $metrics['activeCarwashes'] }}</h3>
+                                    <h3 class="mb-0">{{ $metrics['activeBusinesses'] }}</h3>
                                     <small class="opacity-75">Active</small>
                                 </div>
                                 <div class="col-md-3 col-6 border-end border-white-25 mt-3 mt-md-0">
@@ -171,11 +171,11 @@
                         </span>
                         <input type="text" wire:model.live.debounce.300ms="search"
                                class="form-control border-start-0 ps-0"
-                               placeholder="Search carwashes...">
+                               placeholder="Search businesses...">
                     </div>
                 </div>
                 <div class="col-md-8 text-end">
-                    <span class="text-muted">{{ $carwashes->total() }} carwash(es) found</span>
+                    <span class="text-muted">{{ $businesses->total() }} business(es) found</span>
                 </div>
             </div>
         </div>
@@ -185,7 +185,7 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr class="bg-light">
-                            <th class="border-0 ps-4">Carwash</th>
+                            <th class="border-0 ps-4">Business</th>
                             <th class="border-0">Location</th>
                             <th class="border-0 text-center">Performance</th>
                             <th class="border-0 text-center">Status</th>
@@ -193,7 +193,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($carwashes as $carwash)
+                        @forelse($businesses as $business)
                         <tr>
                             <td class="ps-4">
                                 <div class="d-flex align-items-center">
@@ -201,14 +201,14 @@
                                         <i class="ti ti-car-wash fs-5"></i>
                                     </div>
                                     <div>
-                                        <h6 class="mb-0">{{ $carwash->name }}</h6>
-                                        <small class="text-muted">{{ Str::limit($carwash->address, 35) }}</small>
+                                        <h6 class="mb-0">{{ $business->name }}</h6>
+                                        <small class="text-muted">{{ Str::limit($business->address, 35) }}</small>
                                         <div class="mt-1">
                                             <span class="badge bg-light text-dark me-1">
-                                                <i class="ti ti-package text-muted me-1"></i>{{ $carwash->items_count }} items
+                                                <i class="ti ti-package text-muted me-1"></i>{{ $business->items_count }} items
                                             </span>
                                             <span class="badge bg-light text-dark">
-                                                <i class="ti ti-users text-muted me-1"></i>{{ $carwash->staffs_count }} staff
+                                                <i class="ti ti-users text-muted me-1"></i>{{ $business->staffs_count }} staff
                                             </span>
                                         </div>
                                     </div>
@@ -216,9 +216,9 @@
                             </td>
                             <td>
                                 <div>
-                                    <span class="d-block fw-medium">{{ $carwash->regions->name ?? '-' }}</span>
+                                    <span class="d-block fw-medium">{{ $business->regions->name ?? '-' }}</span>
                                     <small class="text-muted">
-                                        {{ $carwash->districts->name ?? '' }}{{ $carwash->wards ? ', ' . $carwash->wards->name : '' }}
+                                        {{ $business->districts->name ?? '' }}{{ $business->wards ? ', ' . $business->wards->name : '' }}
                                     </small>
                                 </div>
                             </td>
@@ -228,38 +228,38 @@
                                         <div class="avatar avatar-sm bg-success-subtle rounded mb-1 mx-auto d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
                                             <i class="ti ti-receipt text-success"></i>
                                         </div>
-                                        <div class="fw-bold">{{ $carwash->sales_count }}</div>
+                                        <div class="fw-bold">{{ $business->sales_count }}</div>
                                         <small class="text-muted">Sales</small>
                                     </div>
                                     <div class="text-center">
                                         <div class="avatar avatar-sm bg-info-subtle rounded mb-1 mx-auto d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
                                             <i class="ti ti-users text-info"></i>
                                         </div>
-                                        <div class="fw-bold">{{ $carwash->customers_count }}</div>
+                                        <div class="fw-bold">{{ $business->customers_count }}</div>
                                         <small class="text-muted">Customers</small>
                                     </div>
                                     <div class="text-center">
                                         <div class="avatar avatar-sm bg-warning-subtle rounded mb-1 mx-auto d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
                                             <i class="ti ti-calendar text-warning"></i>
                                         </div>
-                                        <div class="fw-bold">{{ $carwash->bookings_count }}</div>
+                                        <div class="fw-bold">{{ $business->bookings_count }}</div>
                                         <small class="text-muted">Bookings</small>
                                     </div>
                                 </div>
                             </td>
                             <td class="text-center">
-                                <span class="badge rounded-pill bg-{{ $carwash->status === 'active' ? 'success' : 'secondary' }}-subtle text-{{ $carwash->status === 'active' ? 'success' : 'secondary' }} px-3 py-2">
-                                    <i class="ti ti-{{ $carwash->status === 'active' ? 'check' : 'x' }} me-1"></i>
-                                    {{ ucfirst($carwash->status) }}
+                                <span class="badge rounded-pill bg-{{ $business->status === 'active' ? 'success' : 'secondary' }}-subtle text-{{ $business->status === 'active' ? 'success' : 'secondary' }} px-3 py-2">
+                                    <i class="ti ti-{{ $business->status === 'active' ? 'check' : 'x' }} me-1"></i>
+                                    {{ ucfirst($business->status) }}
                                 </span>
                             </td>
                             <td class="text-end pe-4">
                                 <div class="btn-group">
-                                    <a href="{{ route('owner.mycarwash', ['id' => $carwash->id]) }}"
+                                    <a href="{{ route('owner.mybusiness', ['id' => $business->id]) }}"
                                        class="btn btn-sm btn-outline-primary" title="View Details">
                                         <i class="ti ti-eye"></i>
                                     </a>
-                                    <button wire:click="editCarwash('{{ $carwash->id }}')"
+                                    <button wire:click="editBusiness('{{ $business->id }}')"
                                             class="btn btn-sm btn-outline-secondary" title="Edit">
                                         <i class="ti ti-edit"></i>
                                     </button>
@@ -271,10 +271,10 @@
                             <td colspan="5" class="text-center py-5">
                                 <div class="text-muted">
                                     <i class="ti ti-car-wash display-4 d-block mb-3 opacity-50"></i>
-                                    <h5>No carwashes found</h5>
-                                    <p class="mb-3">Get started by adding your first carwash</p>
+                                    <h5>No businesses found</h5>
+                                    <p class="mb-3">Get started by adding your first business</p>
                                     <button wire:click="openModal" class="btn btn-primary btn-sm">
-                                        <i class="ti ti-plus me-1"></i> Add Carwash
+                                        <i class="ti ti-plus me-1"></i> Add Business
                                     </button>
                                 </div>
                             </td>
@@ -285,9 +285,9 @@
             </div>
         </div>
 
-        @if($carwashes->hasPages())
+        @if($businesses->hasPages())
         <div class="card-footer bg-transparent border-top">
-            {{ $carwashes->links() }}
+            {{ $businesses->links() }}
         </div>
         @endif
     </div>
@@ -300,7 +300,7 @@
                 <div class="modal-header border-bottom">
                     <h5 class="modal-title">
                         <i class="ti ti-{{ $editMode ? 'edit' : 'plus' }} me-2"></i>
-                        {{ $editMode ? 'Edit Carwash' : 'Add New Carwash' }}
+                        {{ $editMode ? 'Edit Business' : 'Add New Business' }}
                     </h5>
                     <button type="button" wire:click="closeModal" class="btn-close"></button>
                 </div>
@@ -313,8 +313,8 @@
                         </h6>
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <label class="form-label">Carwash Name <span class="text-danger">*</span></label>
-                                <input type="text" wire:model="name" class="form-control @error('name') is-invalid @enderror" placeholder="Enter carwash name">
+                                <label class="form-label">Business Name <span class="text-danger">*</span></label>
+                                <input type="text" wire:model="name" class="form-control @error('name') is-invalid @enderror" placeholder="Enter business name">
                                 @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-6">
@@ -334,7 +334,7 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Description</label>
-                                <textarea wire:model="description" class="form-control @error('description') is-invalid @enderror" rows="2" placeholder="Brief description of your carwash"></textarea>
+                                <textarea wire:model="description" class="form-control @error('description') is-invalid @enderror" rows="2" placeholder="Brief description of your business"></textarea>
                                 @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-6">
@@ -353,7 +353,7 @@
                                     name="region_id"
                                     label="Region"
                                     placeholder="Select region"
-                                    :options="$allRegions->pluck('name', 'id')"
+                                    :options="collect($allRegions)->pluck('name', 'id')"
                                     wire:model.live="region_id"
                                     wrapper="false"
                                 />
@@ -363,7 +363,7 @@
                                     name="district_id"
                                     label="District"
                                     placeholder="Select district"
-                                    :options="$allDistricts->pluck('name', 'id')"
+                                    :options="collect($allDistricts)->pluck('name', 'id')"
                                     wire:model.live="district_id"
                                     wrapper="false"
                                 />
@@ -373,7 +373,7 @@
                                     name="ward_id"
                                     label="Ward"
                                     placeholder="Select ward"
-                                    :options="$allWards->pluck('name', 'id')"
+                                    :options="collect($allWards)->pluck('name', 'id')"
                                     wire:model.live="ward_id"
                                     wrapper="false"
                                 />
@@ -383,7 +383,7 @@
                                     name="street_id"
                                     label="Street"
                                     placeholder="Select street (Optional)"
-                                    :options="$allStreets->pluck('name', 'id')"
+                                    :options="collect($allStreets)->pluck('name', 'id')"
                                     wire:model="street_id"
                                     wrapper="false"
                                 />
@@ -452,7 +452,7 @@
                         <button type="submit" class="btn btn-primary">
                             <span wire:loading.remove wire:target="save">
                                 <i class="ti ti-{{ $editMode ? 'check' : 'plus' }} me-1"></i>
-                                {{ $editMode ? 'Update Carwash' : 'Create Carwash' }}
+                                {{ $editMode ? 'Update Business' : 'Create Business' }}
                             </span>
                             <span wire:loading wire:target="save">
                                 <span class="spinner-border spinner-border-sm me-1"></span> Saving...

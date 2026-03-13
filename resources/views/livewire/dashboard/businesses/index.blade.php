@@ -1,6 +1,6 @@
 <div>
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0">All Carwashes</h3>
+        <h3 class="mb-0">All Businesses</h3>
     </div>
 
     <div class="card border-0 shadow-sm">
@@ -25,15 +25,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($carwashes as $carwash)
+                        @forelse($businesses as $business)
                         <tr>
-                            <td>{{ $carwash->name }}</td>
-                            <td>{{ $carwash->owner->name ?? 'No Owner' }}</td>
-                            <td>{{ $carwash->address }}</td>
-                            <td>{{ $carwash->regions->name ?? '-' }}</td>
+                            <td>{{ $business->name }}</td>
+                            <td>{{ $business->owner->name ?? 'No Owner' }}</td>
+                            <td>{{ $business->address }}</td>
+                            <td>{{ $business->regions->name ?? '-' }}</td>
                             <td>
-                                <span class="badge bg-{{ $carwash->status === 'active' ? 'success' : 'secondary' }}">
-                                    {{ ucfirst($carwash->status) }}
+                                <span class="badge bg-{{ $business->status === 'active' ? 'success' : 'secondary' }}">
+                                    {{ ucfirst($business->status) }}
                                 </span>
                             </td>
                             <td>
@@ -51,6 +51,6 @@
                 </table>
             </div>
         </div>
-        <div class="card-footer bg-transparent">{{ $carwashes->links() }}</div>
+        <div class="card-footer bg-transparent">{{ $businesses->links() }}</div>
     </div>
 </div>

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Livewire\Dashboard\Carwashes;
+namespace App\Livewire\Dashboard\Businesses;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
-use App\Models\carwashes;
+use App\Models\Business;
 
 #[Layout('components.layouts.app')]
 class Index extends Component
@@ -21,14 +21,14 @@ class Index extends Component
 
     public function render()
     {
-        $carwashes = carwashes::when($this->search, function ($query) {
+        $businesses = Business::when($this->search, function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%');
             })
             ->with(['owner', 'regions', 'districts', 'wards'])
             ->paginate(10);
 
-        return view('livewire.dashboard.carwashes.index', [
-            'carwashes' => $carwashes
+        return view('livewire.dashboard.businesses.index', [
+            'businesses' => $businesses
         ]);
     }
 }

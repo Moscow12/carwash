@@ -18,7 +18,7 @@ class History extends Component
     use WithPagination;
 
     public $itemId = '';
-    public $selectedCarwash = '';
+    public $selectedBusiness = '';
     public $perPage = 25;
     public $typeFilter = '';
 
@@ -35,9 +35,9 @@ class History extends Component
 
     public function mount($itemId = null)
     {
-        $firstCarwash = Auth::user()->ownedCarwashes()->first();
-        if ($firstCarwash) {
-            $this->selectedCarwash = $firstCarwash->id;
+        $firstBusiness = Auth::user()->ownedBusinesses()->first();
+        if ($firstBusiness) {
+            $this->selectedBusiness = $firstBusiness->id;
         }
 
         if ($itemId) {
@@ -66,9 +66,9 @@ class History extends Component
     }
 
     #[On('setCarwash')]
-    public function setCarwash($carwashId)
+    public function setCarwash($businessId)
     {
-        $this->selectedCarwash = $carwashId;
+        $this->selectedBusiness = $businessId;
         $this->updatedSelectedCarwash();
     }
 
@@ -92,12 +92,12 @@ class History extends Component
         $this->stockTransfersOut = 0;
         $this->currentStock = 0;
 
-        if (!$this->itemId || !$this->selectedCarwash) {
+        if (!$this->itemId || !$this->selectedBusiness) {
             return;
         }
 
         $balances = item_balance::where('item_id', $this->itemId)
-            ->where('carwash_id', $this->selectedCarwash)
+            ->where('business_id', $this->selectedBusiness)
             ->get();
 
         foreach ($balances as $balance) {
@@ -136,7 +136,7 @@ class History extends Component
 
         // Get current stock from latest balance
         $lastBalance = item_balance::where('item_id', $this->itemId)
-            ->where('carwash_id', $this->selectedCarwash)
+            ->where('business_id', $this->selectedBusiness)
             ->latest()
             ->first();
 
@@ -153,11 +153,11 @@ class History extends Component
 
     public function getItems()
     {
-        if (!$this->selectedCarwash) {
+        if (!$this->selectedBusiness) {
             return collect();
         }
 
-        return items::where('carwash_id', $this->selectedCarwash)
+        return items::where('business_id', $this->selectedBusiness)
             ->orderBy('name')
             ->get();
     }
@@ -172,7 +172,7 @@ class History extends Component
         // Try to find related sale or purchase based on invoice number
         if (in_array($balance->stransaction_type, ['sale', 'refund', 'return'])) {
             // Try to find sale by matching date/time
-            $sale = sales::where('carwash_id', $this->selectedCarwash)
+            $sale = sales::where('business_id', $this->selectedBusiness)
                 ->whereDate('sale_date', $balance->created_at->toDateString())
                 ->with('customer')
                 ->first();
@@ -185,7 +185,7 @@ class History extends Component
             }
         } elseif (in_array($balance->stransaction_type, ['purchase', 'restock'])) {
             $purchase = purchase::where('item_id', $this->itemId)
-                ->where('carwash_id', $this->selectedCarwash)
+                ->where('business_id', $this->selectedBusiness)
                 ->whereDate('created_at', $balance->created_at->toDateString())
                 ->with('supplier')
                 ->first();
@@ -203,15 +203,15 @@ class History extends Component
     {
         $this->loadStats();
 
-        $carwashes = Auth::user()->ownedCarwashes()->orderBy('name')->get();
+        $businesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
         $items = $this->getItems();
         $item = $this->getItem();
 
         $transactions = collect();
 
-        if ($this->itemId && $this->selectedCarwash) {
+        if ($this->itemId && $this->selectedBusiness) {
             $query = item_balance::where('item_id', $this->itemId)
-                ->where('carwash_id', $this->selectedCarwash)
+                ->where('business_id', $this->selectedBusiness)
                 ->when($this->typeFilter, fn($q) => $q->where('stransaction_type', $this->typeFilter))
                 ->with(['user'])
                 ->orderBy('created_at', 'desc');
@@ -221,7 +221,7 @@ class History extends Component
 
         return view('livewire.owner.items.history', [
             'transactions' => $transactions,
-            'carwashes' => $carwashes,
+            'businesses' => $businesses,
             'itemsList' => $items,
             'item' => $item,
         ]);

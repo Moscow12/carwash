@@ -319,9 +319,9 @@
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <span class="fw-bold text-primary">
                     <i class="ti ti-map-pin me-1"></i>
-                    @php $carwash = collect($ownerCarwashes)->firstWhere('id', $selectedCarwash); @endphp
-                    <span class="d-none d-sm-inline">{{ $carwash['name'] ?? 'Select Location' }}</span>
-                    <span class="d-sm-none">{{ Str::limit($carwash['name'] ?? 'Select', 10) }}</span>
+                    @php $business = collect($ownerBusinesses)->firstWhere('id', $selectedBusiness); @endphp
+                    <span class="d-none d-sm-inline">{{ $business['name'] ?? 'Select Location' }}</span>
+                    <span class="d-sm-none">{{ Str::limit($business['name'] ?? 'Select', 10) }}</span>
                 </span>
                 <span class="text-muted small d-none d-md-inline">
                     <i class="ti ti-calendar me-1"></i>
@@ -329,11 +329,11 @@
                 </span>
             </div>
             <div class="d-flex gap-2 align-items-center">
-                @if(count($ownerCarwashes) > 1)
+                @if(count($ownerBusinesses) > 1)
                 <x-forms.select2
-                    name="selectedCarwash"
-                    :options="collect($ownerCarwashes)"
-                    wire:model.live="selectedCarwash"
+                    name="selectedBusiness"
+                    :options="collect($ownerBusinesses)"
+                    wire:model.live="selectedBusiness"
                     wrapper="false"
                     class="form-select form-select-sm"
                     style="width: auto; max-width: 150px;"
@@ -515,10 +515,25 @@
                 @forelse($availableItems as $item)
                 <div wire:click="addToCart('{{ $item['id'] }}')" class="product-card">
                     <div class="product-icon">
-                        @if($item['type'] === 'Service')
-                            <i class="ti ti-car-garage text-primary fs-4"></i>
+                        @if(!empty($item['image']))
+                            <img src="{{ asset('storage/' . $item['image']) }}"
+                                 alt="{{ $item['name'] }}"
+                                 class="img-fluid rounded"
+                                 style="width: 100%; height: 60px; object-fit: cover;"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div style="display: none; align-items: center; justify-content: center; height: 60px;">
+                                @if($item['type'] === 'Service')
+                                    <i class="ti ti-car-garage text-primary fs-4"></i>
+                                @else
+                                    <i class="ti ti-package text-info fs-4"></i>
+                                @endif
+                            </div>
                         @else
-                            <i class="ti ti-package text-info fs-4"></i>
+                            @if($item['type'] === 'Service')
+                                <i class="ti ti-car-garage text-primary fs-4"></i>
+                            @else
+                                <i class="ti ti-package text-info fs-4"></i>
+                            @endif
                         @endif
                     </div>
                     <div class="small fw-medium text-truncate" title="{{ $item['name'] }}">{{ Str::limit($item['name'], 12) }}</div>
@@ -904,25 +919,25 @@
                         {{-- Header with Logo --}}
                         <div class="receipt-header">
                             @php
-                                $showLogo = ($carwashSettings['show_logo_on_receipt'] ?? false) && ($carwashInfo['logo'] ?? false);
-                                $logoUrl = $carwashInfo['logo'] ?? null;
+                                $showLogo = ($businessSettings['show_logo_on_receipt'] ?? false) && ($businessInfo['logo'] ?? false);
+                                $logoUrl = $businessInfo['logo'] ?? null;
                             @endphp
                             @if($showLogo && $logoUrl)
                                 <img src="{{ asset('storage/' . $logoUrl) }}" alt="Logo" class="receipt-logo" style="max-width: 120px; max-height: 60px; margin-bottom: 5px;">
                             @endif
-                            <div class="shop-name">{{ $carwashSettings['business_name'] ?? $carwashInfo['name'] ?? 'SHOP NAME' }}</div>
-                            <div class="shop-address">{{ $carwashSettings['business_address'] ?? $carwashInfo['address'] ?? '' }}</div>
+                            <div class="shop-name">{{ $businessSettings['business_name'] ?? $businessInfo['name'] ?? 'SHOP NAME' }}</div>
+                            <div class="shop-address">{{ $businessSettings['business_address'] ?? $businessInfo['address'] ?? '' }}</div>
                             <div class="shop-contact">
-                                @if($carwashSettings['business_phone'] ?? $carwashInfo['phone'] ?? false)
-                                    Mobile: {{ $carwashSettings['business_phone'] ?? $carwashInfo['phone'] }}
+                                @if($businessSettings['business_phone'] ?? $businessInfo['phone'] ?? false)
+                                    Mobile: {{ $businessSettings['business_phone'] ?? $businessInfo['phone'] }}
                                 @endif
                             </div>
                         </div>
 
                         {{-- Custom Receipt Header --}}
-                        @if($carwashSettings['receipt_header'] ?? false)
+                        @if($businessSettings['receipt_header'] ?? false)
                         <div class="receipt-custom-header">
-                            {!! nl2br(e($carwashSettings['receipt_header'])) !!}
+                            {!! nl2br(e($businessSettings['receipt_header'])) !!}
                         </div>
                         @endif
 
@@ -1034,8 +1049,8 @@
 
                         {{-- Footer --}}
                         <div class="receipt-footer">
-                            @if($carwashSettings['receipt_footer'] ?? false)
-                                <div class="custom-footer">{!! nl2br(e($carwashSettings['receipt_footer'])) !!}</div>
+                            @if($businessSettings['receipt_footer'] ?? false)
+                                <div class="custom-footer">{!! nl2br(e($businessSettings['receipt_footer'])) !!}</div>
                             @else
                                 <div class="thank-you">Thank you for your business!</div>
                                 <div class="visit-again">Please visit again</div>

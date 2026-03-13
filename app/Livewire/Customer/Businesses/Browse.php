@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Livewire\Customer\Carwashes;
+namespace App\Livewire\Customer\Businesses;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
-use App\Models\carwashes;
+use App\Models\Business;
 use App\Models\regions;
 
 #[Layout('components.layouts.app-customer')]
@@ -23,7 +23,7 @@ class Browse extends Component
 
     public function render()
     {
-        $carwashes = carwashes::where('status', 'active')
+        $businesses = Business::where('status', 'active')
             ->when($this->search, function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%');
             })
@@ -35,8 +35,8 @@ class Browse extends Component
 
         $regions = regions::where('status', 'active')->get();
 
-        return view('livewire.customer.carwashes.browse', [
-            'carwashes' => $carwashes,
+        return view('livewire.customer.businesses.browse', [
+            'businesses' => $businesses,
             'regions' => $regions
         ]);
     }

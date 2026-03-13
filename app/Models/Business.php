@@ -81,7 +81,7 @@ class Business extends Model
 
     public function staffs(): HasMany
     {
-        return $this->hasMany(staff::class, 'business_id');
+        return $this->hasMany(staffs::class, 'business_id');
     }
 
     public function customers(): HasMany

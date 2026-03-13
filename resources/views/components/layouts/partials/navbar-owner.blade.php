@@ -18,23 +18,23 @@
     <hr class="mx-5 nav-line mb-1" />
   </li>
   <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.carwashes*') || request()->routeIs('owner.carwashes*') ? 'active' : '' }}"
+    <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.businesses*') || request()->routeIs('owner.mybusiness*') ? 'active' : '' }}"
       href="#!"
       role="button"
       data-bs-toggle="dropdown"
-      aria-expanded="{{ request()->routeIs('owner.carwashes*') || request()->routeIs('owner.carwashes*') ? 'true' : 'false' }}">
+      aria-expanded="{{ request()->routeIs('owner.businesses*') || request()->routeIs('owner.mybusiness*') ? 'true' : 'false' }}">
       <span class="nav-icon"><i class="ti ti-car-garage fs-5"></i></span>
-      <span class="text">My Carwashes</span>
+      <span class="text">My Businesses</span>
     </a>
-    <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.carwashes*') || request()->routeIs('owner.carwashes*') ? 'show' : '' }}">
+    <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.businesses*') || request()->routeIs('owner.mybusiness*') ? 'show' : '' }}">
       <li class="nav-item">
-        <a class='dropdown-item {{ request()->routeIs("owner.carwashes") ? "active" : "" }}' href="{{ route('owner.carwashes') }}">
-          <i class="ti ti-package me-2"></i> Manage Carwash(s)
+        <a class='dropdown-item {{ request()->routeIs("owner.businesses") ? "active" : "" }}' href="{{ route('owner.businesses') }}">
+          <i class="ti ti-package me-2"></i> Manage Business(es)
         </a>
       </li>
       <li class="nav-item">
-        <a class='dropdown-item {{ request()->routeIs("owner.mycarwash") ? "active" : "" }}' href="{{ route('owner.mycarwash') }}">
-          <i class="ti ti-ruler-2 me-2"></i> Add New Carwash
+        <a class='dropdown-item {{ request()->routeIs("owner.mybusiness") ? "active" : "" }}' href="{{ route('owner.mybusiness') }}">
+          <i class="ti ti-ruler-2 me-2"></i> Add New Business
         </a>
       </li>
     </ul>

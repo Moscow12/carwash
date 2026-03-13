@@ -23,7 +23,7 @@ class Stock extends Component
     protected $paginationTheme = 'bootstrap';
 
     #[Url]
-    public $carwash_id = '';
+    public $business_id = '';
 
     #[Url]
     public $category_id = '';
@@ -37,7 +37,7 @@ class Stock extends Component
     public $perPage = 25;
     public $showFilters = true;
 
-    public $carwashes = [];
+    public $businesses = [];
     public $categories = [];
     public $units = [];
 
@@ -50,17 +50,17 @@ class Stock extends Component
     public function mount()
     {
         $owner = Auth::user();
-        $carwashCollection = $owner->ownedCarwashes()->get();
+        $businessCollection = $owner->ownedBusinesses()->get();
 
-        $this->carwashes = $carwashCollection->map(function ($carwash) {
+        $this->carwashes = $businessCollection->map(function ($business) {
             return [
-                'id' => $carwash->id,
-                'name' => $carwash->name,
+                'id' => $business->id,
+                'name' => $business->name,
             ];
         })->toArray();
 
-        if (count($this->carwashes) > 0 && empty($this->carwash_id)) {
-            $this->carwash_id = $this->carwashes[0]['id'];
+        if (count($this->carwashes) > 0 && empty($this->business_id)) {
+            $this->business_id = $this->carwashes[0]['id'];
         }
 
         $this->loadFilterData();
@@ -107,11 +107,11 @@ class Stock extends Component
 
     protected function loadFilterData()
     {
-        if (empty($this->carwash_id)) {
+        if (empty($this->business_id)) {
             return;
         }
 
-        $this->categories = category::where('carwash_id', $this->carwash_id)
+        $this->categories = category::where('business_id', $this->business_id)
             ->where('status', 'active')
             ->get()
             ->map(fn($c) => ['id' => $c->id, 'name' => $c->name])
@@ -125,7 +125,7 @@ class Stock extends Component
     protected function getBaseQuery()
     {
         $query = items::query()
-            ->where('carwash_id', $this->carwash_id)
+            ->where('business_id', $this->business_id)
             ->where('type', '!=', 'Service') // Exclude services
             ->where('status', 'active');
 
@@ -149,7 +149,7 @@ class Stock extends Component
 
     public function calculateSummary()
     {
-        if (empty($this->carwash_id)) {
+        if (empty($this->business_id)) {
             return;
         }
 
@@ -163,7 +163,7 @@ class Stock extends Component
 
         // Bulk load latest balances for all items
         $latestBalances = item_balance::whereIn('item_id', $itemIds)
-            ->where('carwash_id', $this->carwash_id)
+            ->where('business_id', $this->business_id)
             ->orderBy('created_at', 'desc')
             ->get()
             ->unique('item_id')
@@ -200,7 +200,7 @@ class Stock extends Component
     public function getCurrentStock($itemId)
     {
         $lastBalance = item_balance::where('item_id', $itemId)
-            ->where('carwash_id', $this->carwash_id)
+            ->where('business_id', $this->business_id)
             ->latest()
             ->first();
 
@@ -210,7 +210,7 @@ class Stock extends Component
     public function getTotalUnitsSold($itemId)
     {
         return (float) sales_item::whereHas('sale', function ($query) {
-            $query->where('carwash_id', $this->carwash_id)
+            $query->where('business_id', $this->business_id)
                 ->where('sale_status', 'completed');
         })->where('item_id', $itemId)->sum('quantity');
     }
@@ -222,7 +222,7 @@ class Stock extends Component
         // Bulk load stock balances for all items in current page
         $itemIds = $stockData->pluck('id')->toArray();
         $latestBalances = item_balance::whereIn('item_id', $itemIds)
-            ->where('carwash_id', $this->carwash_id)
+            ->where('business_id', $this->business_id)
             ->orderBy('created_at', 'desc')
             ->get()
             ->unique('item_id')

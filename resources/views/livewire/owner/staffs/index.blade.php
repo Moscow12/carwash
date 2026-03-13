@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 class="mb-1">Staff Management</h4>
-            <p class="text-muted mb-0">Manage your carwash staff members</p>
+            <p class="text-muted mb-0">Manage your business staff members</p>
         </div>
         <button wire:click="openModal" class="btn btn-primary">
             <i class="ti ti-plus me-1"></i> Add Staff
@@ -79,12 +79,12 @@
         <div class="card-body">
             <div class="row g-3 align-items-end">
                 <div class="col-md-4">
-                    <label class="form-label small">Carwash</label>
+                    <label class="form-label small">Business</label>
                     <x-forms.select2
-                        name="selectedCarwash"
-                        :options="$carwashes"
-                        wire:model.live="selectedCarwash"
-                        placeholder="All Carwashes"
+                        name="selectedBusiness"
+                        :options="$businesses"
+                        wire:model.live="selectedBusiness"
+                        placeholder="All Businesses"
                         wrapper="false"
                     />
                 </div>
@@ -131,9 +131,9 @@
                                         </div>
                                         <div>
                                             <span class="fw-medium">{{ $staff->name }}</span>
-                                            @if($staff->carwash)
+                                            @if($staff->business)
                                                 <br>
-                                                <small class="text-muted">{{ $staff->carwash->name }}</small>
+                                                <small class="text-muted">{{ $staff->business->name }}</small>
                                             @endif
                                         </div>
                                     </div>
@@ -278,15 +278,15 @@
                                 <h6 class="mb-3">Assignment</h6>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Carwash <span class="text-danger">*</span></label>
+                                <label class="form-label">Business <span class="text-danger">*</span></label>
                                 <x-forms.select2
-                                    name="carwash_id"
-                                    :options="$carwashes"
-                                    wire:model="carwash_id"
-                                    placeholder="Select Carwash"
+                                    name="business_id"
+                                    :options="$businesses"
+                                    wire:model="business_id"
+                                    placeholder="Select Business"
                                     wrapper="false"
                                 />
-                                @error('carwash_id')
+                                @error('business_id')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>

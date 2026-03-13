@@ -15,7 +15,7 @@ class item_balance extends Model
     protected $fillable = [
         'item_id',
         'user_id',
-        'carwash_id',
+        'business_id',
         'previous_balance',
         'current_balance',
         'quantity_changed',
@@ -41,9 +41,9 @@ class item_balance extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function carwash()
+    public function business()
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     // Scopes
@@ -62,9 +62,9 @@ class item_balance extends Model
         return $query->where('item_id', $itemId);
     }
 
-    public function scopeForCarwash($query, $carwashId)
+    public function scopeForBusiness($query, $businessId)
     {
-        return $query->where('carwash_id', $carwashId);
+        return $query->where('business_id', $businessId);
     }
 
     // Helpers

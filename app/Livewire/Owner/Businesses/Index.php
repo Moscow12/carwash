@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Owner\Carwashes;
+namespace App\Livewire\Owner\Businesses;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
@@ -9,7 +9,7 @@ use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use App\Models\carwashes;
+use App\Models\Business;
 use App\Models\regions;
 use App\Models\districts;
 use App\Models\wards;
@@ -26,7 +26,7 @@ class Index extends Component
     public $search = '';
     public $showModal = false;
     public $editMode = false;
-    public $carwashId = null;
+    public $businessId = null;
 
     #[Rule('required|string|max:255')]
     public $name = '';
@@ -119,32 +119,32 @@ class Index extends Component
         $this->showModal = true;
     }
 
-    public function editCarwash($id)
+    public function editBusiness($id)
     {
-        $carwash = carwashes::findOrFail($id);
+        $business = Business::findOrFail($id);
 
-        $this->carwashId = $carwash->id;
-        $this->name = $carwash->name;
-        $this->address = $carwash->address;
-        $this->description = $carwash->description ?? '';
-        $this->status = $carwash->status;
-        $this->whatsapp = $carwash->whatsapp ?? '';
-        $this->instagram = $carwash->instagram ?? '';
-        $this->email = $carwash->email ?? '';
-        $this->website = $carwash->website ?? '';
-        $this->operating_hours = $carwash->operating_hours ?? '';
-        $this->resentative_name = $carwash->resentative_name;
-        $this->resentative_phone = $carwash->resentative_phone;
-        $this->region_id = $carwash->region_id;
+        $this->businessId = $business->id;
+        $this->name = $business->name;
+        $this->address = $business->address;
+        $this->description = $business->description ?? '';
+        $this->status = $business->status;
+        $this->whatsapp = $business->whatsapp ?? '';
+        $this->instagram = $business->instagram ?? '';
+        $this->email = $business->email ?? '';
+        $this->website = $business->website ?? '';
+        $this->operating_hours = $business->operating_hours ?? '';
+        $this->resentative_name = $business->resentative_name;
+        $this->resentative_phone = $business->resentative_phone;
+        $this->region_id = $business->region_id;
 
-        $this->allDistricts = districts::where('region_id', $carwash->region_id)->orderBy('name')->get();
-        $this->district_id = $carwash->district_id;
+        $this->allDistricts = districts::where('region_id', $business->region_id)->orderBy('name')->get();
+        $this->district_id = $business->district_id;
 
-        $this->allWards = wards::where('district_id', $carwash->district_id)->orderBy('name')->get();
-        $this->ward_id = $carwash->ward_id;
+        $this->allWards = wards::where('district_id', $business->district_id)->orderBy('name')->get();
+        $this->ward_id = $business->ward_id;
 
-        $this->allStreets = street::where('ward_id', $carwash->ward_id)->orderBy('name')->get();
-        $this->street_id = $carwash->street_id ?? '';
+        $this->allStreets = street::where('ward_id', $business->ward_id)->orderBy('name')->get();
+        $this->street_id = $business->street_id ?? '';
 
         $this->editMode = true;
         $this->showModal = true;
@@ -173,13 +173,13 @@ class Index extends Component
         ];
 
         if ($this->editMode) {
-            $carwash = carwashes::findOrFail($this->carwashId);
-            $carwash->update($data);
-            session()->flash('message', 'Carwash updated successfully.');
+            $business = Business::findOrFail($this->businessId);
+            $business->update($data);
+            session()->flash('message', 'Business updated successfully.');
         } else {
             $data['owner_id'] = Auth::id();
-            carwashes::create($data);
-            session()->flash('message', 'Carwash created successfully.');
+            Business::create($data);
+            session()->flash('message', 'Business created successfully.');
         }
 
         $this->closeModal();
@@ -194,7 +194,7 @@ class Index extends Component
     public function resetForm()
     {
         $this->reset([
-            'carwashId', 'name', 'address', 'description', 'status',
+            'businessId', 'name', 'address', 'description', 'status',
             'whatsapp', 'instagram', 'email', 'website', 'operating_hours',
             'resentative_name', 'resentative_phone', 'region_id',
             'district_id', 'ward_id', 'street_id'
@@ -208,9 +208,9 @@ class Index extends Component
 
     public function render()
     {
-        $carwashIds = Auth::user()->ownedCarwashes()->pluck('id');
+        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
 
-        $carwashes = Auth::user()->ownedCarwashes()
+        $businesses = Auth::user()->ownedBusinesses()
             ->when($this->search, function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%');
             })
@@ -220,15 +220,15 @@ class Index extends Component
             ->paginate(10);
 
         // Performance metrics
-        $metrics = $this->calculateMetrics($carwashIds);
+        $metrics = $this->calculateMetrics($businessIds);
 
-        return view('livewire.owner.carwashes.index', [
-            'carwashes' => $carwashes,
+        return view('livewire.owner.businesses.index', [
+            'businesses' => $businesses,
             'metrics' => $metrics,
         ]);
     }
 
-    private function calculateMetrics($carwashIds): array
+    private function calculateMetrics($businessIds): array
     {
         $now = Carbon::now();
         $startOfMonth = $now->copy()->startOfMonth();
@@ -236,41 +236,41 @@ class Index extends Component
         $endOfLastMonth = $now->copy()->subMonth()->endOfMonth();
 
         // Total counts
-        $totalCarwashes = $carwashIds->count();
-        $activeCarwashes = carwashes::whereIn('id', $carwashIds)->where('status', 'active')->count();
+        $totalBusinesses = $businessIds->count();
+        $activeBusinesses = Business::whereIn('id', $businessIds)->where('status', 'active')->count();
 
         // Sales metrics
-        $totalRevenue = sales::whereIn('carwash_id', $carwashIds)
+        $totalRevenue = sales::whereIn('business_id', $businessIds)
             ->where('payment_status', 'paid')
             ->sum(DB::raw('CAST(total_amount AS DECIMAL(10,2))'));
 
-        $thisMonthRevenue = sales::whereIn('carwash_id', $carwashIds)
+        $thisMonthRevenue = sales::whereIn('business_id', $businessIds)
             ->where('payment_status', 'paid')
             ->where('sale_date', '>=', $startOfMonth)
             ->sum(DB::raw('CAST(total_amount AS DECIMAL(10,2))'));
 
-        $lastMonthRevenue = sales::whereIn('carwash_id', $carwashIds)
+        $lastMonthRevenue = sales::whereIn('business_id', $businessIds)
             ->where('payment_status', 'paid')
             ->whereBetween('sale_date', [$startOfLastMonth, $endOfLastMonth])
             ->sum(DB::raw('CAST(total_amount AS DECIMAL(10,2))'));
 
-        $totalSales = sales::whereIn('carwash_id', $carwashIds)->count();
-        $thisMonthSales = sales::whereIn('carwash_id', $carwashIds)
+        $totalSales = sales::whereIn('business_id', $businessIds)->count();
+        $thisMonthSales = sales::whereIn('business_id', $businessIds)
             ->where('sale_date', '>=', $startOfMonth)
             ->count();
 
         // Customer metrics
-        $totalCustomers = customers::whereIn('carwash_id', $carwashIds)->count();
-        $newCustomersThisMonth = customers::whereIn('carwash_id', $carwashIds)
+        $totalCustomers = customers::whereIn('business_id', $businessIds)->count();
+        $newCustomersThisMonth = customers::whereIn('business_id', $businessIds)
             ->where('created_at', '>=', $startOfMonth)
             ->count();
 
         // Booking metrics
-        $totalBookings = Booking::whereIn('carwash_id', $carwashIds)->count();
-        $pendingBookings = Booking::whereIn('carwash_id', $carwashIds)
+        $totalBookings = Booking::whereIn('business_id', $businessIds)->count();
+        $pendingBookings = Booking::whereIn('business_id', $businessIds)
             ->where('status', 'pending')
             ->count();
-        $completedBookings = Booking::whereIn('carwash_id', $carwashIds)
+        $completedBookings = Booking::whereIn('business_id', $businessIds)
             ->where('status', 'completed')
             ->count();
 
@@ -280,8 +280,8 @@ class Index extends Component
             : ($thisMonthRevenue > 0 ? 100 : 0);
 
         return [
-            'totalCarwashes' => $totalCarwashes,
-            'activeCarwashes' => $activeCarwashes,
+            'totalBusinesses' => $totalBusinesses,
+            'activeBusinesses' => $activeBusinesses,
             'totalRevenue' => $totalRevenue,
             'thisMonthRevenue' => $thisMonthRevenue,
             'lastMonthRevenue' => $lastMonthRevenue,

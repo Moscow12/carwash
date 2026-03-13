@@ -11,8 +11,8 @@
         <div class="card-body">
             <div class="row align-items-center">
                 <div class="col-md-2 text-center">
-                    @if($carwash->logo)
-                    <img src="{{ asset('storage/' . $carwash->logo) }}" alt="{{ $carwash->name }}" class="rounded" style="width: 100px; height: 100px; object-fit: cover;">
+                    @if($business->logo)
+                    <img src="{{ asset('storage/' . $business->logo) }}" alt="{{ $business->name }}" class="rounded" style="width: 100px; height: 100px; object-fit: cover;">
                     @else
                     <div class="bg-primary bg-opacity-10 rounded d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
                         <i class="ti ti-car-garage fs-1 text-primary"></i>
@@ -20,18 +20,18 @@
                     @endif
                 </div>
                 <div class="col-md-10">
-                    <h2 class="mb-2">{{ $carwash->name }}</h2>
+                    <h2 class="mb-2">{{ $business->name }}</h2>
                     <p class="text-muted mb-2">
-                        <i class="ti ti-map-pin me-1"></i> {{ $carwash->address }}
-                        @if($carwash->regions) - {{ $carwash->regions->name }} @endif
+                        <i class="ti ti-map-pin me-1"></i> {{ $business->address }}
+                        @if($business->regions) - {{ $business->regions->name }} @endif
                     </p>
-                    @if($carwash->operating_hours)
+                    @if($business->operating_hours)
                     <p class="text-muted mb-2">
-                        <i class="ti ti-clock me-1"></i> {{ $carwash->operating_hours }}
+                        <i class="ti ti-clock me-1"></i> {{ $business->operating_hours }}
                     </p>
                     @endif
-                    @if($carwash->description)
-                    <p class="mb-0">{{ $carwash->description }}</p>
+                    @if($business->description)
+                    <p class="mb-0">{{ $business->description }}</p>
                     @endif
                 </div>
             </div>
@@ -80,25 +80,25 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <p><strong>Representative:</strong> {{ $carwash->resentative_name }}</p>
-                    <p><strong>Phone:</strong> {{ $carwash->resentative_phone }}</p>
-                    @if($carwash->email)
-                    <p><strong>Email:</strong> {{ $carwash->email }}</p>
+                    <p><strong>Representative:</strong> {{ $business->resentative_name }}</p>
+                    <p><strong>Phone:</strong> {{ $business->resentative_phone }}</p>
+                    @if($business->email)
+                    <p><strong>Email:</strong> {{ $business->email }}</p>
                     @endif
                 </div>
                 <div class="col-md-6">
-                    @if($carwash->whatsapp)
-                    <a href="https://wa.me/{{ $carwash->whatsapp }}" class="btn btn-outline-success btn-sm me-2" target="_blank">
+                    @if($business->whatsapp)
+                    <a href="https://wa.me/{{ $business->whatsapp }}" class="btn btn-outline-success btn-sm me-2" target="_blank">
                         <i class="ti ti-brand-whatsapp"></i> WhatsApp
                     </a>
                     @endif
-                    @if($carwash->instagram)
-                    <a href="{{ $carwash->instagram }}" class="btn btn-outline-danger btn-sm me-2" target="_blank">
+                    @if($business->instagram)
+                    <a href="{{ $business->instagram }}" class="btn btn-outline-danger btn-sm me-2" target="_blank">
                         <i class="ti ti-brand-instagram"></i> Instagram
                     </a>
                     @endif
-                    @if($carwash->facebook)
-                    <a href="{{ $carwash->facebook }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                    @if($business->facebook)
+                    <a href="{{ $business->facebook }}" class="btn btn-outline-primary btn-sm" target="_blank">
                         <i class="ti ti-brand-facebook"></i> Facebook
                     </a>
                     @endif

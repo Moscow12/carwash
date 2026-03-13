@@ -111,10 +111,10 @@
                 <div class="col-md-3">
                     <label class="form-label small">Business Location:</label>
                     <x-forms.select2
-                        name="selectedCarwash"
+                        name="selectedBusiness"
                         placeholder="All"
-                        :options="$carwashes->pluck('name', 'id')"
-                        wire:model.live="selectedCarwash"
+                        :options="$businesses->pluck('name', 'id')"
+                        wire:model.live="selectedBusiness"
                         wrapper="false"
                     />
                 </div>
@@ -252,7 +252,7 @@
                                             <span class="badge bg-secondary ms-1">Inactive</span>
                                         @endif
                                     </td>
-                                    <td>{{ $item->carwash?->name ?? '-' }}</td>
+                                    <td>{{ $item->business?->name ?? '-' }}</td>
                                     <td class="text-end">TZS {{ number_format($item->cost_price, 2) }}</td>
                                     <td class="text-end fw-bold">TZS {{ number_format($item->selling_price, 2) }}</td>
                                     <td class="text-end">

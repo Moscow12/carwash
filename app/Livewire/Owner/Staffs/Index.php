@@ -14,7 +14,7 @@ class Index extends Component
     use WithPagination;
 
     public $search = '';
-    public $selectedCarwash = '';
+    public $selectedBusiness = '';
     public $statusFilter = '';
 
     // Modal state
@@ -30,7 +30,7 @@ class Index extends Component
     public $commission_type = 'fixed';
     public $amount = '';
     public $status = 'active';
-    public $carwash_id = '';
+    public $business_id = '';
 
     // Summary stats
     public $totalStaff = 0;
@@ -39,10 +39,10 @@ class Index extends Component
 
     public function mount()
     {
-        $firstCarwash = Auth::user()->ownedCarwashes()->first();
-        if ($firstCarwash) {
-            $this->selectedCarwash = $firstCarwash->id;
-            $this->carwash_id = $firstCarwash->id;
+        $firstBusiness = Auth::user()->ownedBusinesses()->first();
+        if ($firstBusiness) {
+            $this->selectedBusiness = $firstBusiness->id;
+            $this->business_id = $firstBusiness->id;
         }
     }
 
@@ -54,20 +54,20 @@ class Index extends Component
     public function updatedSelectedCarwash()
     {
         $this->resetPage();
-        $this->carwash_id = $this->selectedCarwash;
+        $this->business_id = $this->selectedBusiness;
         $this->loadStats();
     }
 
     public function loadStats()
     {
-        if (!$this->selectedCarwash) {
+        if (!$this->selectedBusiness) {
             $this->totalStaff = 0;
             $this->activeStaff = 0;
             $this->inactiveStaff = 0;
             return;
         }
 
-        $baseQuery = staffs::where('carwash_id', $this->selectedCarwash);
+        $baseQuery = staffs::where('business_id', $this->selectedBusiness);
         $this->totalStaff = (clone $baseQuery)->count();
         $this->activeStaff = (clone $baseQuery)->where('status', 'active')->count();
         $this->inactiveStaff = (clone $baseQuery)->where('status', 'inactive')->count();
@@ -76,7 +76,7 @@ class Index extends Component
     public function openModal()
     {
         $this->resetForm();
-        $this->carwash_id = $this->selectedCarwash;
+        $this->business_id = $this->selectedBusiness;
         $this->showModal = true;
     }
 
@@ -97,7 +97,7 @@ class Index extends Component
         $this->commission_type = 'fixed';
         $this->amount = '';
         $this->status = 'active';
-        $this->carwash_id = $this->selectedCarwash;
+        $this->business_id = $this->selectedBusiness;
         $this->resetValidation();
     }
 
@@ -114,7 +114,7 @@ class Index extends Component
             $this->commission_type = $staff->commission_type ?? 'fixed';
             $this->amount = $staff->amount ?? '';
             $this->status = $staff->status;
-            $this->carwash_id = $staff->carwash_id;
+            $this->business_id = $staff->business_id;
             $this->showModal = true;
         }
     }
@@ -125,7 +125,7 @@ class Index extends Component
             'name' => 'required|min:2',
             'phone' => 'required|min:10',
             'email' => 'nullable|email',
-            'carwash_id' => 'required',
+            'business_id' => 'required',
             'payment_mode' => 'required|in:salary,hourly,commission',
             'commission_type' => 'required|in:fixed,percentage',
         ]);
@@ -140,7 +140,7 @@ class Index extends Component
                 'commission_type' => $this->commission_type,
                 'amount' => $this->amount ?: null,
                 'status' => $this->status,
-                'carwash_id' => $this->carwash_id,
+                'business_id' => $this->business_id,
             ];
 
             if ($this->editingId) {
@@ -196,10 +196,10 @@ class Index extends Component
     {
         $this->loadStats();
 
-        $carwashes = Auth::user()->ownedCarwashes()->orderBy('name')->get();
+        $businesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
 
         $staffs = staffs::query()
-            ->when($this->selectedCarwash, fn($q) => $q->where('carwash_id', $this->selectedCarwash))
+            ->when($this->selectedBusiness, fn($q) => $q->where('business_id', $this->selectedBusiness))
             ->when($this->statusFilter, fn($q) => $q->where('status', $this->statusFilter))
             ->when($this->search, function ($q) {
                 $q->where(function ($query) {
@@ -209,13 +209,13 @@ class Index extends Component
                         ->orWhere('position', 'like', "%{$this->search}%");
                 });
             })
-            ->with('carwash')
+            ->with('business')
             ->orderBy('name')
             ->paginate(15);
 
         return view('livewire.owner.staffs.index', [
             'staffs' => $staffs,
-            'carwashes' => $carwashes
+            'businesses' => $businesses
         ]);
     }
 }

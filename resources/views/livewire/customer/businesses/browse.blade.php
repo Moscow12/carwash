@@ -25,32 +25,32 @@
 
     <!-- Carwash Cards -->
     <div class="row g-4">
-        @forelse($carwashes as $carwash)
+        @forelse($businesses as $business)
         <div class="col-md-6 col-lg-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
-                        @if($carwash->logo)
-                        <img src="{{ asset('storage/' . $carwash->logo) }}" alt="{{ $carwash->name }}" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                        @if($business->logo)
+                        <img src="{{ asset('storage/' . $business->logo) }}" alt="{{ $business->name }}" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
                         @else
                         <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
                             <i class="ti ti-car-garage fs-3 text-primary"></i>
                         </div>
                         @endif
                         <div>
-                            <h5 class="mb-1">{{ $carwash->name }}</h5>
-                            <small class="text-muted">{{ $carwash->regions->name ?? '' }}</small>
+                            <h5 class="mb-1">{{ $business->name }}</h5>
+                            <small class="text-muted">{{ $business->regions->name ?? '' }}</small>
                         </div>
                     </div>
                     <p class="text-muted small mb-3">
-                        <i class="ti ti-map-pin me-1"></i> {{ $carwash->address }}
+                        <i class="ti ti-map-pin me-1"></i> {{ $business->address }}
                     </p>
-                    @if($carwash->operating_hours)
+                    @if($business->operating_hours)
                     <p class="text-muted small mb-3">
-                        <i class="ti ti-clock me-1"></i> {{ $carwash->operating_hours }}
+                        <i class="ti ti-clock me-1"></i> {{ $business->operating_hours }}
                     </p>
                     @endif
-                    <a href="{{ route('customer.carwash.details', $carwash->id) }}" class="btn btn-primary btn-sm w-100">
+                    <a href="{{ route('customer.business.details', $business->id) }}" class="btn btn-primary btn-sm w-100">
                         View Services
                     </a>
                 </div>
@@ -71,6 +71,6 @@
 
     <!-- Pagination -->
     <div class="mt-4">
-        {{ $carwashes->links() }}
+        {{ $businesses->links() }}
     </div>
 </div>

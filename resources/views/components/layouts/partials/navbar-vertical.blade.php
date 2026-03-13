@@ -25,7 +25,7 @@
     <hr class="mx-5 nav-line mb-1" />
   </li>
   <li class="nav-item">
-    <a class='nav-link {{ request()->routeIs("admin.carwashes*") ? "active" : "" }}' href="{{ route('admin.carwashes') }}">
+    <a class='nav-link {{ request()->routeIs("admin.businesses*") ? "active" : "" }}' href="{{ route('admin.businesses') }}">
       <span class="nav-icon"><i class="ti ti-car-garage fs-5"></i></span>
       <span class="text">Carwashes</span>
     </a>

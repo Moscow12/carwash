@@ -15,7 +15,7 @@ class purchase extends Model
         'item_id',
         'user_id',
         'supplier_id',
-        'carwash_id',
+        'business_id',
         'quantity',
         'price',
         'discount',
@@ -49,12 +49,6 @@ class purchase extends Model
     public function business()
     {
         return $this->belongsTo(Business::class, 'business_id');
-    }
-
-    // Legacy support
-    public function carwash()
-    {
-        return $this->business();
     }
 
     // Scopes - Purchase Status
@@ -92,12 +86,6 @@ class purchase extends Model
     public function scopeForBusiness($query, $businessId)
     {
         return $query->where('business_id', $businessId);
-    }
-
-    // Legacy support
-    public function scopeForCarwash($query, $carwashId)
-    {
-        return $this->scopeForBusiness($query, $carwashId);
     }
 
     // Computed Attributes

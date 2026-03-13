@@ -11,8 +11,8 @@ class payment_method extends Model
     protected $table = 'payment_methods';
     protected $guarded = [];
 
-    public function carwashes()
+    public function business()
     {
-        return $this->belongsTo(carwashes::class);
+        return $this->belongsTo(Business::class);
     }
 }

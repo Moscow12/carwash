@@ -61,7 +61,7 @@
     <!-- Quick Actions -->
     <div class="row g-4 mb-4">
         <div class="col-md-6">
-            <a href="{{ route('customer.carwashes') }}" class="card border-0 shadow-sm text-decoration-none">
+            <a href="{{ route('customer.businesses') }}" class="card border-0 shadow-sm text-decoration-none">
                 <div class="card-body text-center py-4">
                     <i class="ti ti-car-garage fs-1 text-primary mb-3"></i>
                     <h5>Browse Carwashes</h5>
@@ -90,7 +90,7 @@
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Carwash</th>
+                            <th>Business</th>
                             <th>Service</th>
                             <th>Date</th>
                             <th>Status</th>
@@ -99,7 +99,7 @@
                     <tbody>
                         @forelse($recentBookings as $booking)
                         <tr>
-                            <td>{{ $booking->carwash->name ?? '-' }}</td>
+                            <td>{{ $booking->business->name ?? '-' }}</td>
                             <td>{{ $booking->item->name ?? '-' }}</td>
                             <td>{{ $booking->booking_date->format('M d, Y H:i') }}</td>
                             <td>
@@ -110,7 +110,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" class="text-center py-4">No bookings yet. <a href="{{ route('customer.carwashes') }}">Browse carwashes</a> to make your first booking!</td>
+                            <td colspan="4" class="text-center py-4">No bookings yet. <a href="{{ route('customer.businesses') }}">Browse carwashes</a> to make your first booking!</td>
                         </tr>
                         @endforelse
                     </tbody>

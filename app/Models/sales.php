@@ -13,7 +13,7 @@ class sales extends Model
     protected $table = 'sales';
 
     protected $fillable = [
-        'carwash_id',
+        'business_id',
         'sale_status',
         'sale_type',
         'sale_date',
@@ -37,12 +37,6 @@ class sales extends Model
     public function business()
     {
         return $this->belongsTo(Business::class, 'business_id');
-    }
-
-    // Legacy support
-    public function carwash()
-    {
-        return $this->business();
     }
 
     public function customer()
@@ -94,12 +88,6 @@ class sales extends Model
     public function scopeForBusiness($query, $businessId)
     {
         return $query->where('business_id', $businessId);
-    }
-
-    // Legacy support
-    public function scopeForCarwash($query, $carwashId)
-    {
-        return $this->scopeForBusiness($query, $carwashId);
     }
 
     public function scopeToday($query)

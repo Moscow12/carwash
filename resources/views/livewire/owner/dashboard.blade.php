@@ -57,8 +57,8 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted mb-1">Carwashes</h6>
-                            <h3 class="mb-0">{{ $totalCarwashes }}</h3>
+                            <h6 class="text-muted mb-1">Businesses</h6>
+                            <h3 class="mb-0">{{ $totalBusinesses }}</h3>
                         </div>
                     </div>
                 </div>

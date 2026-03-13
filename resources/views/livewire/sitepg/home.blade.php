@@ -5,7 +5,7 @@
             <div class="row align-items-center min-vh-100">
                 <div class="col-lg-6">
                     <h1 class="hero-title">
-                        Smart <span class="gradient-text">Carwash</span><br>
+                        Smart <span class="gradient-text">Business</span><br>
                         Management System
                     </h1>
                     <p class="hero-subtitle">

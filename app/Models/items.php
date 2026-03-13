@@ -30,7 +30,7 @@ class items extends Model
         'unit_id',
         'status',
         'category_id',
-        'carwash_id',
+        'business_id',
     ];
 
     protected $casts = [
@@ -44,12 +44,6 @@ class items extends Model
     public function business(): BelongsTo
     {
         return $this->belongsTo(Business::class, 'business_id');
-    }
-
-    // Legacy support - deprecated, use business() instead
-    public function carwash(): BelongsTo
-    {
-        return $this->business();
     }
 
     public function category(): BelongsTo
@@ -113,20 +107,14 @@ class items extends Model
         return $query->where('business_id', $businessId);
     }
 
-    // Legacy support - deprecated, use scopeByBusiness() instead
-    public function scopeByCarwash(Builder $query, string $carwashId): Builder
-    {
-        return $this->scopeByBusiness($query, $carwashId);
-    }
-
     public function scopeByCategory(Builder $query, string $categoryId): Builder
     {
         return $query->where('category_id', $categoryId);
     }
 
-    public function scopeByBarcode(Builder $query, string $barcode, string $carwashId): Builder
+    public function scopeByBarcode(Builder $query, string $barcode, string $businessId): Builder
     {
-        return $query->where('barcode', $barcode)->where('carwash_id', $carwashId);
+        return $query->where('barcode', $barcode)->where('business_id', $businessId);
     }
 
     // Accessors

@@ -7,7 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 use App\Models\items;
-use App\Models\carwashes;
+use App\Models\Business;
 
 #[Layout('components.layouts.app-owner')]
 class Index extends Component
@@ -15,13 +15,13 @@ class Index extends Component
     use WithPagination;
 
     public $search = '';
-    public $selectedCarwash = '';
+    public $selectedBusiness = '';
 
     public function mount()
     {
-        $firstCarwash = Auth::user()->ownedCarwashes()->first();
-        if ($firstCarwash) {
-            $this->selectedCarwash = $firstCarwash->id;
+        $firstBusiness = Auth::user()->ownedBusinesses()->first();
+        if ($firstBusiness) {
+            $this->selectedBusiness = $firstBusiness->id;
         }
     }
 
@@ -32,23 +32,23 @@ class Index extends Component
 
     public function render()
     {
-        $carwashIds = Auth::user()->ownedCarwashes()->pluck('id');
+        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
 
-        $items = items::whereIn('carwash_id', $carwashIds)
-            ->when($this->selectedCarwash, function ($query) {
-                $query->where('carwash_id', $this->selectedCarwash);
+        $items = items::whereIn('business_id', $businessIds)
+            ->when($this->selectedBusiness, function ($query) {
+                $query->where('business_id', $this->selectedBusiness);
             })
             ->when($this->search, function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%');
             })
-            ->with(['carwash', 'unit'])
+            ->with(['business', 'unit'])
             ->paginate(10);
 
-        $carwashes = Auth::user()->ownedCarwashes;
+        $businesses = Auth::user()->ownedBusinesses;
 
         return view('livewire.owner.items.index', [
             'items' => $items,
-            'carwashes' => $carwashes
+            'businesses' => $businesses
         ]);
     }
 }

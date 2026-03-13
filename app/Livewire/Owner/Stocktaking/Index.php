@@ -23,7 +23,7 @@ class Index extends Component
 
     // Filters
     public $search = '';
-    public $selectedCarwash = '';
+    public $selectedBusiness = '';
     public $statusFilter = '';
 
     // Modal states
@@ -58,16 +58,16 @@ class Index extends Component
     public $importComplete = false;
 
     // Data
-    public $ownerCarwashes = [];
+    public $ownerBusinesses = [];
     public $availableItems = [];
 
     public function mount()
     {
-        $this->ownerCarwashes = Auth::user()->ownedCarwashes()->orderBy('name')->get();
+        $this->ownerBusinesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
 
-        $firstCarwash = $this->ownerCarwashes->first();
-        if ($firstCarwash) {
-            $this->selectedCarwash = $firstCarwash->id;
+        $firstBusiness = $this->ownerBusinesses->first();
+        if ($firstBusiness) {
+            $this->selectedBusiness = $firstBusiness->id;
             $this->loadItems();
         }
     }
@@ -90,8 +90,8 @@ class Index extends Component
 
     public function loadItems()
     {
-        if ($this->selectedCarwash) {
-            $this->availableItems = items::where('carwash_id', $this->selectedCarwash)
+        if ($this->selectedBusiness) {
+            $this->availableItems = items::where('business_id', $this->selectedBusiness)
                 ->where('type', 'product')
                 ->where('status', 'active')
                 ->orderBy('name')
@@ -135,7 +135,7 @@ class Index extends Component
 
         // Verify item belongs to selected carwash
         $item = items::where('id', $this->item_id)
-            ->where('carwash_id', $this->selectedCarwash)
+            ->where('business_id', $this->selectedBusiness)
             ->first();
 
         if (!$item) {
@@ -177,7 +177,7 @@ class Index extends Component
                 $stocktaking = stocktaking::create([
                     'item_id' => $this->item_id,
                     'user_id' => Auth::id(),
-                    'carwash_id' => $this->selectedCarwash,
+                    'business_id' => $this->selectedBusiness,
                     'quantity' => $this->quantity,
                     'price' => $this->price,
                     'stocktaking_status' => $this->stocktaking_status,
@@ -204,7 +204,7 @@ class Index extends Component
     {
         // Get current balance
         $lastBalance = item_balance::where('item_id', $itemId)
-            ->where('carwash_id', $this->selectedCarwash)
+            ->where('business_id', $this->selectedBusiness)
             ->latest()
             ->first();
 
@@ -214,7 +214,7 @@ class Index extends Component
         item_balance::create([
             'item_id' => $itemId,
             'user_id' => Auth::id(),
-            'carwash_id' => $this->selectedCarwash,
+            'business_id' => $this->selectedBusiness,
             'previous_balance' => $previousBalance,
             'current_balance' => $newBalance,
             'quantity_changed' => $quantity,
@@ -258,10 +258,10 @@ class Index extends Component
 
             // Handle balance updates
             if ($previousStatus !== 'received' && $status === 'received') {
-                $this->selectedCarwash = $stocktaking->carwash_id;
+                $this->selectedBusiness = $stocktaking->business_id;
                 $this->updateItemBalance($stocktaking->item_id, $stocktaking->quantity, 'restock');
             } elseif ($previousStatus === 'received' && $status !== 'received') {
-                $this->selectedCarwash = $stocktaking->carwash_id;
+                $this->selectedBusiness = $stocktaking->business_id;
                 $this->updateItemBalance($stocktaking->item_id, -$stocktaking->quantity, 'adjustment');
             }
 
@@ -331,7 +331,7 @@ class Index extends Component
             'file' => 'required|mimes:csv,txt|max:5120',
         ]);
 
-        if (!$this->selectedCarwash) {
+        if (!$this->selectedBusiness) {
             session()->flash('error', 'Please select a carwash first.');
             return;
         }
@@ -443,7 +443,7 @@ class Index extends Component
                 $stocktaking = stocktaking::create([
                     'item_id' => $item['id'],
                     'user_id' => Auth::id(),
-                    'carwash_id' => $this->selectedCarwash,
+                    'business_id' => $this->selectedBusiness,
                     'quantity' => $data['quantity'],
                     'price' => $data['price'],
                     'stocktaking_status' => $status,
@@ -483,7 +483,7 @@ class Index extends Component
     public function getItemBalance($itemId)
     {
         $lastBalance = item_balance::where('item_id', $itemId)
-            ->where('carwash_id', $this->selectedCarwash)
+            ->where('business_id', $this->selectedBusiness)
             ->latest()
             ->first();
 
@@ -492,33 +492,33 @@ class Index extends Component
 
     public function render()
     {
-        $carwashIds = Auth::user()->ownedCarwashes()->pluck('id');
+        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
 
-        $stocktakings = stocktaking::whereIn('carwash_id', $carwashIds)
-            ->when($this->selectedCarwash, fn($q) => $q->where('carwash_id', $this->selectedCarwash))
+        $stocktakings = stocktaking::whereIn('business_id', $businessIds)
+            ->when($this->selectedBusiness, fn($q) => $q->where('business_id', $this->selectedBusiness))
             ->when($this->statusFilter, fn($q) => $q->where('stocktaking_status', $this->statusFilter))
             ->when($this->search, function ($q) {
                 $q->whereHas('item', fn($q) => $q->where('name', 'like', "%{$this->search}%"));
             })
-            ->with(['carwash', 'item', 'user'])
+            ->with(['business', 'item', 'user'])
             ->latest()
             ->paginate(10);
 
         // Summary stats
         $stats = [
-            'total' => stocktaking::whereIn('carwash_id', $carwashIds)
-                ->when($this->selectedCarwash, fn($q) => $q->where('carwash_id', $this->selectedCarwash))
+            'total' => stocktaking::whereIn('business_id', $businessIds)
+                ->when($this->selectedBusiness, fn($q) => $q->where('business_id', $this->selectedBusiness))
                 ->count(),
-            'received' => stocktaking::whereIn('carwash_id', $carwashIds)
-                ->when($this->selectedCarwash, fn($q) => $q->where('carwash_id', $this->selectedCarwash))
+            'received' => stocktaking::whereIn('business_id', $businessIds)
+                ->when($this->selectedBusiness, fn($q) => $q->where('business_id', $this->selectedBusiness))
                 ->received()
                 ->count(),
-            'pending' => stocktaking::whereIn('carwash_id', $carwashIds)
-                ->when($this->selectedCarwash, fn($q) => $q->where('carwash_id', $this->selectedCarwash))
+            'pending' => stocktaking::whereIn('business_id', $businessIds)
+                ->when($this->selectedBusiness, fn($q) => $q->where('business_id', $this->selectedBusiness))
                 ->pending()
                 ->count(),
-            'total_value' => stocktaking::whereIn('carwash_id', $carwashIds)
-                ->when($this->selectedCarwash, fn($q) => $q->where('carwash_id', $this->selectedCarwash))
+            'total_value' => stocktaking::whereIn('business_id', $businessIds)
+                ->when($this->selectedBusiness, fn($q) => $q->where('business_id', $this->selectedBusiness))
                 ->received()
                 ->selectRaw('SUM(quantity * price) as total')
                 ->value('total') ?? 0,
