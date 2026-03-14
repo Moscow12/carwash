@@ -68,6 +68,11 @@ use App\Livewire\Owner\Hotel\RatePlans;
 use App\Livewire\Owner\Hotel\Guests;
 use App\Livewire\Owner\Hotel\HousekeepingTasks;
 use App\Livewire\Owner\Hotel\BookingSources;
+use App\Livewire\Owner\Hotel\MaintenanceManagement;
+use App\Livewire\Owner\Hotel\BillingFinance;
+use App\Livewire\Owner\Hotel\NightAudit;
+use App\Livewire\Owner\Hotel\FoodBeverage;
+use App\Livewire\Owner\Hotel\HotelReports;
 use App\Livewire\Owner\Items\Edititems;
 use App\Livewire\Owner\Items\History;
 use App\Livewire\Owner\Items\Listitems;
@@ -167,28 +172,28 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/hotel/lost-found', Addhotel::class)->name('owner.hotel.lost-found');
 
     // Maintenance
-    Route::get('/hotel/maintenance/requests', Addhotel::class)->name('owner.hotel.maintenance.requests');
-    Route::get('/hotel/maintenance/preventive', Addhotel::class)->name('owner.hotel.maintenance.preventive');
+    Route::get('/hotel/maintenance/requests', MaintenanceManagement::class)->name('owner.hotel.maintenance.requests');
+    Route::get('/hotel/maintenance/preventive', MaintenanceManagement::class)->name('owner.hotel.maintenance.preventive');
 
     // Billing & Finance
-    Route::get('/hotel/folios', Addhotel::class)->name('owner.hotel.folios');
-    Route::get('/hotel/invoices', Addhotel::class)->name('owner.hotel.invoices');
-    Route::get('/hotel/payments', Addhotel::class)->name('owner.hotel.payments');
-    Route::get('/hotel/night-audit', Addhotel::class)->name('owner.hotel.night-audit');
-    Route::get('/hotel/tax-config', Addhotel::class)->name('owner.hotel.tax-config');
+    Route::get('/hotel/folios', BillingFinance::class)->name('owner.hotel.folios');
+    Route::get('/hotel/invoices', BillingFinance::class)->name('owner.hotel.invoices');
+    Route::get('/hotel/payments', BillingFinance::class)->name('owner.hotel.payments');
+    Route::get('/hotel/night-audit', NightAudit::class)->name('owner.hotel.night-audit');
+    Route::get('/hotel/tax-config', BillingFinance::class)->name('owner.hotel.tax-config');
 
     // F&B Management
-    Route::get('/hotel/pos-outlets', Addhotel::class)->name('owner.hotel.pos-outlets');
-    Route::get('/hotel/pos-orders', Addhotel::class)->name('owner.hotel.pos-orders');
-    Route::get('/hotel/tables', Addhotel::class)->name('owner.hotel.tables');
-    Route::get('/hotel/pos-sessions', Addhotel::class)->name('owner.hotel.pos-sessions');
+    Route::get('/hotel/pos-outlets', FoodBeverage::class)->name('owner.hotel.pos-outlets');
+    Route::get('/hotel/pos-orders', FoodBeverage::class)->name('owner.hotel.pos-orders');
+    Route::get('/hotel/tables', FoodBeverage::class)->name('owner.hotel.tables');
+    Route::get('/hotel/pos-sessions', FoodBeverage::class)->name('owner.hotel.pos-sessions');
 
     // Reports
-    Route::get('/hotel/reports/occupancy', Addhotel::class)->name('owner.hotel.reports.occupancy');
-    Route::get('/hotel/reports/revenue', Addhotel::class)->name('owner.hotel.reports.revenue');
-    Route::get('/hotel/reports/reservations', Addhotel::class)->name('owner.hotel.reports.reservations');
-    Route::get('/hotel/reports/housekeeping', Addhotel::class)->name('owner.hotel.reports.housekeeping');
-    Route::get('/hotel/reports/guest-history', Addhotel::class)->name('owner.hotel.reports.guest-history');
+    Route::get('/hotel/reports/occupancy', HotelReports::class)->name('owner.hotel.reports.occupancy');
+    Route::get('/hotel/reports/revenue', HotelReports::class)->name('owner.hotel.reports.revenue');
+    Route::get('/hotel/reports/reservations', HotelReports::class)->name('owner.hotel.reports.reservations');
+    Route::get('/hotel/reports/housekeeping', HotelReports::class)->name('owner.hotel.reports.housekeeping');
+    Route::get('/hotel/reports/guest-history', HotelReports::class)->name('owner.hotel.reports.guest-history');
 
     // Channels & Integrations
     Route::get('/hotel/booking-sources', BookingSources::class)->name('owner.hotel.booking-sources');
