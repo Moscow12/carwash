@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Business;
 use App\Models\MaintenanceRequest;
 use App\Models\Room;
-use App\Models\Staff;
+use App\Models\staffs;
 
 #[Layout('components.layouts.app-owner')]
 class MaintenanceManagement extends Component
@@ -232,7 +232,7 @@ class MaintenanceManagement extends Component
                 ->orderBy('number')
                 ->get();
 
-            $staff = Staff::where('business_id', $this->selectedHotel)
+            $staff = staffs::where('business_id', $this->selectedHotel)
                 ->where('status', 'active')
                 ->orderBy('name')
                 ->get();
