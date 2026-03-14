@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Rule;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\Business;
 use App\Models\Guest;
 
@@ -29,14 +30,23 @@ class Guests extends Component
     #[Rule('required|string|max:255')]
     public $last_name = '';
 
-    #[Rule('required|email|max:255')]
+    #[Rule('nullable|email|max:255')]
     public $email = '';
 
     #[Rule('required|string|max:50')]
     public $phone = '';
 
-    #[Rule('nullable|string|max:100')]
+    #[Rule('nullable|string|max:255')]
     public $nationality = '';
+
+    #[Rule('nullable|string|max:255')]
+    public $country = '';
+
+    #[Rule('nullable|string|max:255')]
+    public $coming_from = '';
+
+    #[Rule('nullable|string|max:255')]
+    public $going_to = '';
 
     #[Rule('nullable|in:passport,national_id,drivers_license')]
     public $id_type = '';
@@ -94,9 +104,12 @@ class Guests extends Component
         $this->guestId = $guest->id;
         $this->first_name = $guest->first_name;
         $this->last_name = $guest->last_name;
-        $this->email = $guest->email;
+        $this->email = $guest->email ?? '';
         $this->phone = $guest->phone;
         $this->nationality = $guest->nationality ?? '';
+        $this->country = $guest->country ?? '';
+        $this->coming_from = $guest->coming_from ?? '';
+        $this->going_to = $guest->going_to ?? '';
         $this->id_type = $guest->id_type ?? '';
         $this->id_number = $guest->id_number ?? '';
         $this->date_of_birth = $guest->date_of_birth?->format('Y-m-d') ?? '';
@@ -120,9 +133,12 @@ class Guests extends Component
             'business_id' => $this->selectedHotel,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
-            'email' => $this->email,
+            'email' => $this->email ?: null,
             'phone' => $this->phone,
             'nationality' => $this->nationality ?: null,
+            'country' => $this->country ?: null,
+            'coming_from' => $this->coming_from ?: null,
+            'going_to' => $this->going_to ?: null,
             'id_type' => $this->id_type ?: null,
             'id_number' => $this->id_number ?: null,
             'date_of_birth' => $this->date_of_birth ?: null,
@@ -163,6 +179,7 @@ class Guests extends Component
     {
         $this->reset([
             'guestId', 'first_name', 'last_name', 'email', 'phone', 'nationality',
+            'country', 'coming_from', 'going_to',
             'id_type', 'id_number', 'date_of_birth', 'gender', 'address',
             'vip_level', 'loyalty_points', 'blacklisted', 'blacklist_reason', 'status'
         ]);
@@ -208,9 +225,15 @@ class Guests extends Component
             'blacklisted' => Guest::where('business_id', $this->selectedHotel)->where('blacklisted', true)->count(),
         ];
 
+        // Get countries for dropdown
+        $countries = DB::table('countries')
+            ->orderBy('name')
+            ->pluck('name', 'name');
+
         return view('livewire.owner.hotel.guests', [
             'hotels' => $hotels,
             'guests' => $guests,
+            'countries' => $countries,
             'stats' => $stats,
         ]);
     }

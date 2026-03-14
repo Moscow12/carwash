@@ -207,7 +207,7 @@ class BillingFinance extends Component
     {
         $tax = HotelTaxConfig::findOrFail($id);
         $this->taxId = $tax->id;
-        $this->tax_name = $tax->tax_name;
+        $this->tax_name = $tax->name;
         $this->tax_rate = $tax->rate;
         $this->tax_status = $tax->status;
         $this->editMode = true;
@@ -225,7 +225,7 @@ class BillingFinance extends Component
         try {
             if ($this->editMode && $this->taxId) {
                 HotelTaxConfig::findOrFail($this->taxId)->update([
-                    'tax_name' => $this->tax_name,
+                    'name' => $this->tax_name,
                     'rate' => $this->tax_rate,
                     'status' => $this->tax_status,
                 ]);
@@ -233,7 +233,7 @@ class BillingFinance extends Component
             } else {
                 HotelTaxConfig::create([
                     'business_id' => $this->selectedHotel,
-                    'tax_name' => $this->tax_name,
+                    'name' => $this->tax_name,
                     'rate' => $this->tax_rate,
                     'status' => $this->tax_status,
                 ]);

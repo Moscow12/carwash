@@ -20,6 +20,9 @@ class Guest extends Model
         'email',
         'phone',
         'nationality',
+        'country',
+        'coming_from',
+        'going_to',
         'id_type',
         'id_number',
         'date_of_birth',
@@ -37,6 +40,10 @@ class Guest extends Model
         'date_of_birth' => 'date',
         'preferences' => 'array',
         'blacklisted' => 'boolean',
+    ];
+
+    protected $appends = [
+        'full_name',
     ];
 
     // Relationships

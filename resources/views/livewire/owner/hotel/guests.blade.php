@@ -253,8 +253,8 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Email <span class="text-danger">*</span></label>
-                                    <input type="email" wire:model="email" class="form-control @error('email') is-invalid @enderror">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" wire:model="email" class="form-control @error('email') is-invalid @enderror" placeholder="Optional">
                                     @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 
@@ -284,7 +284,27 @@
 
                                 <div class="col-md-4">
                                     <label class="form-label">Nationality</label>
-                                    <input type="text" wire:model="nationality" class="form-control">
+                                    <input type="text" wire:model="nationality" class="form-control" placeholder="e.g., Tanzanian">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Country</label>
+                                    <select wire:model="country" class="form-select">
+                                        <option value="">-- Select Country --</option>
+                                        @foreach($countries as $countryName)
+                                            <option value="{{ $countryName }}">{{ $countryName }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Coming From</label>
+                                    <input type="text" wire:model="coming_from" class="form-control" placeholder="e.g., Dar es Salaam">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Going To</label>
+                                    <input type="text" wire:model="going_to" class="form-control" placeholder="e.g., Arusha">
                                 </div>
 
                                 <!-- ID Information -->

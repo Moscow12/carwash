@@ -44,7 +44,7 @@ class HousekeepingTask extends Model
 
     public function assignedTo(): BelongsTo
     {
-        return $this->belongsTo(staff::class, 'assigned_to');
+        return $this->belongsTo(staffs::class, 'assigned_to');
     }
 
     public function verifiedBy(): BelongsTo

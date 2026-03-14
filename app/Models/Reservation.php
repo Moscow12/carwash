@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Builder;
 
 class Reservation extends Model
@@ -83,6 +84,18 @@ class Reservation extends Model
     public function roomAllocation(): HasOne
     {
         return $this->hasOne(RoomAllocation::class, 'reservation_id');
+    }
+
+    public function room(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Room::class,
+            RoomAllocation::class,
+            'reservation_id',  // Foreign key on room_allocations table
+            'id',              // Foreign key on rooms table
+            'id',              // Local key on reservations table
+            'room_id'          // Local key on room_allocations table
+        );
     }
 
     public function folios(): HasMany

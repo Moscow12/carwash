@@ -81,7 +81,7 @@ class PosOrder extends Model
 
     public function servedBy(): BelongsTo
     {
-        return $this->belongsTo(staff::class, 'served_by');
+        return $this->belongsTo(staffs::class, 'served_by');
     }
 
     public function items(): HasMany

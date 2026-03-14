@@ -47,7 +47,7 @@ class LostAndFound extends Model
 
     public function foundBy(): BelongsTo
     {
-        return $this->belongsTo(staff::class, 'found_by');
+        return $this->belongsTo(staffs::class, 'found_by');
     }
 
     public function claimedByGuest(): BelongsTo
