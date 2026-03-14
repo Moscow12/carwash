@@ -104,7 +104,6 @@
                                 <th>Room Revenue</th>
                                 <th>F&B Revenue</th>
                                 <th>Total Revenue</th>
-                                <th>Payments</th>
                                 <th>ADR</th>
                                 <th>RevPAR</th>
                                 <th>Actions</th>
@@ -120,12 +119,11 @@
                                         <div>
                                             <strong>{{ $audit->occupied_rooms }}</strong> / {{ $audit->total_rooms }}
                                         </div>
-                                        <small class="text-muted">{{ number_format($audit->occupancy_rate, 1) }}%</small>
+                                        <small class="text-muted">{{ number_format($audit->occupancy_pct ?? 0, 1) }}%</small>
                                     </td>
                                     <td>{{ number_format($audit->room_revenue, 2) }}</td>
                                     <td>{{ number_format($audit->fb_revenue, 2) }}</td>
                                     <td><strong class="text-success">{{ number_format($audit->total_revenue, 2) }}</strong></td>
-                                    <td>{{ number_format($audit->payments_collected, 2) }}</td>
                                     <td>{{ number_format($audit->adr, 2) }}</td>
                                     <td>{{ number_format($audit->revpar, 2) }}</td>
                                     <td>
@@ -210,11 +208,11 @@
                                     </div>
                                     <div class="col-md-3">
                                         <p class="mb-1"><strong>Occupancy Rate:</strong></p>
-                                        <h4>{{ number_format($auditData['occupancy_rate'], 1) }}%</h4>
+                                        <h4>{{ number_format($auditData['occupancy_pct'] ?? 0, 1) }}%</h4>
                                     </div>
                                     <div class="col-md-3">
                                         <p class="mb-1"><strong>Arrivals / Departures:</strong></p>
-                                        <h4>{{ $auditData['arrivals'] }} / {{ $auditData['departures'] }}</h4>
+                                        <h4>{{ $auditData['new_arrivals'] ?? 0 }} / {{ $auditData['departures'] ?? 0 }}</h4>
                                     </div>
                                 </div>
                             </div>
@@ -237,7 +235,7 @@
                                     </div>
                                     <div class="col-md-3">
                                         <p class="mb-1"><strong>Other Revenue:</strong></p>
-                                        <h4 class="text-warning">{{ number_format($auditData['other_revenue'], 2) }}</h4>
+                                        <h4 class="text-warning">{{ number_format(($auditData['total_revenue'] ?? 0) - ($auditData['room_revenue'] ?? 0) - ($auditData['fb_revenue'] ?? 0), 2) }}</h4>
                                     </div>
                                     <div class="col-md-3">
                                         <p class="mb-1"><strong>Total Revenue:</strong></p>
@@ -254,16 +252,12 @@
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-4">
-                                        <p class="mb-1"><strong>Payments Collected:</strong></p>
-                                        <h4 class="text-success">{{ number_format($auditData['payments_collected'], 2) }}</h4>
-                                    </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <p class="mb-1"><strong>ADR:</strong></p>
                                         <h4 class="text-primary">{{ number_format($auditData['adr'], 2) }}</h4>
                                         <small class="text-muted">Average Daily Rate</small>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <p class="mb-1"><strong>RevPAR:</strong></p>
                                         <h4 class="text-info">{{ number_format($auditData['revpar'], 2) }}</h4>
                                         <small class="text-muted">Revenue Per Available Room</small>
@@ -282,7 +276,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" wire:click="closeModal">Close</button>
-                        <button type="button" class="btn btn-primary">
+                        <button type="button" class="btn btn-primary" onclick="window.print()">
                             <i class="ti ti-printer me-1"></i> Print Report
                         </button>
                     </div>
@@ -290,4 +284,61 @@
             </div>
         </div>
     @endif
+
+    <style>
+        @media print {
+            /* Hide everything except modal content when printing */
+            body * {
+                visibility: hidden;
+            }
+
+            .modal-content, .modal-content * {
+                visibility: visible;
+            }
+
+            .modal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                margin: 0;
+                padding: 0;
+                min-height: 100vh;
+                background: white !important;
+            }
+
+            .modal-dialog {
+                max-width: 100% !important;
+                margin: 0;
+            }
+
+            .modal-content {
+                position: absolute;
+                left: 0;
+                top: 0;
+                border: none !important;
+                box-shadow: none !important;
+            }
+
+            /* Hide modal footer buttons when printing */
+            .modal-footer {
+                display: none !important;
+            }
+
+            /* Hide page header, sidebar, navbar */
+            header, nav, .sidebar, .navbar, aside {
+                display: none !important;
+            }
+
+            /* Optimize for print */
+            .card {
+                page-break-inside: avoid;
+                border: 1px solid #dee2e6 !important;
+            }
+
+            /* Remove shadows and backgrounds for print */
+            .shadow-sm {
+                box-shadow: none !important;
+            }
+        }
+    </style>
 </div>

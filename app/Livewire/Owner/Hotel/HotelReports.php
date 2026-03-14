@@ -75,7 +75,7 @@ class HotelReports extends Component
 
                 $occupiedRoomNights = Reservation::where('business_id', $this->selectedHotel)
                     ->where('status', 'checked_in')
-                    ->whereBetween('check_in', [$from, $to])
+                    ->whereBetween('check_in_date', [$from, $to])
                     ->count();
 
                 $occupancyRate = $totalRooms > 0 && $totalDays > 0
@@ -107,21 +107,21 @@ class HotelReports extends Component
                         $q->where('business_id', $this->selectedHotel);
                     })
                     ->where('charge_type', 'room')
-                    ->whereBetween('charge_date', [$from, $to])
+                    ->whereBetween('posted_at', [$from, $to])
                     ->sum('amount');
 
                 $fbRevenue = FolioCharge::whereHas('folio', function($q) {
                         $q->where('business_id', $this->selectedHotel);
                     })
                     ->whereIn('charge_type', ['restaurant', 'bar'])
-                    ->whereBetween('charge_date', [$from, $to])
+                    ->whereBetween('posted_at', [$from, $to])
                     ->sum('amount');
 
                 $otherRevenue = FolioCharge::whereHas('folio', function($q) {
                         $q->where('business_id', $this->selectedHotel);
                     })
                     ->whereNotIn('charge_type', ['room', 'restaurant', 'bar'])
-                    ->whereBetween('charge_date', [$from, $to])
+                    ->whereBetween('posted_at', [$from, $to])
                     ->sum('amount');
 
                 $totalRevenue = $roomRevenue + $fbRevenue + $otherRevenue;
@@ -144,13 +144,13 @@ class HotelReports extends Component
 
                 $bySource = Reservation::where('business_id', $this->selectedHotel)
                     ->whereBetween('created_at', [$from, $to])
-                    ->select('booking_source_id')
-                    ->with('bookingSource')
+                    ->select('source_id')
+                    ->with('source')
                     ->get()
-                    ->groupBy('booking_source_id')
+                    ->groupBy('source_id')
                     ->map(function($reservations) {
                         return [
-                            'source' => $reservations->first()->bookingSource->name ?? 'Direct',
+                            'source' => $reservations->first()->source->name ?? 'Direct',
                             'count' => $reservations->count(),
                         ];
                     })

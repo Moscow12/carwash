@@ -72,7 +72,7 @@ class NightAudit extends Component
                     $q->where('business_id', $this->selectedHotel);
                 })
                 ->where('charge_type', 'room')
-                ->whereDate('charge_date', $auditDate)
+                ->whereDate('posted_at', $auditDate)
                 ->sum('amount');
 
             // F&B revenue
@@ -80,7 +80,7 @@ class NightAudit extends Component
                     $q->where('business_id', $this->selectedHotel);
                 })
                 ->whereIn('charge_type', ['restaurant', 'bar'])
-                ->whereDate('charge_date', $auditDate)
+                ->whereDate('posted_at', $auditDate)
                 ->sum('amount');
 
             // Other revenue
@@ -88,7 +88,7 @@ class NightAudit extends Component
                     $q->where('business_id', $this->selectedHotel);
                 })
                 ->whereNotIn('charge_type', ['room', 'restaurant', 'bar'])
-                ->whereDate('charge_date', $auditDate)
+                ->whereDate('posted_at', $auditDate)
                 ->sum('amount');
 
             $totalRevenue = $roomRevenue + $fbRevenue + $otherRevenue;
@@ -100,12 +100,12 @@ class NightAudit extends Component
 
             // Arrivals and departures
             $arrivals = Reservation::where('business_id', $this->selectedHotel)
-                ->whereDate('check_in', $auditDate)
+                ->whereDate('check_in_date', $auditDate)
                 ->where('status', 'checked_in')
                 ->count();
 
             $departures = Reservation::where('business_id', $this->selectedHotel)
-                ->whereDate('check_out', $auditDate)
+                ->whereDate('check_out_date', $auditDate)
                 ->where('status', 'checked_out')
                 ->count();
 
@@ -115,22 +115,28 @@ class NightAudit extends Component
             // Revenue Per Available Room (RevPAR)
             $revpar = $totalRooms > 0 ? $roomRevenue / $totalRooms : 0;
 
+            // Get the first hotel branch for this business, or null
+            $branchId = DB::table('hotel_branches')
+                ->where('business_id', $this->selectedHotel)
+                ->value('id');
+
             // Create snapshot
             NightAuditSnapshot::create([
                 'business_id' => $this->selectedHotel,
+                'branch_id' => $branchId,
                 'audit_date' => $auditDate,
                 'total_rooms' => $totalRooms,
                 'occupied_rooms' => $occupiedRooms,
-                'occupancy_rate' => $occupancyRate,
+                'occupancy_pct' => $occupancyRate,
                 'room_revenue' => $roomRevenue,
                 'fb_revenue' => $fbRevenue,
-                'other_revenue' => $otherRevenue,
                 'total_revenue' => $totalRevenue,
-                'payments_collected' => $paymentsCollected,
-                'arrivals' => $arrivals,
+                'new_arrivals' => $arrivals,
                 'departures' => $departures,
                 'adr' => $adr,
                 'revpar' => $revpar,
+                'run_by' => Auth::id(),
+                'run_at' => now(),
             ]);
 
             DB::commit();
@@ -181,7 +187,7 @@ class NightAudit extends Component
             $todayRevenue = FolioCharge::whereHas('folio', function($q) {
                     $q->where('business_id', $this->selectedHotel);
                 })
-                ->whereDate('charge_date', today())
+                ->whereDate('posted_at', today())
                 ->sum('amount');
 
             $todayMetrics = [

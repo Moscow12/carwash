@@ -318,7 +318,7 @@ class BillingFinance extends Component
 
             // Taxes
             $taxes = HotelTaxConfig::where('business_id', $this->selectedHotel)
-                ->orderBy('tax_name')
+                ->orderBy('name')
                 ->get();
 
             // Statistics
@@ -331,7 +331,7 @@ class BillingFinance extends Component
             $stats['revenue_today'] = FolioCharge::whereHas('folio', function($q) {
                     $q->where('business_id', $this->selectedHotel);
                 })
-                ->whereDate('charge_date', today())->sum('amount');
+                ->whereDate('posted_at', today())->sum('amount');
         }
 
         return view('livewire.owner.hotel.billing-finance', [
