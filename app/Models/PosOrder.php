@@ -6,11 +6,14 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PosOrder extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $fillable = [
         'order_no',
@@ -25,6 +28,7 @@ class PosOrder extends Model
         'covers',
         'subtotal',
         'discount_amount',
+        'discount_id',
         'tax_amount',
         'service_charge',
         'total',
@@ -102,6 +106,37 @@ class PosOrder extends Model
     public function hotelPayments(): HasMany
     {
         return $this->hasMany(HotelPayment::class, 'pos_order_id');
+    }
+
+    public function discount(): BelongsTo
+    {
+        return $this->belongsTo(OrderDiscount::class, 'discount_id');
+    }
+
+    public function payments(): MorphMany
+    {
+        return $this->morphMany(Payment::class, 'payable');
+    }
+
+    public function discounts(): MorphMany
+    {
+        return $this->morphMany(OrderDiscount::class, 'discountable');
+    }
+
+    public function voidLogs(): MorphMany
+    {
+        return $this->morphMany(VoidLog::class, 'voidable');
+    }
+
+    public function barTabs(): BelongsToMany
+    {
+        return $this->belongsToMany(BarTab::class, 'bar_tab_orders', 'order_id', 'tab_id')
+                    ->withTimestamps();
+    }
+
+    public function tableReservations(): HasMany
+    {
+        return $this->hasMany(TableReservation::class, 'pos_order_id');
     }
 
     // Scopes

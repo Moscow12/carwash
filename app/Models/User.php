@@ -7,13 +7,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasUuids;
+    use HasFactory, Notifiable, HasUuids, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -115,5 +116,37 @@ class User extends Authenticatable
     public function hasRole(string $role): bool
     {
         return $this->role === $role;
+    }
+
+    /**
+     * Get business roles for this user
+     */
+    public function businessRoles(): HasMany
+    {
+        return $this->hasMany(UserBusinessRole::class);
+    }
+
+    /**
+     * Get staff profile linked to this user
+     */
+    public function staffProfile(): HasMany
+    {
+        return $this->hasMany(staffs::class);
+    }
+
+    /**
+     * Get payments received by this user
+     */
+    public function paymentsReceived(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'received_by');
+    }
+
+    /**
+     * Get void logs created by this user
+     */
+    public function voidLogs(): HasMany
+    {
+        return $this->hasMany(VoidLog::class, 'voided_by');
     }
 }

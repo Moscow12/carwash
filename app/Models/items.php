@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class items extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $table = 'items';
 
@@ -31,6 +32,7 @@ class items extends Model
         'status',
         'category_id',
         'business_id',
+        'outlet_id',
     ];
 
     protected $casts = [
@@ -79,6 +81,31 @@ class items extends Model
     public function itemBalances(): HasMany
     {
         return $this->hasMany(item_balance::class, 'item_id');
+    }
+
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(PosOutlet::class);
+    }
+
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ItemVariant::class);
+    }
+
+    public function purchaseItems(): HasMany
+    {
+        return $this->hasMany(PurchaseItem::class);
+    }
+
+    public function stockTransferItems(): HasMany
+    {
+        return $this->hasMany(StockTransferItem::class);
+    }
+
+    public function menuItemRecipes(): HasMany
+    {
+        return $this->hasMany(MenuItemRecipe::class);
     }
 
     // Scopes
