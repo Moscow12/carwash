@@ -4,25 +4,48 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class suplier extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $table = 'supliers';
 
     protected $fillable = [
+        'business_id',
         'name',
+        'contact_person',
         'address',
         'phone',
         'email',
+        'tin_number',
+        'vrn_number',
+        'payment_terms',
+        'credit_limit',
         'status',
     ];
 
+    protected $casts = [
+        'credit_limit' => 'decimal:2',
+    ];
+
     // Relationships
-    public function purchases()
+    public function business(): BelongsTo
+    {
+        return $this->belongsTo(Business::class, 'business_id');
+    }
+
+    public function purchases(): HasMany
     {
         return $this->hasMany(purchase::class, 'supplier_id');
+    }
+
+    public function purchaseOrders(): HasMany
+    {
+        return $this->hasMany(PurchaseOrder::class, 'supplier_id');
     }
 
     // Scopes

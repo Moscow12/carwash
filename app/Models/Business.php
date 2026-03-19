@@ -153,6 +153,67 @@ class Business extends Model
         return $this->hasMany(HotelInvoice::class, 'business_id');
     }
 
+    // New table relationships (from Phase 2)
+    public function taxRates(): HasMany
+    {
+        return $this->hasMany(TaxRate::class, 'business_id');
+    }
+
+    public function promotions(): HasMany
+    {
+        return $this->hasMany(Promotion::class, 'business_id');
+    }
+
+    public function stockTransfers(): HasMany
+    {
+        return $this->hasMany(StockTransfer::class, 'business_id');
+    }
+
+    public function shiftSchedules(): HasMany
+    {
+        return $this->hasMany(ShiftSchedule::class, 'business_id');
+    }
+
+    public function purchases(): HasMany
+    {
+        return $this->hasMany(purchase::class, 'business_id');
+    }
+
+    public function purchaseOrders(): HasMany
+    {
+        return $this->hasMany(PurchaseOrder::class, 'business_id');
+    }
+
+    public function suppliers(): HasMany
+    {
+        return $this->hasMany(suplier::class, 'business_id');
+    }
+
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(expenses::class, 'business_id');
+    }
+
+    public function stocktakings(): HasMany
+    {
+        return $this->hasMany(stocktaking::class, 'business_id');
+    }
+
+    public function itemBalances(): HasMany
+    {
+        return $this->hasMany(item_balance::class, 'business_id');
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'business_id');
+    }
+
+    public function voidLogs(): HasMany
+    {
+        return $this->hasMany(VoidLog::class, 'business_id');
+    }
+
     // Scopes
     public function scopeActive(Builder $query): Builder
     {

@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class expenses extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $table = 'expenses';
 
@@ -15,6 +17,7 @@ class expenses extends Model
         'reference_no',
         'expense_date',
         'business_id',
+        'outlet_id',
         'category_id',
         'subcategory_id',
         'total_amount',
@@ -46,32 +49,37 @@ class expenses extends Model
     ];
 
     // Relationships
-    public function business()
+    public function business(): BelongsTo
     {
         return $this->belongsTo(Business::class, 'business_id');
     }
 
-    public function category()
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(PosOutlet::class, 'outlet_id');
+    }
+
+    public function category(): BelongsTo
     {
         return $this->belongsTo(expense_category::class, 'category_id');
     }
 
-    public function subcategory()
+    public function subcategory(): BelongsTo
     {
         return $this->belongsTo(expense_category::class, 'subcategory_id');
     }
 
-    public function addedByUser()
+    public function addedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'added_by');
     }
 
-    public function expenseForStaff()
+    public function expenseForStaff(): BelongsTo
     {
         return $this->belongsTo(staffs::class, 'expense_for_id');
     }
 
-    public function contactSupplier()
+    public function contactSupplier(): BelongsTo
     {
         return $this->belongsTo(suplier::class, 'contact_id');
     }

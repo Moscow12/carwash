@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class stocktaking extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $table = 'stocktakings';
 
@@ -15,31 +17,47 @@ class stocktaking extends Model
         'item_id',
         'user_id',
         'business_id',
+        'outlet_id',
+        'reference_no',
+        'stocktake_date',
+        'expected_quantity',
+        'actual_quantity',
+        'variance',
         'quantity',
         'price',
         'stocktaking_status',
+        'adjustment_reason',
         'notes',
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:2',
+        'stocktake_date' => 'date',
+        'expected_quantity' => 'decimal:3',
+        'actual_quantity' => 'decimal:3',
+        'variance' => 'decimal:3',
+        'quantity' => 'decimal:3',
         'price' => 'decimal:2',
     ];
 
     // Relationships
-    public function item()
+    public function item(): BelongsTo
     {
         return $this->belongsTo(items::class, 'item_id');
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function business()
+    public function business(): BelongsTo
     {
         return $this->belongsTo(Business::class, 'business_id');
+    }
+
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(PosOutlet::class, 'outlet_id');
     }
 
     // Scopes

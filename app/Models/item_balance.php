@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 class item_balance extends Model
@@ -16,34 +17,49 @@ class item_balance extends Model
         'item_id',
         'user_id',
         'business_id',
+        'outlet_id',
+        'order_id',
         'previous_balance',
         'current_balance',
         'quantity_changed',
+        'quantity_ml',
         'stock_type',
         'stransaction_type',
+        'movement_reason',
         'invoice_number',
     ];
 
     protected $casts = [
-        'previous_balance' => 'decimal:2',
-        'current_balance' => 'decimal:2',
-        'quantity_changed' => 'decimal:2',
+        'previous_balance' => 'decimal:3',
+        'current_balance' => 'decimal:3',
+        'quantity_changed' => 'decimal:3',
+        'quantity_ml' => 'decimal:2',
     ];
 
     // Relationships
-    public function item()
+    public function item(): BelongsTo
     {
         return $this->belongsTo(items::class, 'item_id');
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function business()
+    public function business(): BelongsTo
     {
         return $this->belongsTo(Business::class, 'business_id');
+    }
+
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(PosOutlet::class, 'outlet_id');
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(PosOrder::class, 'order_id');
     }
 
     // Scopes
