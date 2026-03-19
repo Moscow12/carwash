@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class purchase extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $table = 'purchases';
 
@@ -16,39 +19,59 @@ class purchase extends Model
         'user_id',
         'supplier_id',
         'business_id',
+        'reference_no',
+        'received_date',
         'quantity',
         'price',
         'discount',
+        'subtotal',
+        'tax_amount',
+        'total_amount',
+        'outlet_id',
         'payment_status',
         'purchase_status',
         'notes',
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:2',
+        'received_date' => 'date',
+        'quantity' => 'decimal:3',
         'price' => 'decimal:2',
         'discount' => 'decimal:2',
+        'subtotal' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
+        'total_amount' => 'decimal:2',
     ];
 
     // Relationships
-    public function item()
+    public function item(): BelongsTo
     {
         return $this->belongsTo(items::class, 'item_id');
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function supplier()
+    public function supplier(): BelongsTo
     {
         return $this->belongsTo(suplier::class, 'supplier_id');
     }
 
-    public function business()
+    public function business(): BelongsTo
     {
         return $this->belongsTo(Business::class, 'business_id');
+    }
+
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(PosOutlet::class);
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(PurchaseItem::class);
     }
 
     // Scopes - Purchase Status

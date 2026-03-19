@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Guest extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $fillable = [
         'business_id',
@@ -80,6 +81,31 @@ class Guest extends Model
     public function communicationLogs(): HasMany
     {
         return $this->hasMany(CommunicationLog::class, 'guest_id');
+    }
+
+    public function reservationGuests(): HasMany
+    {
+        return $this->hasMany(ReservationGuest::class);
+    }
+
+    public function amenityRequests(): HasMany
+    {
+        return $this->hasMany(HotelAmenityRequest::class);
+    }
+
+    public function wakeupCalls(): HasMany
+    {
+        return $this->hasMany(WakeupCall::class);
+    }
+
+    public function laundryOrders(): HasMany
+    {
+        return $this->hasMany(LaundryOrder::class);
+    }
+
+    public function barTabs(): HasMany
+    {
+        return $this->hasMany(BarTab::class);
     }
 
     // Scopes

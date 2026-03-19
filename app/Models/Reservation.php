@@ -8,11 +8,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Reservation extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $fillable = [
         'reservation_no',
@@ -26,6 +28,7 @@ class Reservation extends Model
         'check_out_date',
         'adults',
         'children',
+        'number_of_rooms',
         'total_nights',
         'room_rate',
         'total_amount',
@@ -106,6 +109,23 @@ class Reservation extends Model
     public function posOrders(): HasMany
     {
         return $this->hasMany(PosOrder::class, 'reservation_id');
+    }
+
+    public function reservationGuests(): HasMany
+    {
+        return $this->hasMany(ReservationGuest::class);
+    }
+
+    public function allGuests(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Guest::class,
+            ReservationGuest::class,
+            'reservation_id',
+            'id',
+            'id',
+            'guest_id'
+        );
     }
 
     // Scopes
