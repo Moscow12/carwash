@@ -6,11 +6,10 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class sales_item extends Model
 {
-    use HasUuids, SoftDeletes;
+    use HasUuids;
 
     protected $table = 'sales_items';
 
