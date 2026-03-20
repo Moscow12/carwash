@@ -217,6 +217,7 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/reports/staff-commissions', Staffcommisions::class)->name('owner.reports.staffcommissions');
 
     Route::get('/barmanagement', BarManagement::class)->name('owner.barmanagement');
+    Route::get('/bar/pos', \App\Livewire\Owner\Bar\BarPOS::class)->name('owner.bar.pos');
 
     // Restaurant Management
     Route::get('/restaurant/reservations', \App\Livewire\Owner\Restaurant\TableReservations::class)->name('owner.restaurant.reservations');

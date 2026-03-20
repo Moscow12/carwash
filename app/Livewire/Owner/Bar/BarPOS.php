@@ -1,0 +1,759 @@
+<?php
+
+namespace App\Livewire\Owner\Bar;
+
+use Livewire\Component;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use App\Models\MenuItem;
+use App\Models\MenuCategory;
+use App\Models\BarTab;
+use App\Models\BarHappyHourPrice;
+use App\Models\BarProfile;
+use App\Models\MenuItemRecipe;
+use App\Models\PosSession;
+use App\Models\PosOrder;
+use App\Models\PosOrderItem;
+use App\Models\PosOutlet;
+use App\Models\payment_method;
+use App\Models\customers;
+use App\Models\item_balance;
+use App\Models\items;
+use Carbon\Carbon;
+
+#[Layout('components.layouts.app-owner')]
+class BarPOS extends Component
+{
+    // Business/Outlet selection
+    public $selectedBusiness = '';
+    public $selectedOutlet = '';
+    public $ownerBusinesses = [];
+    public $availableOutlets = [];
+
+    // Session
+    public $currentSession = null;
+    public $sessionRequired = true;
+
+    // Menu filters
+    public $search = '';
+    public $selectedCategory = '';
+
+    // Cart
+    public $cart = [];
+    public $cartTotal = 0;
+    public $cartDiscount = 0;
+    public $cartTax = 0;
+    public $cartItemsCount = 0;
+
+    // Tab management
+    public $orderMode = 'immediate'; // 'immediate', 'tab', 'new_tab'
+    public $selectedTab = null;
+    public $availableTabs = [];
+    public $showTabSelector = false;
+
+    // New Tab Creation
+    public $showNewTabModal = false;
+    public $newTabName = '';
+    public $newTabCustomerId = '';
+    public $newTabGuestId = '';
+    public $newTabFolioId = '';
+    public $newTabTableId = '';
+
+    // Customer
+    public $customer_id = '';
+    public $availableCustomers = [];
+    public $showCustomerModal = false;
+    public $newCustomerName = '';
+    public $newCustomerPhone = '';
+    public $newCustomerEmail = '';
+
+    // Payment
+    public $showPaymentModal = false;
+    public $paymentRows = [];
+    public $orderNotes = '';
+
+    // Data collections
+    public $availableMenuItems = [];
+    public $availableCategories = [];
+    public $availablePaymentMethods = [];
+    public $barProfile = null;
+
+    // Happy Hour
+    public $happyHourActive = false;
+    public $happyHourMessage = '';
+
+    public function mount()
+    {
+        $this->ownerBusinesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
+
+        $firstBusiness = $this->ownerBusinesses->first();
+        if ($firstBusiness) {
+            $this->selectedBusiness = $firstBusiness->id;
+            $this->loadOutlets();
+
+            $firstOutlet = collect($this->availableOutlets)->first();
+            if ($firstOutlet) {
+                $this->selectedOutlet = $firstOutlet['id'];
+                $this->loadData();
+            }
+        }
+    }
+
+    public function updatedSelectedBusiness()
+    {
+        $this->loadOutlets();
+        $this->selectedOutlet = '';
+        $this->currentSession = null;
+        $this->clearCart();
+    }
+
+    public function updatedSelectedOutlet()
+    {
+        $this->loadData();
+        $this->clearCart();
+    }
+
+    public function updatedSearch()
+    {
+        $this->loadMenuItems();
+    }
+
+    public function updatedSelectedCategory()
+    {
+        $this->loadMenuItems();
+    }
+
+    public function loadOutlets()
+    {
+        if (!$this->selectedBusiness) {
+            $this->availableOutlets = [];
+            return;
+        }
+
+        $this->availableOutlets = PosOutlet::where('business_id', $this->selectedBusiness)
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get()
+            ->toArray();
+    }
+
+    public function loadData()
+    {
+        if (!$this->selectedOutlet) return;
+
+        $this->loadSession();
+        $this->loadBarProfile();
+        $this->loadMenuItems();
+        $this->loadCategories();
+        $this->loadCustomers();
+        $this->loadPaymentMethods();
+        $this->loadOpenTabs();
+        $this->checkHappyHour();
+    }
+
+    public function loadSession()
+    {
+        // Get active session for current outlet
+        $this->currentSession = PosSession::where('outlet_id', $this->selectedOutlet)
+            ->whereNull('closed_at')
+            ->latest()
+            ->first();
+
+        if (!$this->currentSession && $this->sessionRequired) {
+            session()->flash('warning', 'No active POS session found. Please open a session first.');
+        }
+    }
+
+    public function loadBarProfile()
+    {
+        $this->barProfile = BarProfile::where('outlet_id', $this->selectedOutlet)
+            ->where('status', 'active')
+            ->first();
+    }
+
+    public function loadMenuItems()
+    {
+        if (!$this->selectedOutlet) {
+            $this->availableMenuItems = [];
+            return;
+        }
+
+        $query = MenuItem::where('outlet_id', $this->selectedOutlet)
+            ->where('status', 'active')
+            ->where('is_available', true);
+
+        if ($this->selectedCategory) {
+            $query->where('category_id', $this->selectedCategory);
+        }
+
+        if ($this->search) {
+            $query->where(function($q) {
+                $q->where('name', 'like', "%{$this->search}%")
+                  ->orWhere('description', 'like', "%{$this->search}%");
+            });
+        }
+
+        $this->availableMenuItems = $query
+            ->with(['category', 'happyHourPrices', 'recipes.item'])
+            ->orderBy('name')
+            ->get()
+            ->toArray();
+    }
+
+    public function loadCategories()
+    {
+        $this->availableCategories = MenuCategory::where('outlet_id', $this->selectedOutlet)
+            ->where('status', 'active')
+            ->orderBy('display_order')
+            ->orderBy('name')
+            ->get()
+            ->toArray();
+    }
+
+    public function loadCustomers()
+    {
+        $this->availableCustomers = customers::where('business_id', $this->selectedBusiness)
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->toArray();
+    }
+
+    public function loadPaymentMethods()
+    {
+        $this->availablePaymentMethods = payment_method::where('business_id', $this->selectedBusiness)
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get()
+            ->toArray();
+    }
+
+    public function loadOpenTabs()
+    {
+        if (!$this->selectedOutlet) {
+            $this->availableTabs = [];
+            return;
+        }
+
+        $this->availableTabs = BarTab::where('outlet_id', $this->selectedOutlet)
+            ->where('status', 'open')
+            ->with(['customer', 'table'])
+            ->orderBy('tab_no')
+            ->get()
+            ->toArray();
+    }
+
+    public function checkHappyHour()
+    {
+        if (!$this->barProfile || !$this->barProfile->happy_hour_enabled) {
+            $this->happyHourActive = false;
+            return;
+        }
+
+        $now = Carbon::now();
+        $currentDay = strtolower($now->format('l'));
+        $currentTime = $now->format('H:i:s');
+
+        // Check if current day is in happy hour days
+        $happyHourDays = $this->barProfile->happy_hour_days ?? [];
+
+        // Ensure it's an array
+        if (!is_array($happyHourDays)) {
+            $happyHourDays = [];
+        }
+
+        if (!empty($happyHourDays) && !in_array($currentDay, array_map('strtolower', $happyHourDays))) {
+            $this->happyHourActive = false;
+            return;
+        }
+
+        // Check if current time is within happy hour range
+        $startTime = $this->barProfile->happy_hour_start;
+        $endTime = $this->barProfile->happy_hour_end;
+
+        if ($currentTime >= $startTime && $currentTime <= $endTime) {
+            $this->happyHourActive = true;
+            $this->happyHourMessage = "Happy Hour Active! ({$this->barProfile->happy_hour_discount_pct}% off)";
+        } else {
+            $this->happyHourActive = false;
+        }
+    }
+
+    // Cart management
+    public function addToCart($menuItemId)
+    {
+        $item = collect($this->availableMenuItems)->firstWhere('id', $menuItemId);
+        if (!$item) return;
+
+        // Calculate price (with happy hour if applicable)
+        $price = $this->calculateItemPrice($item);
+
+        // Check if item already in cart
+        $cartKey = $item['id'];
+        if (isset($this->cart[$cartKey])) {
+            $this->cart[$cartKey]['quantity']++;
+        } else {
+            $this->cart[$cartKey] = [
+                'menu_item_id' => $item['id'],
+                'name' => $item['name'],
+                'price' => $price,
+                'regular_price' => $item['price'],
+                'quantity' => 1,
+                'discount' => 0,
+                'happy_hour_applied' => $price < $item['price'],
+                'recipes' => $item['recipes'] ?? [],
+            ];
+        }
+
+        $this->calculateTotals();
+    }
+
+    private function calculateItemPrice($item)
+    {
+        $regularPrice = $item['price'];
+
+        // Check for specific happy hour price overrides first
+        if (!empty($item['happy_hour_prices'])) {
+            foreach ($item['happy_hour_prices'] as $hhPrice) {
+                if ($hhPrice['status'] === 'active' && $this->isHappyHourPriceActive($hhPrice)) {
+                    $happyHourModel = new BarHappyHourPrice($hhPrice);
+                    return $happyHourModel->calculatePrice($regularPrice);
+                }
+            }
+        }
+
+        // Apply general happy hour discount from bar profile
+        if ($this->happyHourActive && $this->barProfile) {
+            $discountPct = $this->barProfile->happy_hour_discount_pct ?? 0;
+            return $regularPrice * (1 - ($discountPct / 100));
+        }
+
+        return $regularPrice;
+    }
+
+    private function isHappyHourPriceActive($hhPrice)
+    {
+        $now = Carbon::now();
+        $currentDay = strtolower($now->format('l'));
+        $currentTime = $now->format('H:i:s');
+
+        // Check days
+        $days = $hhPrice['override_days'] ?? [];
+
+        // Ensure it's an array
+        if (!is_array($days)) {
+            $days = [];
+        }
+
+        if (!empty($days) && !in_array($currentDay, array_map('strtolower', $days))) {
+            return false;
+        }
+
+        // Check time
+        $startTime = $hhPrice['start_time'];
+        $endTime = $hhPrice['end_time'];
+
+        return $currentTime >= $startTime && $currentTime <= $endTime;
+    }
+
+    public function updateQuantity($cartKey, $quantity)
+    {
+        if ($quantity <= 0) {
+            $this->removeFromCart($cartKey);
+            return;
+        }
+
+        if (isset($this->cart[$cartKey])) {
+            $this->cart[$cartKey]['quantity'] = $quantity;
+            $this->calculateTotals();
+        }
+    }
+
+    public function incrementQuantity($cartKey)
+    {
+        if (isset($this->cart[$cartKey])) {
+            $this->cart[$cartKey]['quantity']++;
+            $this->calculateTotals();
+        }
+    }
+
+    public function decrementQuantity($cartKey)
+    {
+        if (isset($this->cart[$cartKey])) {
+            if ($this->cart[$cartKey]['quantity'] > 1) {
+                $this->cart[$cartKey]['quantity']--;
+            } else {
+                unset($this->cart[$cartKey]);
+            }
+            $this->calculateTotals();
+        }
+    }
+
+    public function removeFromCart($cartKey)
+    {
+        if (isset($this->cart[$cartKey])) {
+            unset($this->cart[$cartKey]);
+            $this->calculateTotals();
+        }
+    }
+
+    public function clearCart()
+    {
+        $this->cart = [];
+        $this->cartTotal = 0;
+        $this->cartDiscount = 0;
+        $this->cartTax = 0;
+        $this->cartItemsCount = 0;
+        $this->customer_id = '';
+        $this->selectedTab = null;
+    }
+
+    private function calculateTotals()
+    {
+        $total = 0;
+        $itemsCount = 0;
+
+        foreach ($this->cart as $item) {
+            $lineTotal = ($item['price'] * $item['quantity']) - ($item['discount'] ?? 0);
+            $total += $lineTotal;
+            $itemsCount += $item['quantity'];
+        }
+
+        $this->cartTotal = $total - $this->cartDiscount;
+        $this->cartItemsCount = $itemsCount;
+    }
+
+    // Tab management
+    public function setOrderMode($mode)
+    {
+        $this->orderMode = $mode;
+
+        if ($mode === 'tab') {
+            $this->loadOpenTabs();
+            $this->showTabSelector = true;
+        } elseif ($mode === 'new_tab') {
+            $this->showNewTabModal = true;
+        }
+    }
+
+    public function selectTab($tabId)
+    {
+        $this->selectedTab = collect($this->availableTabs)->firstWhere('id', $tabId);
+        $this->showTabSelector = false;
+        $this->orderMode = 'tab';
+    }
+
+    public function closeTabSelector()
+    {
+        $this->showTabSelector = false;
+    }
+
+    public function openNewTabModal()
+    {
+        $this->resetNewTabForm();
+        $this->showNewTabModal = true;
+    }
+
+    public function closeNewTabModal()
+    {
+        $this->showNewTabModal = false;
+        $this->resetNewTabForm();
+    }
+
+    private function resetNewTabForm()
+    {
+        $this->newTabName = '';
+        $this->newTabCustomerId = '';
+        $this->newTabGuestId = '';
+        $this->newTabFolioId = '';
+        $this->newTabTableId = '';
+    }
+
+    public function createNewTab()
+    {
+        $this->validate([
+            'newTabName' => 'required|min:2',
+        ]);
+
+        try {
+            if (!$this->currentSession) {
+                session()->flash('error', 'No active session found.');
+                return;
+            }
+
+            // Generate tab number
+            $lastTab = BarTab::where('outlet_id', $this->selectedOutlet)
+                ->whereDate('created_at', today())
+                ->orderBy('tab_no', 'desc')
+                ->first();
+
+            $tabNo = $lastTab ? ((int)substr($lastTab->tab_no, -4) + 1) : 1;
+            $tabNo = 'T' . str_pad($tabNo, 4, '0', STR_PAD_LEFT);
+
+            $tab = BarTab::create([
+                'tab_no' => $tabNo,
+                'business_id' => $this->selectedBusiness,
+                'outlet_id' => $this->selectedOutlet,
+                'session_id' => $this->currentSession->id,
+                'table_id' => $this->newTabTableId ?: null,
+                'customer_id' => $this->newTabCustomerId ?: null,
+                'guest_id' => $this->newTabGuestId ?: null,
+                'folio_id' => $this->newTabFolioId ?: null,
+                'tab_name' => $this->newTabName,
+                'status' => 'open',
+                'total_amount' => 0,
+                'paid_amount' => 0,
+                'balance' => 0,
+                'opened_by' => Auth::id(),
+                'opened_at' => now(),
+            ]);
+
+            $this->selectedTab = $tab->toArray();
+            $this->orderMode = 'tab';
+            $this->loadOpenTabs();
+            $this->closeNewTabModal();
+
+            session()->flash('message', 'Tab created successfully: ' . $tabNo);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error creating tab: ' . $e->getMessage());
+        }
+    }
+
+    // Payment
+    public function openPaymentModal()
+    {
+        if (empty($this->cart)) {
+            session()->flash('error', 'Cart is empty.');
+            return;
+        }
+
+        if ($this->orderMode === 'immediate') {
+            // Get default cash payment method
+            $cashMethod = collect($this->availablePaymentMethods)->firstWhere('name', 'Cash');
+            $defaultMethodId = $cashMethod ? $cashMethod['id'] : ($this->availablePaymentMethods[0]['id'] ?? '');
+
+            $this->paymentRows = [
+                [
+                    'amount' => $this->cartTotal,
+                    'payment_method_id' => $defaultMethodId,
+                    'note' => '',
+                ]
+            ];
+        }
+
+        $this->showPaymentModal = true;
+    }
+
+    public function closePaymentModal()
+    {
+        $this->showPaymentModal = false;
+        $this->paymentRows = [];
+        $this->orderNotes = '';
+    }
+
+    public function addPaymentRow()
+    {
+        $defaultMethodId = $this->availablePaymentMethods[0]['id'] ?? '';
+        $this->paymentRows[] = [
+            'amount' => 0,
+            'payment_method_id' => $defaultMethodId,
+            'note' => '',
+        ];
+    }
+
+    public function removePaymentRow($index)
+    {
+        if (count($this->paymentRows) > 1) {
+            unset($this->paymentRows[$index]);
+            $this->paymentRows = array_values($this->paymentRows);
+        }
+    }
+
+    public function getTotalPayingProperty()
+    {
+        return collect($this->paymentRows)->sum('amount');
+    }
+
+    public function processOrder()
+    {
+        if (empty($this->cart)) {
+            session()->flash('error', 'Cart is empty.');
+            return;
+        }
+
+        if (!$this->currentSession) {
+            session()->flash('error', 'No active POS session.');
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            // Create order
+            $order = PosOrder::create([
+                'business_id' => $this->selectedBusiness,
+                'outlet_id' => $this->selectedOutlet,
+                'session_id' => $this->currentSession->id,
+                'order_type' => 'dine_in',
+                'order_status' => $this->orderMode === 'tab' ? 'open' : 'completed',
+                'payment_status' => $this->orderMode === 'tab' ? 'unpaid' : 'paid',
+                'customer_id' => $this->customer_id ?: null,
+                'total_amount' => $this->cartTotal,
+                'notes' => $this->orderNotes,
+                'created_by' => Auth::id(),
+            ]);
+
+            // Create order items and deduct recipes
+            foreach ($this->cart as $cartItem) {
+                PosOrderItem::create([
+                    'order_id' => $order->id,
+                    'menu_item_id' => $cartItem['menu_item_id'],
+                    'quantity' => $cartItem['quantity'],
+                    'price' => $cartItem['price'],
+                    'discount' => $cartItem['discount'] ?? 0,
+                    'notes' => null,
+                ]);
+
+                // Deduct recipe ingredients
+                $this->deductRecipeIngredients($cartItem);
+            }
+
+            // Handle tab or immediate payment
+            if ($this->orderMode === 'tab' && $this->selectedTab) {
+                // Attach order to tab
+                DB::table('bar_tab_orders')->insert([
+                    'tab_id' => $this->selectedTab['id'],
+                    'order_id' => $order->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                // Update tab total
+                $tab = BarTab::find($this->selectedTab['id']);
+                $tab->total_amount += $this->cartTotal;
+                $tab->balance = $tab->total_amount - $tab->paid_amount;
+                $tab->save();
+
+                $message = 'Order added to tab: ' . $tab->tab_no;
+            } else {
+                // Process immediate payment
+                foreach ($this->paymentRows as $paymentRow) {
+                    $amount = (float) ($paymentRow['amount'] ?? 0);
+                    $methodId = $paymentRow['payment_method_id'] ?? '';
+
+                    if ($amount > 0 && $methodId) {
+                        DB::table('pos_order_payments')->insert([
+                            'id' => \Illuminate\Support\Str::uuid(),
+                            'order_id' => $order->id,
+                            'payment_method_id' => $methodId,
+                            'amount' => $amount,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+
+                $message = 'Order completed successfully!';
+            }
+
+            DB::commit();
+
+            $this->closePaymentModal();
+            $this->clearCart();
+
+            session()->flash('message', $message);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Error processing order: ' . $e->getMessage());
+            \Log::error('Bar POS Order Error: ' . $e->getMessage());
+        }
+    }
+
+    private function deductRecipeIngredients($cartItem)
+    {
+        if (empty($cartItem['recipes'])) {
+            return;
+        }
+
+        foreach ($cartItem['recipes'] as $recipe) {
+            if (!$recipe['item_id']) continue;
+
+            $quantityToDeduct = $recipe['quantity'] * $cartItem['quantity'];
+
+            // Update item balance
+            $lastBalance = item_balance::where('item_id', $recipe['item_id'])
+                ->where('business_id', $this->selectedBusiness)
+                ->latest()
+                ->first();
+
+            $previousBalance = $lastBalance ? $lastBalance->current_balance : 0;
+            $newBalance = $previousBalance - $quantityToDeduct;
+
+            item_balance::create([
+                'item_id' => $recipe['item_id'],
+                'user_id' => Auth::id(),
+                'business_id' => $this->selectedBusiness,
+                'previous_balance' => $previousBalance,
+                'current_balance' => $newBalance,
+                'quantity_changed' => $quantityToDeduct,
+                'stock_type' => 'out',
+                'stransaction_type' => 'bar_sale',
+                'invoice_number' => item_balance::generateInvoiceNumber(),
+            ]);
+        }
+    }
+
+    // Customer Management
+    public function openCustomerModal()
+    {
+        $this->resetCustomerForm();
+        $this->showCustomerModal = true;
+    }
+
+    public function closeCustomerModal()
+    {
+        $this->showCustomerModal = false;
+        $this->resetCustomerForm();
+    }
+
+    private function resetCustomerForm()
+    {
+        $this->newCustomerName = '';
+        $this->newCustomerPhone = '';
+        $this->newCustomerEmail = '';
+    }
+
+    public function saveCustomer()
+    {
+        $this->validate([
+            'newCustomerName' => 'required|min:2',
+            'newCustomerPhone' => 'required|min:10',
+            'newCustomerEmail' => 'nullable|email',
+        ]);
+
+        try {
+            $customer = customers::create([
+                'name' => $this->newCustomerName,
+                'phone' => $this->newCustomerPhone,
+                'email' => $this->newCustomerEmail ?: null,
+                'business_id' => $this->selectedBusiness,
+                'user_id' => Auth::id(),
+                'status' => 'active',
+            ]);
+
+            $this->loadCustomers();
+            $this->customer_id = $customer->id;
+            $this->closeCustomerModal();
+
+            session()->flash('message', 'Customer added successfully: ' . $customer->name);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error adding customer: ' . $e->getMessage());
+        }
+    }
+
+    public function render()
+    {
+        return view('livewire.owner.bar.bar-p-o-s');
+    }
+}
