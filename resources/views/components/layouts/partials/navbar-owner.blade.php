@@ -131,6 +131,69 @@
       </li>
     </ul>
   </li>
+  <!-- Bar Management -->
+  <li class="nav-item dropdown" id="barManagementMenu">
+    <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.barmanagement*') ? 'active' : '' }}"
+      href="#!"
+      role="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="{{ request()->routeIs('owner.barmanagement*') ? 'true' : 'false' }}">
+      <span class="nav-icon"><i class="ti ti-glass-full fs-5"></i></span>
+      <span class="text">Bar Management</span>
+    </a>
+    <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.barmanagement*') ? 'show' : '' }}">
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.barmanagement") && !request()->has("tab") ? "active" : "" }}' href="{{ route('owner.barmanagement') }}">
+          <i class="ti ti-dashboard me-2"></i> Dashboard
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->get("tab") === "tabs" ? "active" : "" }}' href="{{ route('owner.barmanagement', ['tab' => 'tabs']) }}">
+          <i class="ti ti-receipt me-2"></i> Bar Tabs
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->get("tab") === "happy-hours" ? "active" : "" }}' href="{{ route('owner.barmanagement', ['tab' => 'happy-hours']) }}">
+          <i class="ti ti-clock me-2"></i> Happy Hours
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->get("tab") === "bottle-service" ? "active" : "" }}' href="{{ route('owner.barmanagement', ['tab' => 'bottle-service']) }}">
+          <i class="ti ti-bottle me-2"></i> Bottle Service
+        </a>
+      </li>
+    </ul>
+  </li>
+
+  <!-- Restaurant Management -->
+  <li class="nav-item dropdown" id="restaurantManagementMenu">
+    <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.restaurant*') ? 'active' : '' }}"
+      href="#!"
+      role="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="{{ request()->routeIs('owner.restaurant*') ? 'true' : 'false' }}">
+      <span class="nav-icon"><i class="ti ti-tools-kitchen-2 fs-5"></i></span>
+      <span class="text">Restaurant Management</span>
+    </a>
+    <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.restaurant*') ? 'show' : '' }}">
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.restaurant.reservations") ? "active" : "" }}' href="{{ route('owner.restaurant.reservations') }}">
+          <i class="ti ti-calendar-event me-2"></i> Table Reservations
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.restaurant.waiters") ? "active" : "" }}' href="{{ route('owner.restaurant.waiters') }}">
+          <i class="ti ti-users me-2"></i> Waiter Management
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.restaurant.recipes") ? "active" : "" }}' href="{{ route('owner.restaurant.recipes') }}">
+          <i class="ti ti-chef-hat me-2"></i> Menu Recipes
+        </a>
+      </li>
+    </ul>
+  </li>
+
   <!-- Hotel Management -->
     <li class="nav-item dropdown" id="hotelManagementMenu">
       <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.hotel*') ? 'active' : '' }}"
@@ -251,6 +314,25 @@
         <li class="nav-item">
           <a class='dropdown-item {{ request()->routeIs("owner.hotel.maintenance.preventive") ? "active" : "" }}' href="{{ route('owner.hotel.maintenance.preventive') }}">
             <i class="ti ti-calendar-check me-2"></i> Preventive
+          </a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+
+        <!-- Guest Services -->
+        <li class="nav-item"><small class="dropdown-header text-muted">Guest Services</small></li>
+        <li class="nav-item">
+          <a class='dropdown-item {{ request()->routeIs("owner.hotel.amenity-requests") ? "active" : "" }}' href="{{ route('owner.hotel.amenity-requests') }}">
+            <i class="ti ti-briefcase me-2"></i> Amenity Requests
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class='dropdown-item {{ request()->routeIs("owner.hotel.wakeup-calls") ? "active" : "" }}' href="{{ route('owner.hotel.wakeup-calls') }}">
+            <i class="ti ti-alarm me-2"></i> Wakeup Calls
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class='dropdown-item {{ request()->routeIs("owner.hotel.laundry-orders") ? "active" : "" }}' href="{{ route('owner.hotel.laundry-orders') }}">
+            <i class="ti ti-wash me-2"></i> Laundry Orders
           </a>
         </li>
         <li><hr class="dropdown-divider"></li>

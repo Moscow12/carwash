@@ -55,6 +55,7 @@ Route::get('/register', Register::class)->name('site.register');
 
 // Admin Authentication
 use App\Http\Controllers\Auth\LoginController;
+use App\Livewire\Owner\Bar\BarManagement;
 use App\Livewire\Owner\Expenses\Category;
 use App\Livewire\Owner\Expenses\Expenses;
 use App\Livewire\Owner\Hotel\Addhotel;
@@ -214,6 +215,18 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/reports/sales', Sales::class)->name('owner.reports.sales');
     Route::get('/reports/stock', Stock::class)->name('owner.reports.stock');
     Route::get('/reports/staff-commissions', Staffcommisions::class)->name('owner.reports.staffcommissions');
+
+    Route::get('/barmanagement', BarManagement::class)->name('owner.barmanagement');
+
+    // Restaurant Management
+    Route::get('/restaurant/reservations', \App\Livewire\Owner\Restaurant\TableReservations::class)->name('owner.restaurant.reservations');
+    Route::get('/restaurant/waiters', \App\Livewire\Owner\Restaurant\WaiterManagement::class)->name('owner.restaurant.waiters');
+    Route::get('/restaurant/recipes', \App\Livewire\Owner\Restaurant\MenuRecipes::class)->name('owner.restaurant.recipes');
+
+    // Hotel Guest Services
+    Route::get('/hotel/amenity-requests', \App\Livewire\Owner\Hotel\AmenityRequests::class)->name('owner.hotel.amenity-requests');
+    Route::get('/hotel/wakeup-calls', \App\Livewire\Owner\Hotel\WakeupCalls::class)->name('owner.hotel.wakeup-calls');
+    Route::get('/hotel/laundry-orders', \App\Livewire\Owner\Hotel\LaundryManagement::class)->name('owner.hotel.laundry-orders');
 
 });
 

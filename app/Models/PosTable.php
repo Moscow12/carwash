@@ -36,6 +36,21 @@ class PosTable extends Model
         return $this->hasMany(PosOrder::class, 'table_id');
     }
 
+    public function waiterAssignments(): HasMany
+    {
+        return $this->hasMany(WaiterAssignment::class, 'table_id');
+    }
+
+    public function barTabs(): HasMany
+    {
+        return $this->hasMany(BarTab::class, 'table_id');
+    }
+
+    public function tableReservations(): HasMany
+    {
+        return $this->hasMany(TableReservation::class, 'table_id');
+    }
+
     // Scopes
     public function scopeActive(Builder $query): Builder
     {
