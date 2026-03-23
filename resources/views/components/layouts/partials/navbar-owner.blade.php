@@ -133,17 +133,17 @@
   </li>
   <!-- Bar Management -->
   <li class="nav-item dropdown" id="barManagementMenu">
-    <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.barmanagement*') || request()->routeIs('owner.bar.*') ? 'active' : '' }}"
+    <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.bar.*') ? 'active' : '' }}"
       href="#!"
       role="button"
       data-bs-toggle="dropdown"
-      aria-expanded="{{ request()->routeIs('owner.barmanagement*') || request()->routeIs('owner.bar.*') ? 'true' : 'false' }}">
+      aria-expanded="{{ request()->routeIs('owner.bar.*') ? 'true' : 'false' }}">
       <span class="nav-icon"><i class="ti ti-glass-full fs-5"></i></span>
       <span class="text">Bar Management</span>
     </a>
-    <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.barmanagement*') || request()->routeIs('owner.bar.*') ? 'show' : '' }}">
+    <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.bar.*') ? 'show' : '' }}">
       <li class="nav-item">
-        <a class='dropdown-item {{ request()->routeIs("owner.barmanagement") && !request()->has("tab") ? "active" : "" }}' href="{{ route('owner.barmanagement') }}">
+        <a class='dropdown-item {{ request()->routeIs("owner.bar.dashboard") ? "active" : "" }}' href="{{ route('owner.bar.dashboard') }}">
           <i class="ti ti-dashboard me-2"></i> Dashboard
         </a>
       </li>
@@ -152,19 +152,26 @@
           <i class="ti ti-cash-register me-2"></i> Bar POS
         </a>
       </li>
+      <li><hr class="dropdown-divider"></li>
       <li class="nav-item">
-        <a class='dropdown-item {{ request()->get("tab") === "tabs" ? "active" : "" }}' href="{{ route('owner.barmanagement', ['tab' => 'tabs']) }}">
+        <a class='dropdown-item {{ request()->routeIs("owner.bar.menu") ? "active" : "" }}' href="{{ route('owner.bar.menu') }}">
+          <i class="ti ti-menu-2 me-2"></i> Menu Items
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.bar.tabs") ? "active" : "" }}' href="{{ route('owner.bar.tabs') }}">
           <i class="ti ti-receipt me-2"></i> Bar Tabs
         </a>
       </li>
       <li class="nav-item">
-        <a class='dropdown-item {{ request()->get("tab") === "happy-hours" ? "active" : "" }}' href="{{ route('owner.barmanagement', ['tab' => 'happy-hours']) }}">
-          <i class="ti ti-clock me-2"></i> Happy Hours
+        <a class='dropdown-item {{ request()->routeIs("owner.bar.stock") ? "active" : "" }}' href="{{ route('owner.bar.stock') }}">
+          <i class="ti ti-package me-2"></i> Stock Management
         </a>
       </li>
+      <li><hr class="dropdown-divider"></li>
       <li class="nav-item">
-        <a class='dropdown-item {{ request()->get("tab") === "bottle-service" ? "active" : "" }}' href="{{ route('owner.barmanagement', ['tab' => 'bottle-service']) }}">
-          <i class="ti ti-bottle me-2"></i> Bottle Service
+        <a class='dropdown-item {{ request()->routeIs("owner.bar.reports") ? "active" : "" }}' href="{{ route('owner.bar.reports') }}">
+          <i class="ti ti-chart-bar me-2"></i> Reports
         </a>
       </li>
     </ul>

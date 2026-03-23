@@ -59,65 +59,27 @@
     </div>
 
     @if($selectedOutlet)
-        <!-- Statistics -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="card shadow-sm border-start border-primary border-4">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar bg-primary text-white me-3">
-                                <i class="ti ti-receipt"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Open Tabs</h6>
-                                <h3 class="mb-0">{{ $stats['open_tabs'] }}</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm border-start border-info border-4">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar bg-info text-white me-3">
-                                <i class="ti ti-calendar"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Tabs Today</h6>
-                                <h3 class="mb-0">{{ $stats['tabs_today'] }}</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm border-start border-success border-4">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar bg-success text-white me-3">
-                                <i class="ti ti-cash"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Revenue Today</h6>
-                                <h3 class="mb-0">{{ number_format($stats['revenue_today'], 0) }}</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm border-start border-warning border-4">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar bg-warning text-white me-3">
-                                <i class="ti ti-clock"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Active Happy Hours</h6>
-                                <h3 class="mb-0">{{ $stats['active_happy_hours'] }}</h3>
-                            </div>
-                        </div>
+        <!-- Statistics Dashboard -->
+        @include('livewire.owner.bar.bar-management-stats')
+
+        <!-- Quick Links -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-body py-3">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <h6 class="mb-0"><i class="ti ti-link me-2 text-primary"></i>Quick Links</h6>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{{ route('owner.list-items') }}" class="btn btn-sm btn-outline-primary">
+                            <i class="ti ti-package me-1"></i> Item Stock
+                        </a>
+                        <a href="{{ route('owner.categories') }}" class="btn btn-sm btn-outline-info">
+                            <i class="ti ti-category me-1"></i> Categories
+                        </a>
+                        <a href="{{ route('owner.barmanagement') }}?tab=menu-items" class="btn btn-sm btn-outline-success">
+                            <i class="ti ti-glass me-1"></i> Bar Menu
+                        </a>
+                        <a href="{{ route('owner.bar.pos') }}" class="btn btn-sm btn-primary">
+                            <i class="ti ti-cash-register me-1"></i> Open POS
+                        </a>
                     </div>
                 </div>
             </div>
@@ -146,6 +108,13 @@
                            wire:click.prevent="switchTab('bottle-service')"
                            href="#" role="tab">
                             <i class="ti ti-bottle me-1"></i> Bottle Service
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ $activeTab === 'menu-items' ? 'active' : '' }}"
+                           wire:click.prevent="switchTab('menu-items')"
+                           href="#" role="tab">
+                            <i class="ti ti-glass me-1"></i> Menu Items
                         </a>
                     </li>
                 </ul>
@@ -327,6 +296,104 @@
                         </div>
                         <div class="mt-3">
                             {{ $bottleServices->links() }}
+                        </div>
+                    @endif
+
+                    <!-- Menu Items Tab -->
+                    @if($activeTab === 'menu-items')
+                        <!-- Category Filter -->
+                        <div class="mb-3">
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <select wire:model.live="selectedCategory" class="form-select">
+                                        <option value="">All Categories</option>
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Item Name</th>
+                                        <th>Category</th>
+                                        <th>Price</th>
+                                        <th>Stock Item</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($menuItems as $item)
+                                        <tr>
+                                            <td>
+                                                <strong>{{ $item->name }}</strong>
+                                                @if($item->description)
+                                                    <br><small class="text-muted">{{ Str::limit($item->description, 50) }}</small>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($item->category)
+                                                    <span class="badge bg-info">{{ $item->category->name }}</span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                            <td><strong class="text-success">TSh {{ number_format($item->price, 0) }}</strong></td>
+                                            <td>
+                                                @if($item->item)
+                                                    <span class="badge bg-primary">{{ $item->item->name }}</span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ $item->status === 'active' ? 'success' : 'secondary' }}">
+                                                    {{ ucfirst($item->status) }}
+                                                </span>
+                                                @if(!$item->is_available)
+                                                    <span class="badge bg-warning">Out of Stock</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    @if($item->item_id)
+                                                        <a href="{{ route('owner.history', ['itemId' => $item->item_id]) }}"
+                                                           class="btn btn-outline-primary"
+                                                           title="View Stock History"
+                                                           target="_blank">
+                                                            <i class="ti ti-history"></i>
+                                                        </a>
+                                                    @endif
+                                                    <a href="{{ route('owner.hotel.pos-outlets') }}"
+                                                       class="btn btn-outline-info"
+                                                       title="Manage Menu"
+                                                       target="_blank">
+                                                        <i class="ti ti-edit"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-4">
+                                                <i class="ti ti-glass-off" style="font-size: 3rem;"></i>
+                                                <p class="mt-2">No menu items found</p>
+                                                <a href="{{ route('owner.hotel.pos-outlets') }}" class="btn btn-sm btn-primary">
+                                                    <i class="ti ti-plus me-1"></i> Add Menu Items
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
+                            {{ $menuItems->links() }}
                         </div>
                     @endif
                 </div>

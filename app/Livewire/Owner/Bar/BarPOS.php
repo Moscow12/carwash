@@ -35,6 +35,8 @@ class BarPOS extends Component
     // Session
     public $currentSession = null;
     public $sessionRequired = true;
+    public $showSessionModal = false;
+    public $openingFloat = 0;
 
     // Menu filters
     public $search = '';
@@ -223,8 +225,8 @@ class BarPOS extends Component
 
     public function loadPaymentMethods()
     {
-        $this->availablePaymentMethods = payment_method::where('business_id', $this->selectedBusiness)
-            ->where('status', 'active')
+        // Load all active payment methods (not business-specific)
+        $this->availablePaymentMethods = payment_method::where('status', 'active')
             ->orderBy('name')
             ->get()
             ->toArray();
@@ -546,6 +548,33 @@ class BarPOS extends Component
         $this->showPaymentModal = true;
     }
 
+    public function payWithCash()
+    {
+        if (empty($this->cart)) {
+            session()->flash('error', 'Cart is empty.');
+            return;
+        }
+
+        // Get cash payment method
+        $cashMethod = collect($this->availablePaymentMethods)->firstWhere('name', 'Cash');
+
+        if (!$cashMethod) {
+            session()->flash('error', 'Cash payment method not found.');
+            return;
+        }
+
+        $this->paymentRows = [
+            [
+                'amount' => $this->cartTotal,
+                'payment_method_id' => $cashMethod['id'],
+                'note' => '',
+            ]
+        ];
+
+        $this->orderMode = 'immediate';
+        $this->processOrder();
+    }
+
     public function closePaymentModal()
     {
         $this->showPaymentModal = false;
@@ -590,28 +619,53 @@ class BarPOS extends Component
 
         DB::beginTransaction();
         try {
+            // Generate order number
+            $lastOrder = PosOrder::where('outlet_id', $this->selectedOutlet)
+                ->whereDate('created_at', today())
+                ->orderBy('order_no', 'desc')
+                ->first();
+
+            if ($lastOrder && preg_match('/(\d+)$/', $lastOrder->order_no, $matches)) {
+                $orderNum = intval($matches[1]) + 1;
+            } else {
+                $orderNum = 1;
+            }
+
+            $orderNo = 'ORD-' . now()->format('Ymd') . '-' . str_pad($orderNum, 4, '0', STR_PAD_LEFT);
+
+            // Get staff record for current user (if exists)
+            $staffRecord = \App\Models\staffs::where('user_id', Auth::id())
+                ->where('business_id', $this->selectedBusiness)
+                ->first();
+
             // Create order
             $order = PosOrder::create([
+                'order_no' => $orderNo,
                 'business_id' => $this->selectedBusiness,
                 'outlet_id' => $this->selectedOutlet,
                 'session_id' => $this->currentSession->id,
-                'order_type' => 'dine_in',
-                'order_status' => $this->orderMode === 'tab' ? 'open' : 'completed',
-                'payment_status' => $this->orderMode === 'tab' ? 'unpaid' : 'paid',
+                'order_type' => 'bar',
+                'status' => $this->orderMode === 'tab' ? 'open' : 'paid',
                 'customer_id' => $this->customer_id ?: null,
-                'total_amount' => $this->cartTotal,
+                'subtotal' => $this->cartTotal,
+                'total' => $this->cartTotal,
                 'notes' => $this->orderNotes,
-                'created_by' => Auth::id(),
+                'served_by' => $staffRecord ? $staffRecord->id : null,
             ]);
 
             // Create order items and deduct recipes
             foreach ($this->cart as $cartItem) {
+                $itemTotal = $cartItem['price'] * $cartItem['quantity'];
+                $discountAmount = $cartItem['discount'] ?? 0;
+
                 PosOrderItem::create([
                     'order_id' => $order->id,
                     'menu_item_id' => $cartItem['menu_item_id'],
                     'quantity' => $cartItem['quantity'],
-                    'price' => $cartItem['price'],
-                    'discount' => $cartItem['discount'] ?? 0,
+                    'unit_price' => $cartItem['price'],
+                    'subtotal' => $itemTotal,
+                    'discount_amount' => $discountAmount,
+                    'total' => $itemTotal - $discountAmount,
                     'notes' => null,
                 ]);
 
@@ -623,6 +677,7 @@ class BarPOS extends Component
             if ($this->orderMode === 'tab' && $this->selectedTab) {
                 // Attach order to tab
                 DB::table('bar_tab_orders')->insert([
+                    'id' => \Illuminate\Support\Str::uuid(),
                     'tab_id' => $this->selectedTab['id'],
                     'order_id' => $order->id,
                     'created_at' => now(),
@@ -643,13 +698,15 @@ class BarPOS extends Component
                     $methodId = $paymentRow['payment_method_id'] ?? '';
 
                     if ($amount > 0 && $methodId) {
-                        DB::table('pos_order_payments')->insert([
-                            'id' => \Illuminate\Support\Str::uuid(),
-                            'order_id' => $order->id,
+                        \App\Models\HotelPayment::create([
+                            'business_id' => $this->selectedBusiness,
+                            'pos_order_id' => $order->id,
                             'payment_method_id' => $methodId,
                             'amount' => $amount,
-                            'created_at' => now(),
-                            'updated_at' => now(),
+                            'currency' => 'TSh',
+                            'status' => 'completed',
+                            'received_by' => Auth::id(),
+                            'paid_at' => now(),
                         ]);
                     }
                 }
@@ -749,6 +806,47 @@ class BarPOS extends Component
             session()->flash('message', 'Customer added successfully: ' . $customer->name);
         } catch (\Exception $e) {
             session()->flash('error', 'Error adding customer: ' . $e->getMessage());
+        }
+    }
+
+    // Session Management
+    public function openSessionModal()
+    {
+        if (!$this->selectedOutlet) {
+            session()->flash('error', 'Please select an outlet first.');
+            return;
+        }
+
+        $this->openingFloat = 0;
+        $this->showSessionModal = true;
+    }
+
+    public function closeSessionModal()
+    {
+        $this->showSessionModal = false;
+        $this->openingFloat = 0;
+    }
+
+    public function startSession()
+    {
+        $this->validate([
+            'openingFloat' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            $session = PosSession::create([
+                'outlet_id' => $this->selectedOutlet,
+                'opened_by' => Auth::id(),
+                'opening_float' => $this->openingFloat,
+                'opened_at' => now(),
+            ]);
+
+            $this->currentSession = $session;
+            $this->closeSessionModal();
+
+            session()->flash('message', 'POS Session opened successfully!');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error opening session: ' . $e->getMessage());
         }
     }
 

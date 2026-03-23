@@ -55,7 +55,6 @@ Route::get('/register', Register::class)->name('site.register');
 
 // Admin Authentication
 use App\Http\Controllers\Auth\LoginController;
-use App\Livewire\Owner\Bar\BarManagement;
 use App\Livewire\Owner\Expenses\Category;
 use App\Livewire\Owner\Expenses\Expenses;
 use App\Livewire\Owner\Hotel\Addhotel;
@@ -216,8 +215,17 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/reports/stock', Stock::class)->name('owner.reports.stock');
     Route::get('/reports/staff-commissions', Staffcommisions::class)->name('owner.reports.staffcommissions');
 
-    Route::get('/barmanagement', BarManagement::class)->name('owner.barmanagement');
+    // Bar Management Routes
+    Route::get('/barmanagement', function() {
+        return redirect()->route('owner.bar.dashboard');
+    })->name('owner.barmanagement'); // Backward compatibility redirect
+
+    Route::get('/bar/dashboard', \App\Livewire\Owner\Bar\BarDashboard::class)->name('owner.bar.dashboard');
     Route::get('/bar/pos', \App\Livewire\Owner\Bar\BarPOS::class)->name('owner.bar.pos');
+    Route::get('/bar/menu-items', \App\Livewire\Owner\Bar\BarMenuItems::class)->name('owner.bar.menu');
+    Route::get('/bar/tabs', \App\Livewire\Owner\Bar\BarTabs::class)->name('owner.bar.tabs');
+    Route::get('/bar/stock', \App\Livewire\Owner\Bar\BarStock::class)->name('owner.bar.stock');
+    Route::get('/bar/reports', \App\Livewire\Owner\Bar\BarReports::class)->name('owner.bar.reports');
 
     // Restaurant Management
     Route::get('/restaurant/reservations', \App\Livewire\Owner\Restaurant\TableReservations::class)->name('owner.restaurant.reservations');

@@ -477,11 +477,13 @@
                 Manage POS Outlets
             </a>
         </div>
-    @endif
-
-    @if($selectedOutlet && !$currentSession && $sessionRequired)
-        <div style="padding: 15px; background: rgba(245, 158, 11, 0.2); color: var(--bar-warning); text-align: center; border-bottom: 1px solid var(--bar-border);">
-            <div style="font-weight: 600;">⚠ No active session - Please open a session to process orders</div>
+    @elseif($selectedOutlet && !$currentSession && $sessionRequired)
+        <div style="padding: 20px; background: rgba(245, 158, 11, 0.15); color: #f1f5f9; text-align: center; border-bottom: 2px solid var(--bar-warning);">
+            <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 8px; color: var(--bar-warning);">⚠ No Active POS Session</div>
+            <div style="margin-bottom: 12px; color: #cbd5e1;">Please open a session to process orders and track cash</div>
+            <button wire:click="openSessionModal" class="btn-bar btn-bar-warning" style="display: inline-block;">
+                Open Session
+            </button>
         </div>
     @endif
 
@@ -534,9 +536,9 @@
                             @endphp
 
                             @if($hasDiscount)
-                                <span class="original-price">${{ number_format($item['price'], 2) }}</span>
+                                <span class="original-price">TSh {{ number_format($item['price'], 0) }}</span>
                             @endif
-                            ${{ number_format($displayPrice, 2) }}
+                            TSh {{ number_format($displayPrice, 0) }}
                         </div>
                     </div>
                 @empty
@@ -618,17 +620,17 @@
                         <div class="cart-item-price">
                             @if($item['happy_hour_applied'])
                                 <span style="text-decoration: line-through; color: #64748b; font-size: 0.85rem; margin-right: 5px;">
-                                    ${{ number_format($item['regular_price'], 2) }}
+                                    TSh {{ number_format($item['regular_price'], 0) }}
                                 </span>
                             @endif
-                            ${{ number_format($item['price'], 2) }}
+                            TSh {{ number_format($item['price'], 0) }}
                         </div>
                         <div class="cart-item-controls">
                             <button wire:click="decrementQuantity('{{ $key }}')" class="qty-btn">-</button>
                             <div class="qty-display">{{ $item['quantity'] }}</div>
                             <button wire:click="incrementQuantity('{{ $key }}')" class="qty-btn">+</button>
                             <div style="margin-left: auto; color: var(--bar-success); font-weight: 700;">
-                                ${{ number_format($item['price'] * $item['quantity'], 2) }}
+                                TSh {{ number_format($item['price'] * $item['quantity'], 0) }}
                             </div>
                         </div>
                     </div>
@@ -647,23 +649,29 @@
                 </div>
                 <div class="summary-row total">
                     <span>Total</span>
-                    <span>${{ number_format($cartTotal, 2) }}</span>
+                    <span>TSh {{ number_format($cartTotal, 0) }}</span>
                 </div>
 
                 @if(count($cart) > 0)
-                    <div style="display: flex; gap: 10px; margin-top: 15px;">
-                        <button wire:click="clearCart" class="btn-bar btn-bar-danger" style="flex: 1;">
-                            Clear
-                        </button>
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
                         @if($orderMode === 'immediate')
-                            <button wire:click="openPaymentModal" class="btn-bar btn-bar-success" style="flex: 2;">
-                                Pay Now
+                            <!-- Quick Cash Payment -->
+                            <button wire:click="payWithCash" class="btn-bar btn-bar-success" style="width: 100%; font-size: 1.1rem; padding: 15px;">
+                                💵 Pay Cash - TSh {{ number_format($cartTotal, 0) }}
+                            </button>
+                            <!-- Other Payment Methods -->
+                            <button wire:click="openPaymentModal" class="btn-bar btn-bar-primary" style="width: 100%;">
+                                💳 Other Payment Methods
                             </button>
                         @else
-                            <button wire:click="processOrder" class="btn-bar btn-bar-warning" style="flex: 2;">
-                                Add to Tab
+                            <button wire:click="processOrder" class="btn-bar btn-bar-warning" style="width: 100%; font-size: 1.1rem; padding: 15px;">
+                                ➕ Add to Tab
                             </button>
                         @endif
+                        <!-- Clear Cart -->
+                        <button wire:click="clearCart" class="btn-bar btn-bar-danger" style="width: 100%;">
+                            🗑️ Clear Cart
+                        </button>
                     </div>
                 @endif
             </div>
@@ -683,7 +691,7 @@
                     <div wire:click="selectTab('{{ $tab['id'] }}')" class="tab-list-item">
                         <div style="font-weight: 700; margin-bottom: 5px;">{{ $tab['tab_no'] }} - {{ $tab['tab_name'] }}</div>
                         <div style="color: #94a3b8; font-size: 0.875rem;">
-                            Balance: ${{ number_format($tab['balance'], 2) }}
+                            Balance: TSh {{ number_format($tab['balance'], 0) }}
                             @if(isset($tab['customer']['name']))
                                 | Customer: {{ $tab['customer']['name'] }}
                             @endif
@@ -784,55 +792,117 @@
         <div class="bar-modal" wire:click="closePaymentModal">
             <div class="bar-modal-content" wire:click.stop>
                 <div class="bar-modal-header">
-                    <div class="bar-modal-title">Process Payment</div>
+                    <div class="bar-modal-title">💳 Payment Methods</div>
                     <button wire:click="closePaymentModal" class="btn-bar btn-bar-danger">✕</button>
                 </div>
 
-                <div style="background: var(--bar-bg); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="background: var(--bar-bg); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--bar-success);">
+                    <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 5px;">Total Amount</div>
                     <div style="font-size: 1.5rem; font-weight: 700; color: var(--bar-success);">
-                        Total: ${{ number_format($cartTotal, 2) }}
+                        TSh {{ number_format($cartTotal, 0) }}
                     </div>
                 </div>
 
-                @foreach($paymentRows as $index => $row)
-                    <div class="form-group">
-                        <div style="display: flex; gap: 10px; align-items: end;">
-                            <div style="flex: 1;">
-                                <label class="form-label">Payment Method</label>
-                                <select wire:model="paymentRows.{{ $index }}.payment_method_id" class="form-control-bar">
-                                    @foreach($availablePaymentMethods as $method)
-                                        <option value="{{ $method['id'] }}">{{ $method['name'] }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div style="flex: 1;">
-                                <label class="form-label">Amount</label>
-                                <input type="number" step="0.01" wire:model="paymentRows.{{ $index }}.amount" class="form-control-bar">
-                            </div>
-                            @if(count($paymentRows) > 1)
-                                <button wire:click="removePaymentRow({{ $index }})" class="btn-bar btn-bar-danger">
-                                    ✕
-                                </button>
-                            @endif
+                <!-- Payment Methods Section -->
+                <div style="margin-bottom: 20px;">
+                    @if(count($paymentRows) > 1)
+                        <div style="background: rgba(99, 102, 241, 0.1); padding: 8px 12px; border-radius: 6px; margin-bottom: 15px; border-left: 3px solid var(--bar-primary);">
+                            <strong style="color: var(--bar-primary);">💰 Split Payment</strong>
+                            <span style="color: #94a3b8; font-size: 0.875rem; margin-left: 8px;">
+                                ({{ count($paymentRows) }} methods)
+                            </span>
                         </div>
-                    </div>
-                @endforeach
+                    @endif
+
+                    @foreach($paymentRows as $index => $row)
+                        <div class="form-group" style="background: var(--bar-bg); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                            @if(count($paymentRows) > 1)
+                                <div style="color: #cbd5e1; font-size: 0.875rem; margin-bottom: 8px; font-weight: 600;">
+                                    Payment #{{ $index + 1 }}
+                                </div>
+                            @endif
+                            <div style="display: flex; gap: 10px; align-items: end;">
+                                <div style="flex: 1;">
+                                    <label class="form-label">Method</label>
+                                    <select wire:model="paymentRows.{{ $index }}.payment_method_id" class="form-control-bar">
+                                        <option value="">Select Method</option>
+                                        @foreach($availablePaymentMethods as $method)
+                                            <option value="{{ $method['id'] }}">{{ $method['name'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div style="flex: 1;">
+                                    <label class="form-label">Amount (TSh)</label>
+                                    <input type="number" step="1" wire:model="paymentRows.{{ $index }}.amount" class="form-control-bar" placeholder="0">
+                                </div>
+                                @if(count($paymentRows) > 1)
+                                    <button wire:click="removePaymentRow({{ $index }})" class="btn-bar btn-bar-danger" style="padding: 10px 12px;">
+                                        ✕
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
 
                 <button wire:click="addPaymentRow" class="btn-bar btn-bar-primary" style="width: 100%; margin-bottom: 20px;">
-                    + Add Payment Method
+                    ➕ Add Another Payment Method (Split Payment)
                 </button>
 
                 <div class="form-group">
                     <label class="form-label">Notes (Optional)</label>
-                    <textarea wire:model="orderNotes" class="form-control-bar" rows="2"></textarea>
+                    <textarea wire:model="orderNotes" class="form-control-bar" rows="2" placeholder="Add any notes about this order..."></textarea>
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
                     <button wire:click="closePaymentModal" class="btn-bar btn-bar-danger" style="flex: 1;">
                         Cancel
                     </button>
-                    <button wire:click="processOrder" class="btn-bar btn-bar-success" style="flex: 2;">
-                        Complete Payment
+                    <button wire:click="processOrder" class="btn-bar btn-bar-success" style="flex: 2; font-size: 1.05rem;">
+                        ✓ Complete Payment
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Open Session Modal -->
+    @if($showSessionModal)
+        <div class="bar-modal" wire:click="closeSessionModal">
+            <div class="bar-modal-content" wire:click.stop style="max-width: 500px;">
+                <div class="bar-modal-header">
+                    <div class="bar-modal-title">Open POS Session</div>
+                    <button wire:click="closeSessionModal" class="btn-bar btn-bar-danger">✕</button>
+                </div>
+
+                <div style="background: rgba(99, 102, 241, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--bar-primary);">
+                    <div style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+                        <strong style="color: #f1f5f9;">Opening a session allows you to:</strong>
+                        <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                            <li>Track cash float and transactions</li>
+                            <li>Process orders and payments</li>
+                            <li>Reconcile at end of shift</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Opening Float (TSh) *</label>
+                    <input type="number" step="0.01" wire:model="openingFloat" class="form-control-bar" placeholder="Enter starting cash amount" autofocus>
+                    <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 5px;">
+                        The amount of cash in the register at the start of your shift
+                    </div>
+                    @error('openingFloat')
+                        <span style="color: var(--bar-danger); font-size: 0.875rem; margin-top: 4px; display: block;">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button wire:click="closeSessionModal" class="btn-bar btn-bar-danger" style="flex: 1;">
+                        Cancel
+                    </button>
+                    <button wire:click="startSession" class="btn-bar btn-bar-success" style="flex: 2;">
+                        Open Session
                     </button>
                 </div>
             </div>
@@ -841,20 +911,26 @@
 
     <!-- Flash Messages -->
     @if (session()->has('message'))
-        <div style="position: fixed; top: 80px; right: 20px; background: var(--bar-success); color: white; padding: 15px 20px; border-radius: 8px; z-index: 2000; animation: slideIn 0.3s;">
-            {{ session('message') }}
+        <div id="flash-message" style="position: fixed; top: 80px; right: 20px; background: var(--bar-success); color: white; padding: 15px 50px 15px 20px; border-radius: 8px; z-index: 2000; animation: slideIn 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 400px;">
+            <button onclick="this.parentElement.remove()" style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.2); border: none; color: white; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">✕</button>
+            <div style="font-weight: 600; margin-bottom: 4px;">✓ Success</div>
+            <div>{{ session('message') }}</div>
         </div>
     @endif
 
     @if (session()->has('error'))
-        <div style="position: fixed; top: 80px; right: 20px; background: var(--bar-danger); color: white; padding: 15px 20px; border-radius: 8px; z-index: 2000; animation: slideIn 0.3s;">
-            {{ session('error') }}
+        <div id="flash-error" style="position: fixed; top: 80px; right: 20px; background: var(--bar-danger); color: white; padding: 15px 50px 15px 20px; border-radius: 8px; z-index: 2000; animation: slideIn 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 400px;">
+            <button onclick="this.parentElement.remove()" style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.2); border: none; color: white; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">✕</button>
+            <div style="font-weight: 600; margin-bottom: 4px;">✗ Error</div>
+            <div>{{ session('error') }}</div>
         </div>
     @endif
 
     @if (session()->has('warning'))
-        <div style="position: fixed; top: 80px; right: 20px; background: var(--bar-warning); color: var(--bar-bg); padding: 15px 20px; border-radius: 8px; z-index: 2000; animation: slideIn 0.3s;">
-            {{ session('warning') }}
+        <div id="flash-warning" style="position: fixed; top: 80px; right: 20px; background: var(--bar-warning); color: var(--bar-bg); padding: 15px 50px 15px 20px; border-radius: 8px; z-index: 2000; animation: slideIn 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 400px;">
+            <button onclick="this.parentElement.remove()" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.2); border: none; color: var(--bar-bg); width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">✕</button>
+            <div style="font-weight: 600; margin-bottom: 4px;">⚠ Warning</div>
+            <div>{{ session('warning') }}</div>
         </div>
     @endif
 
@@ -867,6 +943,22 @@
             to {
                 transform: translateX(0);
                 opacity: 1;
+            }
+        }
+
+        /* Auto-hide flash messages after 5 seconds */
+        #flash-message, #flash-error, #flash-warning {
+            animation: slideIn 0.3s, fadeOut 0.5s 4.5s forwards;
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(400px);
             }
         }
     </style>

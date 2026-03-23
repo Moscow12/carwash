@@ -94,8 +94,10 @@ class Index extends Component
             $this->availableItems = items::where('business_id', $this->selectedBusiness)
                 ->where('type', 'product')
                 ->where('status', 'active')
+                ->select('id', 'name')
                 ->orderBy('name')
-                ->get();
+                ->get()
+                ->toArray();
         } else {
             $this->availableItems = [];
         }
