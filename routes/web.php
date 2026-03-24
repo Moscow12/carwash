@@ -237,6 +237,10 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/hotel/wakeup-calls', \App\Livewire\Owner\Hotel\WakeupCalls::class)->name('owner.hotel.wakeup-calls');
     Route::get('/hotel/laundry-orders', \App\Livewire\Owner\Hotel\LaundryManagement::class)->name('owner.hotel.laundry-orders');
 
+    // Inventory & Purchase Management
+    Route::get('/inventory/purchases', \App\Livewire\Owner\Inventory\PurchaseManagement::class)->name('owner.inventory.purchases');
+    Route::get('/inventory/stocktransfers', \App\Livewire\Owner\Inventory\StockTransfer::class)->name('owner.inventory.stocktransfers');
+
 });
 
 // Customer Dashboard (Protected Routes - Customer Only)

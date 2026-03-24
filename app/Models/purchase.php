@@ -27,6 +27,8 @@ class purchase extends Model
         'subtotal',
         'tax_amount',
         'total_amount',
+        'paid_amount',
+        'balance',
         'outlet_id',
         'payment_status',
         'purchase_status',
@@ -41,6 +43,8 @@ class purchase extends Model
         'subtotal' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
+        'balance' => 'decimal:2',
     ];
 
     // Relationships
@@ -69,9 +73,14 @@ class purchase extends Model
         return $this->belongsTo(PosOutlet::class);
     }
 
-    public function items(): HasMany
+    public function purchaseItems(): HasMany
     {
         return $this->hasMany(PurchaseItem::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(PurchasePayment::class);
     }
 
     // Scopes - Purchase Status
@@ -165,5 +174,45 @@ class purchase extends Model
             'canceled' => 'Canceled',
             default => ucfirst($this->purchase_status),
         };
+    }
+
+    // Payment tracking helpers
+    public function updatePaymentStatus()
+    {
+        $totalAmount = $this->total_amount ?? 0;
+        $paidAmount = $this->paid_amount ?? 0;
+
+        if ($paidAmount <= 0) {
+            $this->payment_status = 'unpaid';
+        } elseif ($paidAmount >= $totalAmount) {
+            $this->payment_status = 'paid';
+        } else {
+            $this->payment_status = 'partial';
+        }
+
+        $this->balance = $totalAmount - $paidAmount;
+        $this->save();
+    }
+
+    public function recalculateBalance()
+    {
+        $this->paid_amount = $this->payments()->sum('amount');
+        $this->balance = $this->total_amount - $this->paid_amount;
+        $this->updatePaymentStatus();
+    }
+
+    public function isFullyPaid(): bool
+    {
+        return $this->paid_amount >= $this->total_amount;
+    }
+
+    public function hasPartialPayment(): bool
+    {
+        return $this->paid_amount > 0 && $this->paid_amount < $this->total_amount;
+    }
+
+    public function getRemainingBalanceAttribute()
+    {
+        return max(0, $this->total_amount - $this->paid_amount);
     }
 }
