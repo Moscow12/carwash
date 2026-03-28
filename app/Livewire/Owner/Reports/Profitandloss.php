@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Business;
 use App\Models\sales;
 use App\Models\sales_item;
-use App\Models\purchase;
+use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderItem;
 use App\Models\expenses;
 use App\Models\items;
 use App\Models\category;
@@ -183,17 +184,14 @@ class Profitandloss extends Component
                 ->whereBetween('sale_date', [$startDate, $endDate]);
         })->sum('discount');
 
-        // Calculate Total Purchase (excluding tax, discount)
-        $this->totalPurchase = (float) purchase::where('business_id', $this->business_id)
-            ->where('purchase_status', 'received')
+        // Calculate Total Purchase (excluding tax, using subtotal)
+        $this->totalPurchase = (float) PurchaseOrder::where('business_id', $this->business_id)
+            ->where('status', 'received')
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum(DB::raw('(price * quantity) - COALESCE(discount, 0)'));
+            ->sum('subtotal');
 
-        // Calculate Total Purchase Discount
-        $this->totalPurchaseDiscount = (float) purchase::where('business_id', $this->business_id)
-            ->where('purchase_status', 'received')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum('discount');
+        // Calculate Total Purchase Discount (PurchaseOrder doesn't have discount)
+        $this->totalPurchaseDiscount = 0;
 
         // Calculate Total Expenses
         $this->totalExpense = (float) expenses::where('business_id', $this->business_id)
@@ -281,11 +279,13 @@ class Profitandloss extends Component
                     ->whereBetween('sale_date', [$startDate, $endDate]);
             })->where('item_id', $item->id)->sum('quantity');
 
-            $stockPurchased = (float) purchase::where('business_id', $this->business_id)
+            $stockPurchased = (float) PurchaseOrderItem::whereHas('purchaseOrder', function($query) use ($startDate, $endDate) {
+                    $query->where('business_id', $this->business_id)
+                        ->where('status', 'received')
+                        ->whereBetween('created_at', [$startDate, $endDate]);
+                })
                 ->where('item_id', $item->id)
-                ->where('purchase_status', 'received')
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->sum('quantity');
+                ->sum('quantity_received');
 
             $openingStock = $currentStock + $stockSold - $stockPurchased;
             $openingPurchase += $openingStock * $costPrice;

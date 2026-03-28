@@ -239,7 +239,8 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
 
     // Inventory & Purchase Management
     Route::get('/inventory/purchases', \App\Livewire\Owner\Inventory\PurchaseManagement::class)->name('owner.inventory.purchases');
-    Route::get('/inventory/stocktransfers', \App\Livewire\Owner\Inventory\StockTransfer::class)->name('owner.inventory.stocktransfers');
+    Route::get('/inventory/purchases/create', \App\Livewire\Owner\Inventory\CreatePurchase::class)->name('owner.inventory.purchases.create');
+    Route::get('/inventory/stocktransfers', \App\Livewire\Owner\Inventory\StockTransferManagement::class)->name('owner.inventory.stocktransfers');
 
 });
 

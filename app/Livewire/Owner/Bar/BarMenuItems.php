@@ -13,6 +13,7 @@ use App\Models\MenuItem;
 use App\Models\MenuCategory;
 use App\Models\items;
 use App\Models\PosOrderItem;
+use App\Models\item_balance;
 
 #[Layout('components.layouts.app-owner')]
 class BarMenuItems extends Component
@@ -443,6 +444,7 @@ class BarMenuItems extends Component
             'newStockQty.min' => 'Quantity must be greater than or equal to 0.',
         ]);
 
+        DB::beginTransaction();
         try {
             // Get first category for this business
             $categoryId = DB::table('categories')
@@ -465,21 +467,46 @@ class BarMenuItems extends Component
 
             $newItem = items::create([
                 'business_id' => $this->selectedBusiness,
+                'outlet_id' => $this->selectedOutlet,
                 'name' => $this->newStockName,
                 'description' => $this->newStockName,
-                'qty' => $this->newStockQty,
+                'type' => 'product',
+                'product_stock' => 'yes',
                 'unit_id' => $this->newStockUnitId,
                 'cost_price' => $this->newStockCostPrice ?: 0,
-                'reorder_level' => $this->newStockReorderLevel,
+                'selling_price' => $this->newStockCostPrice ?: 0,
                 'category_id' => $categoryId,
+                'status' => 'active',
             ]);
+
+            // Create initial stock balance record
+            if ($this->newStockQty > 0) {
+                item_balance::create([
+                    'item_id' => $newItem->id,
+                    'user_id' => Auth::id(),
+                    'business_id' => $this->selectedBusiness,
+                    'outlet_id' => $this->selectedOutlet,
+                    'order_id' => null,
+                    'previous_balance' => 0,
+                    'current_balance' => $this->newStockQty,
+                    'quantity_changed' => $this->newStockQty,
+                    'quantity_ml' => 0,
+                    'movement_reason' => 'opening_count',
+                    'stock_type' => 'in',
+                    'stransaction_type' => 'initial_stock',
+                    'invoice_number' => 'INIT-' . date('YmdHis'),
+                ]);
+            }
+
+            DB::commit();
 
             // Auto-select the newly created item
             $this->linkStockItemId = $newItem->id;
 
-            session()->flash('message', "Stock item '{$this->newStockName}' created successfully.");
+            session()->flash('message', "Stock item '{$this->newStockName}' created successfully with initial stock of {$this->newStockQty}.");
             $this->closeCreateStockModal();
         } catch (\Exception $e) {
+            DB::rollBack();
             session()->flash('error', 'Error creating stock item: ' . $e->getMessage());
         }
     }
@@ -531,7 +558,9 @@ class BarMenuItems extends Component
         DB::beginTransaction();
         try {
             $stockItem = $this->updatingStockItem->item;
-            $currentQty = $stockItem->qty ?? 0;
+
+            // Get current quantity from item_balance
+            $currentQty = $this->getCurrentStock($stockItem->id);
 
             if ($this->updateStockAction === 'add') {
                 $newQty = $currentQty + $this->updateStockQty;
@@ -539,41 +568,32 @@ class BarMenuItems extends Component
                 $newQty = $currentQty - $this->updateStockQty;
                 if ($newQty < 0) {
                     session()->flash('error', 'Cannot subtract more than current stock quantity.');
+                    DB::rollBack();
                     return;
                 }
             }
 
-            // Update stock item quantity
-            $stockItem->update(['qty' => $newQty]);
-
-            // Record in item_balance (notes column doesn't exist, movement_reason enum has limited values)
-            DB::table('item_balances')->insert([
-                'id' => (string) \Illuminate\Support\Str::uuid(),
+            // Record in item_balance
+            item_balance::create([
                 'item_id' => $stockItem->id,
                 'user_id' => Auth::id(),
                 'business_id' => $this->selectedBusiness,
-                'outlet_id' => null,
+                'outlet_id' => $this->selectedOutlet,
                 'order_id' => null,
-                'order_item_id' => null,
                 'previous_balance' => $currentQty,
                 'current_balance' => $newQty,
                 'quantity_changed' => $this->updateStockAction === 'add' ? $this->updateStockQty : -$this->updateStockQty,
-                'quantity_ml' => null,
+                'quantity_ml' => 0,
                 'movement_reason' => 'normal',
                 'stock_type' => $this->updateStockAction === 'add' ? 'in' : 'out',
                 'stransaction_type' => 'adjustment',
                 'invoice_number' => 'ADJ-' . date('YmdHis'),
-                'created_at' => now(),
-                'updated_at' => now(),
             ]);
 
             DB::commit();
 
-            // Refresh the stock item to show updated quantity
-            $stockItem->refresh();
-
             $unitName = $stockItem->unit ? $stockItem->unit->name : 'pcs';
-            session()->flash('message', "Stock updated successfully. New quantity: {$newQty} {$unitName}");
+            session()->flash('message', "Stock updated successfully. New quantity: " . number_format($newQty, 2) . " {$unitName}");
             $this->closeUpdateStockModal();
 
             // Reset the page to refresh the data
@@ -582,6 +602,21 @@ class BarMenuItems extends Component
             DB::rollBack();
             session()->flash('error', 'Error updating stock: ' . $e->getMessage());
         }
+    }
+
+    // Helper method to get current stock from item_balance
+    public function getCurrentStock($itemId)
+    {
+        if (!$itemId || !$this->selectedBusiness) {
+            return 0;
+        }
+
+        $lastBalance = item_balance::where('item_id', $itemId)
+            ->where('business_id', $this->selectedBusiness)
+            ->latest('created_at')
+            ->first();
+
+        return $lastBalance ? (float) $lastBalance->current_balance : 0;
     }
 
     public function render()
@@ -625,13 +660,30 @@ class BarMenuItems extends Component
                 ->paginate(20);
         }
 
-        // Load stock items for dropdown
+        // Load stock items for dropdown with current balances
         $stockItems = collect();
         if ($this->selectedBusiness) {
             $stockItems = items::where('business_id', $this->selectedBusiness)
+                ->where('type', 'product')
+                ->where('product_stock', 'yes')
                 ->with('unit')
                 ->orderBy('name')
                 ->get();
+
+            // Get latest balances for all stock items
+            $itemIds = $stockItems->pluck('id')->toArray();
+            $latestBalances = item_balance::whereIn('item_id', $itemIds)
+                ->where('business_id', $this->selectedBusiness)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->unique('item_id')
+                ->keyBy('item_id');
+
+            // Attach current_stock to each item
+            $stockItems->each(function($item) use ($latestBalances) {
+                $balance = $latestBalances->get($item->id);
+                $item->current_stock = $balance ? (float) $balance->current_balance : 0;
+            });
         }
 
         // Load units for create stock modal

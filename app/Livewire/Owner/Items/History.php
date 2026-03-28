@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\items;
 use App\Models\item_balance;
 use App\Models\sales;
-use App\Models\purchase;
+use App\Models\PurchaseOrder;
 
 #[Layout('components.layouts.app-owner')]
 class History extends Component
@@ -184,15 +184,17 @@ class History extends Component
                 $info['customer_supplier'] = 'Walk-In Customer';
             }
         } elseif (in_array($balance->stransaction_type, ['purchase', 'restock'])) {
-            $purchase = purchase::where('item_id', $this->itemId)
-                ->where('business_id', $this->selectedBusiness)
-                ->whereDate('created_at', $balance->created_at->toDateString())
-                ->with('supplier')
-                ->first();
+            // Use invoice_number from item_balance to find PurchaseOrder
+            if (!empty($balance->invoice_number)) {
+                $purchaseOrder = PurchaseOrder::where('po_number', $balance->invoice_number)
+                    ->where('business_id', $this->selectedBusiness)
+                    ->with('supplier')
+                    ->first();
 
-            if ($purchase) {
-                $info['customer_supplier'] = $purchase->supplier?->name ?? '-';
-                $info['reference'] = 'PO' . date('Y', strtotime($balance->created_at)) . '/' . substr($purchase->id, 0, 4);
+                if ($purchaseOrder) {
+                    $info['customer_supplier'] = $purchaseOrder->supplier?->name ?? '-';
+                    $info['reference'] = $purchaseOrder->po_number;
+                }
             }
         }
 

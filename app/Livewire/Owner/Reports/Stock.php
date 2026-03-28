@@ -50,17 +50,13 @@ class Stock extends Component
     public function mount()
     {
         $owner = Auth::user();
-        $businessCollection = $owner->ownedBusinesses()->get();
 
-        $this->businesses = $businessCollection->map(function ($business) {
-            return [
-                'id' => $business->id,
-                'name' => $business->name,
-            ];
-        })->toArray();
+        $this->businesses = $owner->ownedBusinesses()
+            ->pluck('name', 'id')
+            ->toArray();
 
         if (count($this->businesses) > 0 && empty($this->business_id)) {
-            $this->business_id = $this->businesses[0]['id'];
+            $this->business_id = array_key_first($this->businesses);
         }
 
         $this->loadFilterData();
@@ -113,12 +109,10 @@ class Stock extends Component
 
         $this->categories = category::where('business_id', $this->business_id)
             ->where('status', 'active')
-            ->get()
-            ->map(fn($c) => ['id' => $c->id, 'name' => $c->name])
+            ->pluck('name', 'id')
             ->toArray();
 
-        $this->units = unit::all()
-            ->map(fn($u) => ['id' => $u->id, 'name' => $u->name])
+        $this->units = unit::pluck('name', 'id')
             ->toArray();
     }
 

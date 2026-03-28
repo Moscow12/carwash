@@ -7,17 +7,18 @@
             <div class="dropdown">
                 <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                     <i class="fas fa-map-marker-alt me-1"></i>
-                    @php
-                        $selectedBusiness = collect($businesses)->firstWhere('id', $business_id);
-                    @endphp
-                    {{ $selectedBusiness['name'] ?? 'Select Location' }}
+                    @if($business_id && isset($businesses[$business_id]))
+                        {{ $businesses[$business_id] }}
+                    @else
+                        Select Location
+                    @endif
                 </button>
                 <ul class="dropdown-menu">
-                    @foreach($businesses as $business)
+                    @foreach($businesses as $id => $name)
                         <li>
-                            <a class="dropdown-item {{ $business_id == $business['id'] ? 'active' : '' }}"
-                               href="#" wire:click.prevent="$set('business_id', '{{ $business['id'] }}')">
-                                {{ $business['name'] }}
+                            <a class="dropdown-item {{ $business_id == $id ? 'active' : '' }}"
+                               href="#" wire:click.prevent="$set('business_id', '{{ $id }}')">
+                                {{ is_array($name) ? ($name['name'] ?? $name) : $name }}
                             </a>
                         </li>
                     @endforeach
@@ -145,8 +146,9 @@
                 <table class="table table-hover table-striped">
                     <thead class="table-light">
                         <tr>
+                            <th>ID</th>
                             <th>SKU</th>
-                            <th>Product</th>
+                            <th>Product Name</th>
                             <th>Category</th>
                             <th class="text-end">Selling Price</th>
                             <th class="text-end">Cost Price</th>
@@ -171,6 +173,7 @@
                             $totalSold = $this->getTotalUnitsSold($item->id);
                         @endphp
                         <tr>
+                            <td><small class="text-muted">{{ substr($item->id, 0, 8) }}...</small></td>
                             <td><span class="badge bg-secondary">{{ $item->barcode ?? '-' }}</span></td>
                             <td>{{ $item->name }}</td>
                             <td>{{ $item->category->name ?? '-' }}</td>
@@ -190,7 +193,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="10" class="text-center text-muted py-4">
+                            <td colspan="11" class="text-center text-muted py-4">
                                 <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
                                 No stock data found for the selected filters.
                             </td>
@@ -200,7 +203,7 @@
                     @if($stockData->count() > 0)
                     <tfoot class="table-light fw-bold">
                         <tr>
-                            <td colspan="6" class="text-end">Totals:</td>
+                            <td colspan="7" class="text-end">Totals:</td>
                             <td class="text-end">TSh {{ number_format($closingStockPurchase, 2) }}</td>
                             <td class="text-end">TSh {{ number_format($closingStockSale, 2) }}</td>
                             <td class="text-end {{ $potentialProfit >= 0 ? 'text-success' : 'text-danger' }}">

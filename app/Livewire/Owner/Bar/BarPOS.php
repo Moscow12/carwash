@@ -198,7 +198,7 @@ class BarPOS extends Component
         }
 
         $this->availableMenuItems = $query
-            ->with(['category', 'happyHourPrices', 'recipes.item'])
+            ->with(['category', 'happyHourPrices', 'recipes.item', 'item.unit'])
             ->orderBy('name')
             ->get()
             ->toArray();
@@ -306,6 +306,7 @@ class BarPOS extends Component
                 'discount' => 0,
                 'happy_hour_applied' => $price < $item['price'],
                 'recipes' => $item['recipes'] ?? [],
+                'linked_item_id' => $item['item_id'] ?? null,
             ];
         }
 
@@ -619,10 +620,12 @@ class BarPOS extends Component
 
         DB::beginTransaction();
         try {
-            // Generate order number
+            // Generate order number with lock to prevent duplicates
             $lastOrder = PosOrder::where('outlet_id', $this->selectedOutlet)
                 ->whereDate('created_at', today())
-                ->orderBy('order_no', 'desc')
+                ->lockForUpdate()
+                ->orderBy('created_at', 'desc')
+                ->orderBy('id', 'desc')
                 ->first();
 
             if ($lastOrder && preg_match('/(\d+)$/', $lastOrder->order_no, $matches)) {
@@ -631,7 +634,14 @@ class BarPOS extends Component
                 $orderNum = 1;
             }
 
-            $orderNo = 'ORD-' . now()->format('Ymd') . '-' . str_pad($orderNum, 4, '0', STR_PAD_LEFT);
+            // Ensure uniqueness by checking if order number already exists
+            do {
+                $orderNo = 'ORD-' . now()->format('Ymd') . '-' . str_pad($orderNum, 4, '0', STR_PAD_LEFT);
+                $exists = PosOrder::where('order_no', $orderNo)->exists();
+                if ($exists) {
+                    $orderNum++;
+                }
+            } while ($exists);
 
             // Get staff record for current user (if exists)
             $staffRecord = \App\Models\staffs::where('user_id', Auth::id())
@@ -669,8 +679,8 @@ class BarPOS extends Component
                     'notes' => null,
                 ]);
 
-                // Deduct recipe ingredients
-                $this->deductRecipeIngredients($cartItem);
+                // Deduct stock items (linked items and/or recipe ingredients)
+                $this->deductStockItems($order->id, $cartItem);
             }
 
             // Handle tab or immediate payment
@@ -727,37 +737,71 @@ class BarPOS extends Component
         }
     }
 
-    private function deductRecipeIngredients($cartItem)
+    private function deductStockItems($orderId, $cartItem)
     {
-        if (empty($cartItem['recipes'])) {
-            return;
-        }
+        // Priority 1: Deduct linked stock item (direct menu item -> stock item link)
+        if (!empty($cartItem['linked_item_id'])) {
+            $quantityToDeduct = $cartItem['quantity'];
 
-        foreach ($cartItem['recipes'] as $recipe) {
-            if (!$recipe['item_id']) continue;
-
-            $quantityToDeduct = $recipe['quantity'] * $cartItem['quantity'];
-
-            // Update item balance
-            $lastBalance = item_balance::where('item_id', $recipe['item_id'])
+            // Get current balance
+            $lastBalance = item_balance::where('item_id', $cartItem['linked_item_id'])
                 ->where('business_id', $this->selectedBusiness)
-                ->latest()
+                ->latest('created_at')
                 ->first();
 
-            $previousBalance = $lastBalance ? $lastBalance->current_balance : 0;
+            $previousBalance = $lastBalance ? (float) $lastBalance->current_balance : 0;
             $newBalance = $previousBalance - $quantityToDeduct;
 
+            // Create item balance record
             item_balance::create([
-                'item_id' => $recipe['item_id'],
+                'item_id' => $cartItem['linked_item_id'],
                 'user_id' => Auth::id(),
                 'business_id' => $this->selectedBusiness,
+                'outlet_id' => $this->selectedOutlet,
+                'order_id' => $orderId,
                 'previous_balance' => $previousBalance,
                 'current_balance' => $newBalance,
                 'quantity_changed' => $quantityToDeduct,
+                'quantity_ml' => 0,
+                'movement_reason' => 'normal',
                 'stock_type' => 'out',
-                'stransaction_type' => 'bar_sale',
-                'invoice_number' => item_balance::generateInvoiceNumber(),
+                'stransaction_type' => 'sale',
+                'invoice_number' => 'ORD-' . now()->format('YmdHis'),
             ]);
+        }
+        // Priority 2: Deduct recipe ingredients (if no linked item)
+        elseif (!empty($cartItem['recipes'])) {
+            foreach ($cartItem['recipes'] as $recipe) {
+                if (!$recipe['item_id']) continue;
+
+                $quantityToDeduct = $recipe['quantity'] * $cartItem['quantity'];
+
+                // Get current balance
+                $lastBalance = item_balance::where('item_id', $recipe['item_id'])
+                    ->where('business_id', $this->selectedBusiness)
+                    ->latest('created_at')
+                    ->first();
+
+                $previousBalance = $lastBalance ? (float) $lastBalance->current_balance : 0;
+                $newBalance = $previousBalance - $quantityToDeduct;
+
+                // Create item balance record
+                item_balance::create([
+                    'item_id' => $recipe['item_id'],
+                    'user_id' => Auth::id(),
+                    'business_id' => $this->selectedBusiness,
+                    'outlet_id' => $this->selectedOutlet,
+                    'order_id' => $orderId,
+                    'previous_balance' => $previousBalance,
+                    'current_balance' => $newBalance,
+                    'quantity_changed' => $quantityToDeduct,
+                    'quantity_ml' => 0,
+                    'movement_reason' => 'normal',
+                    'stock_type' => 'out',
+                    'stransaction_type' => 'sale',
+                    'invoice_number' => 'ORD-' . now()->format('YmdHis'),
+                ]);
+            }
         }
     }
 

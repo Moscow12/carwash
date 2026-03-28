@@ -141,7 +141,7 @@
                                             <td class="text-center">
                                                 @if($item->item)
                                                     @php
-                                                        $qty = $item->item->qty ?? 0;
+                                                        $qty = $this->getCurrentStock($item->item_id);
                                                         $reorderLevel = $item->item->reorder_level ?? 10;
                                                         $stockStatus = $qty <= 0 ? 'out' : ($qty <= $reorderLevel ? 'low' : 'ok');
 
@@ -160,7 +160,7 @@
                                                           title="Reorder Level: {{ $reorderLevel }} {{ $item->item->unit?->name ?? 'pcs' }}"
                                                           data-bs-toggle="tooltip">
                                                         <i class="ti {{ $iconClass }}"></i>
-                                                        {{ $qty }} {{ $item->item->unit?->name ?? 'pcs' }}
+                                                        {{ number_format($qty, 2) }} {{ $item->item->unit?->name ?? 'pcs' }}
                                                     </span>
                                                 @else
                                                     <span class="badge bg-secondary">
@@ -295,7 +295,7 @@
                                 @foreach($stockItems as $stockItem)
                                     <option value="{{ $stockItem->id }}">
                                         {{ $stockItem->name }}
-                                        (Current: {{ $stockItem->qty ?? 0 }} {{ $stockItem->unit?->name ?? 'pcs' }})
+                                        (Current: {{ number_format($stockItem->current_stock ?? 0, 2) }} {{ $stockItem->unit?->name ?? 'pcs' }})
                                     </option>
                                 @endforeach
                             </select>
@@ -324,8 +324,8 @@
                                             <tr>
                                                 <td class="text-muted">Current Stock:</td>
                                                 <td>
-                                                    <span class="badge bg-{{ ($selectedStock->qty ?? 0) > 0 ? 'success' : 'danger' }}">
-                                                        {{ $selectedStock->qty ?? 0 }} {{ $selectedStock->unit?->name ?? 'pcs' }}
+                                                    <span class="badge bg-{{ ($selectedStock->current_stock ?? 0) > 0 ? 'success' : 'danger' }}">
+                                                        {{ number_format($selectedStock->current_stock ?? 0, 2) }} {{ $selectedStock->unit?->name ?? 'pcs' }}
                                                     </span>
                                                 </td>
                                             </tr>
