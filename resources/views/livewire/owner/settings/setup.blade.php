@@ -575,7 +575,7 @@
                                 <label class="form-label">Default Payment Method</label>
                                 <x-forms.select2
                                     name="default_payment_method"
-                                    :options="collect($availablePaymentMethods)->filter(fn($m) => $m['status'] === 'active')->values()->toArray()"
+                                    :options="collect($availablePaymentMethods)->filter(fn($m) => $m['status'] === 'active')->pluck('name', 'id')->toArray()"
                                     wire:model="default_payment_method"
                                     placeholder="Select default method"
                                     wrapper="false"

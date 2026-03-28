@@ -181,11 +181,13 @@ class Setup extends Component
 
     public function mount()
     {
-        $this->ownerBusinesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
+        $this->ownerBusinesses = Auth::user()->ownedBusinesses()
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->toArray();
 
-        $firstBusiness = $this->ownerBusinesses->first();
-        if ($firstBusiness) {
-            $this->selectedBusiness = $firstBusiness->id;
+        if (!empty($this->ownerBusinesses)) {
+            $this->selectedBusiness = array_key_first($this->ownerBusinesses);
             $this->loadSettings();
         }
 
@@ -603,7 +605,7 @@ class Setup extends Component
 
         $this->availablePaymentMethods = payment_method::where('business_id', $this->selectedBusiness)
             ->orderBy('name')
-            ->get()
+            ->get(['id', 'name', 'description', 'status'])
             ->toArray();
     }
 
