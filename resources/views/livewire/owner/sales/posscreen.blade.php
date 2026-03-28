@@ -311,6 +311,18 @@
             background: #ccc;
             border-radius: 2px;
         }
+
+        /* Mobile adjustments */
+        @media (max-width: 767px) {
+            .input-group .select2-container .select2-selection {
+                min-height: 40px;
+            }
+
+            .input-group .btn {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+        }
     </style>
 
     {{-- Header --}}
@@ -319,9 +331,9 @@
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <span class="fw-bold text-primary">
                     <i class="ti ti-map-pin me-1"></i>
-                    @php $business = collect($ownerBusinesses)->firstWhere('id', $selectedBusiness); @endphp
-                    <span class="d-none d-sm-inline">{{ $business['name'] ?? 'Select Location' }}</span>
-                    <span class="d-sm-none">{{ Str::limit($business['name'] ?? 'Select', 10) }}</span>
+                    @php $businessName = $ownerBusinesses[$selectedBusiness] ?? 'Select Location'; @endphp
+                    <span class="d-none d-sm-inline">{{ $businessName }}</span>
+                    <span class="d-sm-none">{{ Str::limit($businessName, 10) }}</span>
                 </span>
                 <span class="text-muted small d-none d-md-inline">
                     <i class="ti ti-calendar me-1"></i>
@@ -332,7 +344,7 @@
                 @if(count($ownerBusinesses) > 1)
                 <x-forms.select2
                     name="selectedBusiness"
-                    :options="collect($ownerBusinesses)"
+                    :options="$ownerBusinesses"
                     wire:model.live="selectedBusiness"
                     wrapper="false"
                     class="form-select form-select-sm"
@@ -380,7 +392,7 @@
             {{-- Customer & Staff Selection --}}
             <div class="p-2 p-md-3 border-bottom">
                 <div class="row g-2">
-                    <div class="col-12 col-md-8">
+                    <div class="col-12 col-md-7">
                         <div class="input-group">
                             <span class="input-group-text"><i class="ti ti-user"></i></span>
                             <x-forms.select2
@@ -389,6 +401,7 @@
                                 wire:model="customer_id"
                                 placeholder="Walk-In Customer"
                                 wrapper="false"
+                                inputGroup="true"
                                 class="form-select"
                             />
                             <button wire:click="openCustomerModal" class="btn btn-primary" title="Add Customer">
@@ -396,10 +409,10 @@
                             </button>
                         </div>
                     </div>
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-5">
                         <x-forms.select2
                             name="selectedStaff"
-                            :options="collect($availableStaffs)"
+                            :options="$availableStaffs"
                             wire:model="selectedStaff"
                             placeholder="Select Staff"
                             wrapper="false"

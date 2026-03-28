@@ -83,11 +83,13 @@ class Posscreen extends Component
 
     public function mount()
     {
-        $this->ownerBusinesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
+        $this->ownerBusinesses = Auth::user()->ownedBusinesses()
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->toArray();
 
-        $firstBusiness = $this->ownerBusinesses->first();
-        if ($firstBusiness) {
-            $this->selectedBusiness = $firstBusiness->id;
+        if (!empty($this->ownerBusinesses)) {
+            $this->selectedBusiness = array_key_first($this->ownerBusinesses);
             $this->loadData();
         }
     }
@@ -130,9 +132,18 @@ class Posscreen extends Component
             ->where('status', 'active')
             ->when($this->selectedCategory, fn($q) => $q->where('category_id', $this->selectedCategory))
             ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))
-            ->with('category', 'unit')
             ->orderBy('name')
-            ->get()
+            ->get([
+                'id',
+                'name',
+                'selling_price',
+                'type',
+                'require_plate_number',
+                'commission',
+                'commission_type',
+                'image',
+                'product_stock'
+            ])
             ->toArray();
     }
 
@@ -141,7 +152,7 @@ class Posscreen extends Component
         $this->availableCategories = category::where('business_id', $this->selectedBusiness)
             ->where('status', 'active')
             ->orderBy('name')
-            ->get()
+            ->pluck('name', 'id')
             ->toArray();
     }
 
@@ -169,7 +180,7 @@ class Posscreen extends Component
         $this->availablePaymentMethods = payment_method::where('business_id', $this->selectedBusiness)
             ->where('status', 'active')
             ->orderBy('name')
-            ->get()
+            ->pluck('name', 'id')
             ->toArray();
     }
 
@@ -362,8 +373,18 @@ class Posscreen extends Component
         }
 
         // Get default cash payment method
-        $cashMethod = collect($this->availablePaymentMethods)->firstWhere('name', 'Cash');
-        $defaultMethodId = $cashMethod ? $cashMethod['id'] : ($this->availablePaymentMethods[0]['id'] ?? '');
+        $defaultMethodId = '';
+        foreach ($this->availablePaymentMethods as $id => $name) {
+            if (stripos($name, 'cash') !== false) {
+                $defaultMethodId = $id;
+                break;
+            }
+        }
+
+        // Fallback to first available method if cash not found
+        if (!$defaultMethodId && !empty($this->availablePaymentMethods)) {
+            $defaultMethodId = array_key_first($this->availablePaymentMethods);
+        }
 
         if (!$defaultMethodId) {
             session()->flash('error', 'No payment method available.');
@@ -401,37 +422,34 @@ class Posscreen extends Component
         // Get default payment method based on type
         $defaultMethodId = '';
         if ($type === 'cash') {
-            $cashMethod = collect($this->availablePaymentMethods)->firstWhere('name', 'Cash');
-            $defaultMethodId = $cashMethod ? $cashMethod['id'] : ($this->availablePaymentMethods[0]['id'] ?? '');
+            foreach ($this->availablePaymentMethods as $id => $name) {
+                if (stripos($name, 'cash') !== false) {
+                    $defaultMethodId = $id;
+                    break;
+                }
+            }
         } elseif ($type === 'card') {
-            $cardMethod = collect($this->availablePaymentMethods)->first(fn($m) => stripos($m['name'], 'card') !== false);
-            $defaultMethodId = $cardMethod ? $cardMethod['id'] : ($this->availablePaymentMethods[0]['id'] ?? '');
-        } elseif ($type === 'multiple') {
-            // For multiple payments, start with an empty row
-            $defaultMethodId = $this->availablePaymentMethods[0]['id'] ?? '';
-        } else {
-            $defaultMethodId = $this->availablePaymentMethods[0]['id'] ?? '';
+            foreach ($this->availablePaymentMethods as $id => $name) {
+                if (stripos($name, 'card') !== false) {
+                    $defaultMethodId = $id;
+                    break;
+                }
+            }
+        }
+
+        // Fallback to first available method
+        if (!$defaultMethodId && !empty($this->availablePaymentMethods)) {
+            $defaultMethodId = array_key_first($this->availablePaymentMethods);
         }
 
         // Initialize payment rows
-        if ($type === 'multiple') {
-            // For multiple payments, start with empty amount to encourage splitting
-            $this->paymentRows = [
-                [
-                    'amount' => $this->cartTotal,
-                    'payment_method_id' => $defaultMethodId,
-                    'note' => '',
-                ]
-            ];
-        } else {
-            $this->paymentRows = [
-                [
-                    'amount' => $this->cartTotal,
-                    'payment_method_id' => $defaultMethodId,
-                    'note' => '',
-                ]
-            ];
-        }
+        $this->paymentRows = [
+            [
+                'amount' => $this->cartTotal,
+                'payment_method_id' => $defaultMethodId,
+                'note' => '',
+            ]
+        ];
 
         // Legacy support
         $this->paymentAmount = $this->cartTotal;
@@ -452,7 +470,9 @@ class Posscreen extends Component
     // Multiple Payment Row Management
     public function addPaymentRow()
     {
-        $defaultMethodId = $this->availablePaymentMethods[0]['id'] ?? '';
+        $defaultMethodId = !empty($this->availablePaymentMethods)
+            ? array_key_first($this->availablePaymentMethods)
+            : '';
         $this->paymentRows[] = [
             'amount' => 0,
             'payment_method_id' => $defaultMethodId,
@@ -663,10 +683,10 @@ class Posscreen extends Component
     public function openRecentModal()
     {
         $this->recentSales = sales::where('business_id', $this->selectedBusiness)
-            ->with(['customer', 'user', 'items.item'])
+            ->with(['customer:id,name,phone', 'user:id,name'])
             ->latest()
             ->take(10)
-            ->get()
+            ->get(['id', 'sale_date', 'total_amount', 'payment_status', 'customer_id', 'user_id'])
             ->toArray();
 
         $this->showRecentModal = true;
