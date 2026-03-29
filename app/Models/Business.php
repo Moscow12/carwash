@@ -137,6 +137,12 @@ class Business extends Model
         return $this->hasMany(PosOutlet::class, 'business_id');
     }
 
+    // Alias for posOutlets
+    public function outlets(): HasMany
+    {
+        return $this->posOutlets();
+    }
+
     public function posOrders(): HasMany
     {
         return $this->hasMany(PosOrder::class, 'business_id');

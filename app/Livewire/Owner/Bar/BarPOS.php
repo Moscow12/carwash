@@ -88,7 +88,26 @@ class BarPOS extends Component
 
     public function mount()
     {
-        $this->ownerBusinesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
+        $user = Auth::user();
+
+        // Get owned businesses
+        $ownedBusinesses = $user->ownedBusinesses()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        // Get assigned businesses via UserBusinessRole
+        $assignedBusinesses = DB::table('user_business_roles')
+            ->join('businesses', 'user_business_roles.business_id', '=', 'businesses.id')
+            ->where('user_business_roles.user_id', $user->id)
+            ->where('user_business_roles.is_active', true)
+            ->select('businesses.id', 'businesses.name')
+            ->distinct()
+            ->get();
+
+        // Merge and deduplicate
+        $allBusinesses = $ownedBusinesses->merge($assignedBusinesses)->unique('id');
+
+        $this->ownerBusinesses = $allBusinesses;
 
         $firstBusiness = $this->ownerBusinesses->first();
         if ($firstBusiness) {
@@ -134,9 +153,38 @@ class BarPOS extends Component
             return;
         }
 
-        $this->availableOutlets = PosOutlet::where('business_id', $this->selectedBusiness)
-            ->where('status', 'active')
-            ->orderBy('name')
+        $user = Auth::user();
+
+        // Check if user has outlet-specific assignments for this business
+        $assignedOutletIds = DB::table('user_business_roles')
+            ->where('user_id', $user->id)
+            ->where('business_id', $this->selectedBusiness)
+            ->where('is_active', true)
+            ->whereNotNull('outlet_id')
+            ->pluck('outlet_id')
+            ->toArray();
+
+        // Check if user has business-level access (no specific outlet)
+        $hasBusinessLevelAccess = DB::table('user_business_roles')
+            ->where('user_id', $user->id)
+            ->where('business_id', $this->selectedBusiness)
+            ->where('is_active', true)
+            ->whereNull('outlet_id')
+            ->exists();
+
+        // Check if user owns this business
+        $ownsBusiness = $user->ownedBusinesses()->where('id', $this->selectedBusiness)->exists();
+
+        // Build query
+        $query = PosOutlet::where('business_id', $this->selectedBusiness)
+            ->where('status', 'active');
+
+        // If user has specific outlet assignments and doesn't own business and doesn't have business-level access
+        if (!empty($assignedOutletIds) && !$ownsBusiness && !$hasBusinessLevelAccess) {
+            $query->whereIn('id', $assignedOutletIds);
+        }
+
+        $this->availableOutlets = $query->orderBy('name')
             ->get()
             ->toArray();
     }
