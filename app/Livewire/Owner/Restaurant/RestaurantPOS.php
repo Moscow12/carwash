@@ -28,10 +28,9 @@ class RestaurantPOS extends Component
 
     // Tables & Orders
     public $tables = [];
-    public $selectedTable = null;
+    public $selectedTableId = '';
     public $currentOrder = null;
     public $orderItems = [];
-    public $showTableSection = true;
 
     // Menu
     public $menuCategories = [];
@@ -40,7 +39,6 @@ class RestaurantPOS extends Component
     public $menuSearch = '';
 
     // Order Management
-    public $showOrderModal = false;
     public $covers = 1;
     public $orderNotes = '';
     public $orderType = 'dine_in';
@@ -64,8 +62,9 @@ class RestaurantPOS extends Component
     // Payment
     public $showPaymentModal = false;
     public $paymentAmount = 0;
-    public $paymentMethodId = '';
     public $availablePaymentMethods = [];
+    public $paymentRows = [];
+    public $remainingAmount = 0;
 
     // Kitchen
     public $unsentItems = [];
@@ -143,6 +142,19 @@ class RestaurantPOS extends Component
         $this->loadTables();
         $this->loadMenu();
         $this->resetSelection();
+    }
+
+    public function updatedSelectedTableId()
+    {
+        $this->loadCurrentOrder();
+    }
+
+    public function updatedOrderType()
+    {
+        // If switching to takeaway/delivery, clear table
+        if (in_array($this->orderType, ['takeaway', 'delivery'])) {
+            $this->selectedTableId = '';
+        }
     }
 
     public function updatedSelectedCategory()
@@ -300,36 +312,39 @@ class RestaurantPOS extends Component
 
     public function resetSelection()
     {
-        $this->selectedTable = null;
+        $this->selectedTableId = '';
         $this->currentOrder = null;
         $this->orderItems = [];
-        $this->closeOrderModal();
+        $this->covers = 1;
+        $this->orderNotes = '';
+        $this->selectedStaff = '';
+        $this->selectedCustomer = '';
+        $this->menuSearch = '';
+        $this->selectedCategory = '';
+        $this->orderType = 'dine_in';
     }
 
     // Table Management
-    public function selectTable($tableId)
+    public function loadCurrentOrder()
     {
-        $table = collect($this->tables)->firstWhere('id', $tableId);
-        if (!$table) return;
-
-        $this->selectedTable = $table;
-        $this->orderType = 'dine_in';
-
-        if ($table['has_order']) {
-            $this->loadOrder($table['order_id']);
-        } else {
-            $this->createNewOrder($tableId);
+        if (!$this->selectedTableId) {
+            $this->currentOrder = null;
+            $this->orderItems = [];
+            return;
         }
 
-        $this->showOrderModal = true;
-    }
+        // Find table and check for active order
+        $table = collect($this->tables)->firstWhere('id', $this->selectedTableId);
+        if (!$table) return;
 
-    public function openOrderWithoutTable($orderType = 'takeaway')
-    {
-        $this->selectedTable = null;
-        $this->orderType = $orderType;
-        $this->createNewOrder(null);
-        $this->showOrderModal = true;
+        $this->orderType = 'dine_in';
+
+        if ($table['has_order'] && $table['order_id']) {
+            $this->loadOrder($table['order_id']);
+        } else {
+            $this->currentOrder = null;
+            $this->orderItems = [];
+        }
     }
 
     public function loadOrder($orderId)
@@ -363,26 +378,17 @@ class RestaurantPOS extends Component
         $this->calculateUnsentItems();
     }
 
-    public function createNewOrder($tableId)
-    {
-        $this->currentOrder = null;
-        $this->orderItems = [];
-        $this->covers = 1;
-        $this->orderNotes = '';
-        $this->selectedStaff = '';
-        $this->selectedCustomer = '';
-
-        // Don't reset orderType here as it's set before calling this method
-        if (!$this->orderType) {
-            $this->orderType = $tableId ? 'dine_in' : 'takeaway';
-        }
-    }
 
     // Order Management
     public function addMenuItem($menuItemId)
     {
         $menuItem = collect($this->menuItems)->firstWhere('id', $menuItemId);
         if (!$menuItem) return;
+
+        // For takeaway/delivery, must create order first if none exists
+        if (!$this->currentOrder && !$this->selectedTableId) {
+            $this->createImmediateOrder();
+        }
 
         // Check if item already in order
         $existingIndex = collect($this->orderItems)->search(function ($item) use ($menuItemId) {
@@ -410,6 +416,29 @@ class RestaurantPOS extends Component
         }
 
         $this->calculateUnsentItems();
+    }
+
+    private function createImmediateOrder()
+    {
+        try {
+            $orderData = [
+                'order_no' => $this->generateOrderNumber(),
+                'business_id' => $this->selectedBusiness,
+                'outlet_id' => $this->selectedOutlet,
+                'customer_id' => $this->selectedCustomer ?: null,
+                'order_type' => $this->orderType,
+                'covers' => $this->covers,
+                'notes' => $this->orderNotes,
+                'served_by' => $this->selectedStaff ?: null,
+                'status' => 'open',
+                'subtotal' => 0,
+                'total' => 0,
+            ];
+
+            $this->currentOrder = PosOrder::create($orderData);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error creating order: ' . $e->getMessage());
+        }
     }
 
     public function updateQuantity($index, $quantity)
@@ -495,8 +524,8 @@ class RestaurantPOS extends Component
                 ];
 
                 // Add table_id only if table is selected
-                if ($this->selectedTable && isset($this->selectedTable['id'])) {
-                    $orderData['table_id'] = $this->selectedTable['id'];
+                if ($this->selectedTableId) {
+                    $orderData['table_id'] = $this->selectedTableId;
                 }
 
                 $order = PosOrder::create($orderData);
@@ -532,9 +561,11 @@ class RestaurantPOS extends Component
                 'total' => $order->items()->sum('subtotal'),
             ]);
 
-            // Update table status
-            PosTable::where('id', $this->selectedTable['id'])
-                ->update(['status' => 'occupied']);
+            // Update table status if table is selected
+            if ($this->selectedTableId) {
+                PosTable::where('id', $this->selectedTableId)
+                    ->update(['status' => 'occupied']);
+            }
 
             DB::commit();
 
@@ -661,7 +692,14 @@ class RestaurantPOS extends Component
         }
 
         $this->paymentAmount = $this->total;
-        $this->paymentMethodId = array_key_first($this->availablePaymentMethods) ?? '';
+        $this->remainingAmount = $this->total;
+
+        // Initialize with one payment row - pre-populate with first payment method
+        $defaultMethodId = array_key_first($this->availablePaymentMethods) ?? '';
+        $this->paymentRows = [
+            ['amount' => $this->total, 'method_id' => $defaultMethodId]
+        ];
+
         $this->showPaymentModal = true;
     }
 
@@ -669,47 +707,117 @@ class RestaurantPOS extends Component
     {
         $this->showPaymentModal = false;
         $this->paymentAmount = 0;
-        $this->paymentMethodId = '';
+        $this->paymentRows = [];
+        $this->remainingAmount = 0;
+    }
+
+    public function addPaymentRow()
+    {
+        $this->paymentRows[] = ['amount' => $this->remainingAmount, 'method_id' => ''];
+        $this->calculateRemainingAmount();
+    }
+
+    public function removePaymentRow($index)
+    {
+        unset($this->paymentRows[$index]);
+        $this->paymentRows = array_values($this->paymentRows);
+        $this->calculateRemainingAmount();
+    }
+
+    public function updatedPaymentRows()
+    {
+        $this->calculateRemainingAmount();
+    }
+
+    private function calculateRemainingAmount()
+    {
+        $totalPaid = collect($this->paymentRows)->sum('amount');
+        $this->remainingAmount = max(0, $this->total - $totalPaid);
+    }
+
+    public function quickPayCash()
+    {
+        // Find cash payment method
+        $cashMethod = collect($this->availablePaymentMethods)->search(function($name) {
+            return stripos($name, 'cash') !== false;
+        });
+
+        if ($cashMethod === false) {
+            $cashMethod = array_key_first($this->availablePaymentMethods);
+        }
+
+        $this->paymentRows = [
+            ['amount' => $this->total, 'method_id' => $cashMethod]
+        ];
+        $this->calculateRemainingAmount();
     }
 
     public function processPayment()
     {
-        if (!$this->paymentMethodId || $this->paymentAmount <= 0) {
-            session()->flash('error', 'Invalid payment details.');
+        if (!$this->currentOrder) {
+            session()->flash('error', 'No active order to process payment.');
             return;
+        }
+
+        // Validate payment rows
+        $totalPayment = collect($this->paymentRows)->sum('amount');
+
+        if ($totalPayment < $this->total) {
+            session()->flash('error', 'Total payment amount must equal order total.');
+            return;
+        }
+
+        foreach ($this->paymentRows as $index => $row) {
+            if (empty($row['method_id']) || $row['amount'] <= 0) {
+                session()->flash('error', 'Please complete all payment rows.');
+                return;
+            }
         }
 
         DB::beginTransaction();
         try {
             $order = PosOrder::find($this->currentOrder['id']);
 
+            if (!$order) {
+                throw new \Exception('Order not found.');
+            }
+
+            // Update order status
             $order->update([
                 'status' => 'paid',
+                'payment_status' => 'paid',
                 'closed_at' => now(),
             ]);
 
-            // Create payment record (integrate with existing sales_payments)
-            DB::table('sales_payments')->insert([
-                'id' => \Illuminate\Support\Str::uuid(),
-                'sale_id' => $order->id,
-                'user_id' => Auth::id(),
-                'amount' => $this->paymentAmount,
-                'payment_date' => now(),
-                'payment_method_id' => $this->paymentMethodId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            // Create payment records
+            foreach ($this->paymentRows as $row) {
+                // Create Payment record using polymorphic relationship
+                \App\Models\Payment::create([
+                    'business_id' => $this->selectedBusiness,
+                    'payable_type' => 'App\Models\PosOrder',
+                    'payable_id' => $order->id,
+                    'amount' => $row['amount'],
+                    'currency' => 'TZS',
+                    'exchange_rate' => 1,
+                    'amount_local' => $row['amount'],
+                    'payment_method_id' => $row['method_id'],
+                    'paid_at' => now(),
+                    'received_by' => Auth::id(),
+                    'reference_no' => 'POS-' . $order->order_no,
+                    'status' => 'completed',
+                ]);
+            }
 
             // Update table status only if order has a table
-            if ($this->selectedTable && isset($this->selectedTable['id'])) {
-                PosTable::where('id', $this->selectedTable['id'])
+            if ($this->selectedTableId) {
+                PosTable::where('id', $this->selectedTableId)
                     ->update(['status' => 'available']);
             }
 
             DB::commit();
 
             $this->closePaymentModal();
-            $this->closeOrderModal();
+            $this->resetSelection();
             $this->loadTables();
             session()->flash('message', 'Payment processed successfully!');
         } catch (\Exception $e) {
@@ -718,13 +826,6 @@ class RestaurantPOS extends Component
         }
     }
 
-    public function closeOrderModal()
-    {
-        $this->showOrderModal = false;
-        $this->selectedTable = null;
-        $this->orderType = 'dine_in';
-        $this->resetSelection();
-    }
 
     private function generateOrderNumber()
     {

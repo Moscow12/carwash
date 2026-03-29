@@ -149,7 +149,7 @@
       </li>
       <li class="nav-item">
         <a class='dropdown-item {{ request()->routeIs("owner.bar.pos") ? "active" : "" }}' href="{{ route('owner.bar.pos') }}">
-          <i class="ti ti-cash-register me-2"></i> Bar POS
+          <i class="ti ti-beer me-2"></i> Bar POS
         </a>
       </li>
       <li><hr class="dropdown-divider"></li>
@@ -188,6 +188,21 @@
       <span class="text">Restaurant Management</span>
     </a>
     <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.restaurant*') ? 'show' : '' }}">
+      <li class="nav-item" id="restaurantPosMenu">
+        <a class='dropdown-item {{ request()->routeIs("owner.restaurant.dashboard") ? "active" : "" }}' href="{{ route('owner.restaurant.dashboard') }}">
+          <i class="ti ti-dashboard me-2"></i> Dashboard
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.restaurant.pos") ? "active" : "" }}' href="{{ route('owner.restaurant.pos') }}">
+          <i class="ti ti-tools-kitchen-2 me-2"></i> Restaurant POS
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.restaurant.kitchenscreen") ? "active" : "" }}' href="{{ route('owner.restaurant.kitchenscreen') }}">
+          <i class="ti ti-tools-kitchen-2 me-2"></i> Kitchen Screen
+        </a>
+      </li>
       <li class="nav-item">
         <a class='dropdown-item {{ request()->routeIs("owner.restaurant.reservations") ? "active" : "" }}' href="{{ route('owner.restaurant.reservations') }}">
           <i class="ti ti-calendar-event me-2"></i> Table Reservations
@@ -201,6 +216,11 @@
       <li class="nav-item">
         <a class='dropdown-item {{ request()->routeIs("owner.restaurant.recipes") ? "active" : "" }}' href="{{ route('owner.restaurant.recipes') }}">
           <i class="ti ti-chef-hat me-2"></i> Menu Recipes
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.restaurant.settings") ? "active" : "" }}' href="{{ route('owner.restaurant.settings') }}">
+          <i class="ti ti-settings me-2"></i> Settings
         </a>
       </li>
     </ul>

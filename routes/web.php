@@ -228,9 +228,13 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/bar/reports', \App\Livewire\Owner\Bar\BarReports::class)->name('owner.bar.reports');
 
     // Restaurant Management
+    Route::get('/restaurant/dashboard', \App\Livewire\Owner\Restaurant\Dashboard::class)->name('owner.restaurant.dashboard');
     Route::get('/restaurant/reservations', \App\Livewire\Owner\Restaurant\TableReservations::class)->name('owner.restaurant.reservations');
     Route::get('/restaurant/waiters', \App\Livewire\Owner\Restaurant\WaiterManagement::class)->name('owner.restaurant.waiters');
     Route::get('/restaurant/recipes', \App\Livewire\Owner\Restaurant\MenuRecipes::class)->name('owner.restaurant.recipes');
+    Route::get('/restaurant/restaurant-pos', \App\Livewire\Owner\Restaurant\RestaurantPOS::class)->name('owner.restaurant.pos');
+    Route::get('/restaurant/kitchenscreen', \App\Livewire\Owner\Restaurant\KitchenScreen::class)->name('owner.restaurant.kitchenscreen');
+    Route::get('restaurant/settings', \App\Livewire\Owner\Restaurant\RestaurantSettings::class)->name('owner.restaurant.settings');
 
     // Hotel Guest Services
     Route::get('/hotel/amenity-requests', \App\Livewire\Owner\Hotel\AmenityRequests::class)->name('owner.hotel.amenity-requests');

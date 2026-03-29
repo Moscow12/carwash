@@ -6,127 +6,72 @@
             --pos-warning: #ffc107;
             --pos-danger: #dc3545;
             --pos-info: #0dcaf0;
-            --pos-bg: #f0f4f8;
+            --pos-bg: #f8f9fa;
+            --pos-card: #ffffff;
         }
 
         .restaurant-pos-container {
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
             background: var(--pos-bg);
         }
 
         /* Header */
         .pos-header {
-            background: #fff;
-            padding: 15px 20px;
+            background: var(--pos-card);
+            padding: 12px 20px;
             border-bottom: 2px solid #e0e0e0;
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
-        /* Floor Plan Grid */
-        .floor-plan {
-            padding: 20px;
-        }
-
-        .tables-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .table-card {
-            background: #fff;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .table-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .table-card.available {
-            border-color: var(--pos-success);
-            background: #f0fff4;
-        }
-
-        .table-card.occupied {
-            border-color: var(--pos-danger);
-            background: #fff5f5;
-        }
-
-        .table-card.reserved {
-            border-color: var(--pos-warning);
-            background: #fffbf0;
-        }
-
-        .table-number {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .table-status-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-
-        .table-info {
-            margin-top: 10px;
-            font-size: 12px;
-            color: #666;
-        }
-
-        /* Section Header */
-        .section-header {
-            background: #fff;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        /* Modals */
-        .modal-xl {
-            max-width: 95%;
-        }
-
-        /* Order Modal */
-        .order-content {
-            display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: 20px;
-            height: 70vh;
-        }
-
-        @media (max-width: 991px) {
-            .order-content {
-                grid-template-columns: 1fr;
-                height: auto;
-            }
-        }
-
-        .menu-section {
+        /* Main Layout */
+        .pos-main {
             display: flex;
-            flex-direction: column;
-            height: 100%;
+            flex: 1;
             overflow: hidden;
         }
 
-        .menu-search {
+        .pos-menu {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--pos-bg);
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .pos-cart {
+            width: 400px;
+            background: var(--pos-card);
+            border-left: 2px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        @media (max-width: 1200px) {
+            .pos-cart {
+                width: 350px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .pos-main {
+                flex-direction: column;
+            }
+            .pos-cart {
+                width: 100%;
+                border-left: none;
+                border-top: 2px solid #e0e0e0;
+                max-height: 50vh;
+            }
+        }
+
+        /* Menu Search & Categories */
+        .menu-search-bar {
             margin-bottom: 15px;
         }
 
@@ -153,10 +98,11 @@
             border-color: var(--pos-primary);
         }
 
+        /* Menu Grid */
         .menu-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
             overflow-y: auto;
             flex: 1;
             padding: 5px;
@@ -164,7 +110,7 @@
 
         .menu-item-card {
             background: #fff;
-            border: 1px solid #e0e0e0;
+            border: 2px solid #e0e0e0;
             border-radius: 10px;
             padding: 12px;
             cursor: pointer;
@@ -175,11 +121,12 @@
         .menu-item-card:hover {
             border-color: var(--pos-primary);
             box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2);
+            transform: translateY(-2px);
         }
 
         .menu-item-image {
             width: 100%;
-            height: 80px;
+            height: 100px;
             object-fit: cover;
             border-radius: 8px;
             margin-bottom: 8px;
@@ -187,7 +134,7 @@
 
         .menu-item-placeholder {
             width: 100%;
-            height: 80px;
+            height: 100px;
             background: #f0f4f8;
             border-radius: 8px;
             display: flex;
@@ -196,20 +143,14 @@
             margin-bottom: 8px;
         }
 
-        .order-panel {
-            display: flex;
-            flex-direction: column;
-            border-left: 1px solid #e0e0e0;
-            padding-left: 20px;
-        }
-
-        .order-items-list {
+        /* Cart */
+        .cart-items {
             flex: 1;
             overflow-y: auto;
             margin: 15px 0;
         }
 
-        .order-item {
+        .cart-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -219,15 +160,9 @@
             margin-bottom: 8px;
         }
 
-        .order-item.sent-to-kitchen {
+        .cart-item.sent-to-kitchen {
             background: #e7f5ff;
             border-left: 3px solid var(--pos-info);
-        }
-
-        .order-summary {
-            border-top: 2px solid #e0e0e0;
-            padding-top: 15px;
-            margin-top: auto;
         }
 
         .qty-controls {
@@ -251,63 +186,21 @@
             padding: 4px;
         }
 
-        /* Split Bill Modal */
-        .split-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-        }
-
-        .split-column {
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 15px;
-            background: #f8f9fa;
-        }
-
-        .split-column h6 {
-            text-align: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        .unassigned-items {
-            border: 2px dashed #dee2e6;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            background: #fff;
-        }
-
-        .draggable-item {
-            padding: 10px;
-            background: #fff;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            cursor: move;
-        }
-
-        .draggable-item:hover {
-            border-color: var(--pos-primary);
-        }
-
-        /* Loading */
-        .spinner-border-sm {
-            width: 1rem;
-            height: 1rem;
+        .cart-summary {
+            border-top: 2px solid #e0e0e0;
+            padding-top: 15px;
+            margin-top: auto;
         }
     </style>
 
     {{-- Header --}}
     <div class="pos-header">
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
-            <div class="mb-2 mb-md-0">
-                <h4 class="mb-0">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="mb-0">
                     <i class="ti ti-tool-kitchen me-2"></i>
                     Restaurant POS
-                </h4>
+                </h5>
             </div>
             <div class="d-flex gap-2 align-items-center flex-wrap">
                 {{-- Business Selection --}}
@@ -385,296 +278,213 @@
             </div>
         </div>
     @else
-    {{-- Quick Actions Bar --}}
-    <div class="bg-white border-bottom px-3 py-2">
-        <div class="d-flex gap-2 align-items-center flex-wrap">
-            <button wire:click="openOrderWithoutTable('takeaway')" class="btn btn-sm btn-success">
-                <i class="ti ti-package me-1"></i> Takeaway Order
-            </button>
-            <button wire:click="openOrderWithoutTable('delivery')" class="btn btn-sm btn-info">
-                <i class="ti ti-truck-delivery me-1"></i> Delivery Order
-            </button>
-            @if(!empty($tables))
-            <button wire:click="$toggle('showTableSection')" class="btn btn-sm btn-outline-secondary ms-auto">
-                <i class="ti ti-{{ $showTableSection ? 'eye-off' : 'eye' }} me-1"></i>
-                {{ $showTableSection ? 'Hide' : 'Show' }} Tables
-            </button>
-            @endif
-        </div>
-    </div>
-
-    {{-- Floor Plan --}}
-    @if($showTableSection && !empty($tables))
-    <div class="floor-plan">
-        @php
-            $sections = collect($tables)->groupBy('section');
-        @endphp
-
-        @forelse($sections as $section => $sectionTables)
-            <div class="section-header">
-                <i class="ti ti-layout-grid me-2"></i>
-                {{ $section ?: 'Main Area' }}
+    {{-- Main POS Screen --}}
+    <div class="pos-main">
+        {{-- Menu Section --}}
+        <div class="pos-menu">
+            <div class="menu-search-bar">
+                <input type="text"
+                       wire:model.live.debounce.300ms="menuSearch"
+                       class="form-control"
+                       placeholder="Search menu items...">
             </div>
 
-            <div class="tables-grid">
-                @foreach($sectionTables as $table)
-                <div wire:click="selectTable('{{ $table['id'] }}')"
-                     class="table-card {{ $table['status'] }}">
-                    <span class="table-status-badge badge
-                        @if($table['status'] === 'available') bg-success
-                        @elseif($table['status'] === 'occupied') bg-danger
-                        @elseif($table['status'] === 'reserved') bg-warning
-                        @else bg-secondary @endif">
-                        {{ ucfirst($table['status']) }}
-                    </span>
-
-                    <i class="ti ti-armchair fs-1 mb-2"></i>
-                    <div class="table-number">Table {{ $table['table_number'] }}</div>
-                    <div class="table-info">
-                        <i class="ti ti-users"></i> {{ $table['capacity'] }} seats
-                        @if($table['has_order'])
-                            <div class="mt-2">
-                                <span class="badge bg-info">Order Active</span>
-                            </div>
-                        @endif
-                    </div>
-                </div>
+            <div class="menu-categories">
+                <button wire:click="$set('selectedCategory', '')"
+                        class="category-btn {{ !$selectedCategory ? 'active' : '' }}">
+                    All Items
+                </button>
+                @foreach($menuCategories as $catId => $catName)
+                <button wire:click="$set('selectedCategory', '{{ $catId }}')"
+                        class="category-btn {{ $selectedCategory === $catId ? 'active' : '' }}">
+                    {{ $catName }}
+                </button>
                 @endforeach
             </div>
-        @empty
-            <div class="text-center py-5">
-                <i class="ti ti-armchair fs-1 text-muted"></i>
-                <p class="text-muted mt-3">No tables available. Please add tables in settings.</p>
-            </div>
-        @endforelse
-    </div>
-    @elseif(!$showTableSection)
-        <div class="container py-5">
-            <div class="alert alert-info text-center">
-                <i class="ti ti-armchair fs-1 d-block mb-3"></i>
-                <p class="mb-0">Table view is hidden. Use quick action buttons above to create orders, or click "Show Tables" to view table floor plan.</p>
+
+            <div class="menu-grid">
+                @forelse($menuItems as $item)
+                <div wire:click="addMenuItem('{{ $item['id'] }}')" class="menu-item-card">
+                    @if($item['image'])
+                        <img src="{{ asset('storage/' . $item['image']) }}"
+                             alt="{{ $item['name'] }}"
+                             class="menu-item-image">
+                    @else
+                        <div class="menu-item-placeholder">
+                            <i class="ti ti-tool-kitchen fs-1 text-muted"></i>
+                        </div>
+                    @endif
+
+                    <div class="fw-medium small text-truncate">{{ $item['name'] }}</div>
+                    <div class="text-primary small fw-bold">TZS {{ number_format($item['price'], 0) }}</div>
+
+                    @if($item['is_vegetarian'])
+                        <span class="badge bg-success-subtle text-success mt-1" style="font-size: 9px;">
+                            <i class="ti ti-leaf"></i> Veg
+                        </span>
+                    @endif
+                    @if($item['is_vegan'])
+                        <span class="badge bg-info-subtle text-info mt-1" style="font-size: 9px;">
+                            <i class="ti ti-plant"></i> Vegan
+                        </span>
+                    @endif
+                </div>
+                @empty
+                <div class="text-center py-5 text-muted" style="grid-column: 1 / -1;">
+                    <i class="ti ti-chef-hat fs-1 d-block mb-2"></i>
+                    No menu items found
+                </div>
+                @endforelse
             </div>
         </div>
-    @endif
-    @endif
 
-    {{-- Order Modal --}}
-    @if($showOrderModal)
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        @if($selectedTable)
-                            <i class="ti ti-armchair me-2"></i>
-                            Table {{ $selectedTable['table_number'] }}
-                        @else
-                            <i class="ti ti-{{ $orderType === 'delivery' ? 'truck-delivery' : 'package' }} me-2"></i>
-                            {{ ucfirst($orderType) }} Order
-                        @endif
-                        @if($currentOrder)
-                            - Order #{{ substr($currentOrder['order_no'] ?? '', -5) }}
-                        @endif
-                    </h5>
-                    <button type="button" class="btn-close" wire:click="closeOrderModal"></button>
+        {{-- Cart Section --}}
+        <div class="pos-cart">
+            <h6 class="mb-3">Order Details</h6>
+
+            {{-- Order Type & Table Selection --}}
+            <div class="mb-3">
+                <label class="form-label small">Order Type</label>
+                <select wire:model.live="orderType" class="form-select form-select-sm">
+                    <option value="dine_in">Dine In</option>
+                    <option value="takeaway">Takeaway</option>
+                    <option value="delivery">Delivery</option>
+                </select>
+            </div>
+
+            @if($orderType === 'dine_in' && !empty($tables))
+            <div class="mb-3">
+                <label class="form-label small">Table</label>
+                <select wire:model.live="selectedTableId" class="form-select form-select-sm">
+                    <option value="">Select Table...</option>
+                    @foreach($tables as $table)
+                        <option value="{{ $table['id'] }}" {{ $table['status'] !== 'available' && !$selectedTableId ? 'disabled' : '' }}>
+                            Table {{ $table['table_number'] }}
+                            @if($table['status'] === 'occupied') (Occupied) @endif
+                            @if($table['status'] === 'reserved') (Reserved) @endif
+                            - {{ $table['capacity'] }} seats
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label small">Covers</label>
+                    <input type="number" wire:model="covers" class="form-control form-control-sm" min="1">
                 </div>
-                <div class="modal-body p-0">
-                    <div class="order-content p-3">
-                        {{-- Menu Section --}}
-                        <div class="menu-section">
-                            <div class="menu-search">
-                                <input type="text"
-                                       wire:model.live.debounce.300ms="menuSearch"
-                                       class="form-control"
-                                       placeholder="Search menu...">
-                            </div>
+                <div class="col-6">
+                    <label class="form-label small">{{ $orderType === 'dine_in' ? 'Waiter' : 'Customer' }}</label>
+                    <select wire:model="selectedStaff" class="form-select form-select-sm">
+                        <option value="">Select...</option>
+                        @if($orderType === 'dine_in')
+                            @foreach($availableStaffs as $id => $name)
+                                <option value="{{ $id }}">{{ $name }}</option>
+                            @endforeach
+                        @else
+                            @foreach($availableCustomers as $id => $name)
+                                <option value="{{ $id }}">{{ $name }}</option>
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
+            </div>
 
-                            <div class="menu-categories">
-                                <button wire:click="$set('selectedCategory', '')"
-                                        class="category-btn {{ !$selectedCategory ? 'active' : '' }}">
-                                    All Items
-                                </button>
-                                @foreach($menuCategories as $catId => $catName)
-                                <button wire:click="$set('selectedCategory', '{{ $catId }}')"
-                                        class="category-btn {{ $selectedCategory === $catId ? 'active' : '' }}">
-                                    {{ $catName }}
-                                </button>
-                                @endforeach
-                            </div>
-
-                            <div class="menu-grid">
-                                @forelse($menuItems as $item)
-                                <div wire:click="addMenuItem('{{ $item['id'] }}')" class="menu-item-card">
-                                    @if($item['image'])
-                                        <img src="{{ asset('storage/' . $item['image']) }}"
-                                             alt="{{ $item['name'] }}"
-                                             class="menu-item-image">
-                                    @else
-                                        <div class="menu-item-placeholder">
-                                            <i class="ti ti-tool-kitchen fs-1 text-muted"></i>
-                                        </div>
-                                    @endif
-
-                                    <div class="fw-medium small text-truncate">{{ $item['name'] }}</div>
-                                    <div class="text-primary small fw-bold">TZS {{ number_format($item['price'], 0) }}</div>
-
-                                    @if($item['is_vegetarian'])
-                                        <span class="badge bg-success-subtle text-success" style="font-size: 9px;">
-                                            <i class="ti ti-leaf"></i> Veg
-                                        </span>
-                                    @endif
-                                    @if($item['is_vegan'])
-                                        <span class="badge bg-info-subtle text-info" style="font-size: 9px;">
-                                            <i class="ti ti-plant"></i> Vegan
-                                        </span>
-                                    @endif
-                                </div>
-                                @empty
-                                <div class="text-center py-4 text-muted" style="grid-column: 1 / -1;">
-                                    No menu items found
-                                </div>
-                                @endforelse
-                            </div>
-                        </div>
-
-                        {{-- Order Panel --}}
-                        <div class="order-panel">
-                            <div>
-                                <h6 class="mb-3">Order Details</h6>
-
-                                <div class="row g-2 mb-3">
-                                    <div class="col-6">
-                                        <label class="form-label small">Type</label>
-                                        <select wire:model="orderType" class="form-select form-select-sm" {{ $selectedTable ? 'disabled' : '' }}>
-                                            <option value="dine_in">Dine In</option>
-                                            <option value="takeaway">Takeaway</option>
-                                            <option value="delivery">Delivery</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="form-label small">Covers</label>
-                                        <input type="number" wire:model="covers" class="form-control form-control-sm" min="1">
-                                    </div>
-                                </div>
-                                <div class="row g-2 mb-3">
-                                    @if($selectedTable)
-                                    <div class="col-12">
-                                        <label class="form-label small">Waiter</label>
-                                        <select wire:model="selectedStaff" class="form-select form-select-sm">
-                                            <option value="">Select...</option>
-                                            @foreach($availableStaffs as $id => $name)
-                                                <option value="{{ $id }}">{{ $name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    @else
-                                    <div class="col-12">
-                                        <label class="form-label small">Customer</label>
-                                        <select wire:model="selectedCustomer" class="form-select form-select-sm">
-                                            <option value="">Select...</option>
-                                            @foreach($availableCustomers as $id => $name)
-                                                <option value="{{ $id }}">{{ $name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    @endif
-                                </div>
-                            </div>
-
-                            <div class="order-items-list">
-                                @forelse($orderItems as $index => $item)
-                                <div class="order-item {{ $item['sent_to_kitchen'] ? 'sent-to-kitchen' : '' }}">
-                                    <div class="flex-grow-1">
-                                        <div class="fw-medium small">{{ $item['name'] }}</div>
-                                        <div class="text-muted small">TZS {{ number_format($item['unit_price'], 0) }}</div>
-                                        @if($item['sent_to_kitchen'])
-                                            <span class="badge bg-info-subtle text-info" style="font-size: 9px;">
-                                                <i class="ti ti-chef-hat"></i> In Kitchen
-                                            </span>
-                                        @endif
-                                    </div>
-
-                                    @if(!$item['sent_to_kitchen'])
-                                    <div class="qty-controls">
-                                        <button wire:click="updateQuantity({{ $index }}, {{ $item['quantity'] - 1 }})"
-                                                class="btn btn-sm btn-outline-secondary qty-btn">
-                                            <i class="ti ti-minus"></i>
-                                        </button>
-                                        <input type="number"
-                                               value="{{ $item['quantity'] }}"
-                                               wire:change="updateQuantity({{ $index }}, $event.target.value)"
-                                               class="form-control form-control-sm qty-input">
-                                        <button wire:click="updateQuantity({{ $index }}, {{ $item['quantity'] + 1 }})"
-                                                class="btn btn-sm btn-outline-secondary qty-btn">
-                                            <i class="ti ti-plus"></i>
-                                        </button>
-                                    </div>
-                                    @else
-                                    <div class="text-end">
-                                        <div class="fw-medium">{{ $item['quantity'] }}x</div>
-                                    </div>
-                                    @endif
-
-                                    <div class="text-end ms-3">
-                                        <div class="fw-bold">TZS {{ number_format($item['subtotal'], 0) }}</div>
-                                    </div>
-
-                                    @if($item['sent_to_kitchen'])
-                                        <button wire:click="openVoidModal('{{ $item['id'] }}')"
-                                                class="btn btn-sm btn-outline-danger ms-2"
-                                                title="Void Item">
-                                            <i class="ti ti-ban"></i>
-                                        </button>
-                                    @else
-                                        <button wire:click="removeItem({{ $index }})"
-                                                class="btn btn-sm text-danger ms-2">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    @endif
-                                </div>
-                                @empty
-                                <div class="text-center py-4 text-muted">
-                                    <i class="ti ti-shopping-cart-off fs-1 d-block mb-2"></i>
-                                    No items in order
-                                </div>
-                                @endforelse
-                            </div>
-
-                            <div class="order-summary">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Subtotal:</span>
-                                    <span class="fw-bold">TZS {{ number_format($this->total, 0) }}</span>
-                                </div>
-                                @if(count($unsentItems) > 0)
-                                <div class="d-flex justify-content-between mb-2 text-warning">
-                                    <span>Unsent Items:</span>
-                                    <span class="fw-bold">TZS {{ number_format($this->unsentTotal, 0) }}</span>
-                                </div>
-                                @endif
-                                <div class="d-flex justify-content-between pt-2 border-top">
-                                    <span class="fw-bold">Total:</span>
-                                    <span class="fw-bold text-primary fs-5">TZS {{ number_format($this->total, 0) }}</span>
-                                </div>
-
-                                <div class="d-flex gap-2 mt-3">
-                                    @if(count($unsentItems) > 0)
-                                    <button wire:click="sendToKitchen" class="btn btn-primary flex-fill">
-                                        <i class="ti ti-chef-hat me-1"></i> Send to Kitchen
-                                    </button>
-                                    @endif
-
-                                    @if($currentOrder && count($orderItems) > 0)
-                                    <button wire:click="openSplitBillModal" class="btn btn-info">
-                                        <i class="ti ti-cut"></i>
-                                    </button>
-                                    <button wire:click="openPaymentModal" class="btn btn-success">
-                                        <i class="ti ti-cash"></i>
-                                    </button>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
+            {{-- Cart Items --}}
+            <div class="cart-items">
+                @forelse($orderItems as $index => $item)
+                <div class="cart-item {{ $item['sent_to_kitchen'] ? 'sent-to-kitchen' : '' }}">
+                    <div class="flex-grow-1">
+                        <div class="fw-medium small">{{ $item['name'] }}</div>
+                        <div class="text-muted small">TZS {{ number_format($item['unit_price'], 0) }}</div>
+                        @if($item['sent_to_kitchen'])
+                            <span class="badge bg-info-subtle text-info" style="font-size: 9px;">
+                                <i class="ti ti-chef-hat"></i> In Kitchen
+                            </span>
+                        @endif
                     </div>
+
+                    @if(!$item['sent_to_kitchen'])
+                    <div class="qty-controls">
+                        <button wire:click="updateQuantity({{ $index }}, {{ $item['quantity'] - 1 }})"
+                                class="btn btn-sm btn-outline-secondary qty-btn">
+                            <i class="ti ti-minus"></i>
+                        </button>
+                        <input type="number"
+                               value="{{ $item['quantity'] }}"
+                               wire:change="updateQuantity({{ $index }}, $event.target.value)"
+                               class="form-control form-control-sm qty-input">
+                        <button wire:click="updateQuantity({{ $index }}, {{ $item['quantity'] + 1 }})"
+                                class="btn btn-sm btn-outline-secondary qty-btn">
+                            <i class="ti ti-plus"></i>
+                        </button>
+                    </div>
+                    @else
+                    <div class="text-end">
+                        <div class="fw-medium">{{ $item['quantity'] }}x</div>
+                    </div>
+                    @endif
+
+                    <div class="text-end ms-3">
+                        <div class="fw-bold">TZS {{ number_format($item['subtotal'], 0) }}</div>
+                    </div>
+
+                    @if($item['sent_to_kitchen'])
+                        <button wire:click="openVoidModal('{{ $item['id'] }}')"
+                                class="btn btn-sm btn-outline-danger ms-2"
+                                title="Void Item">
+                            <i class="ti ti-ban"></i>
+                        </button>
+                    @else
+                        <button wire:click="removeItem({{ $index }})"
+                                class="btn btn-sm text-danger ms-2">
+                            <i class="ti ti-x"></i>
+                        </button>
+                    @endif
+                </div>
+                @empty
+                <div class="text-center py-5 text-muted">
+                    <i class="ti ti-shopping-cart-off fs-1 d-block mb-2"></i>
+                    <small>No items in order</small>
+                </div>
+                @endforelse
+            </div>
+
+            {{-- Cart Summary --}}
+            <div class="cart-summary">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal:</span>
+                    <span class="fw-bold">TZS {{ number_format($this->total, 0) }}</span>
+                </div>
+                @if(count($unsentItems) > 0)
+                <div class="d-flex justify-content-between mb-2 text-warning">
+                    <span>Unsent Items:</span>
+                    <span class="fw-bold">TZS {{ number_format($this->unsentTotal, 0) }}</span>
+                </div>
+                @endif
+                <div class="d-flex justify-content-between pt-2 border-top">
+                    <span class="fw-bold">Total:</span>
+                    <span class="fw-bold text-primary fs-5">TZS {{ number_format($this->total, 0) }}</span>
+                </div>
+
+                <div class="d-grid gap-2 mt-3">
+                    @if(count($unsentItems) > 0)
+                    <button wire:click="sendToKitchen" class="btn btn-primary">
+                        <i class="ti ti-chef-hat me-1"></i> Send to Kitchen
+                    </button>
+                    @endif
+
+                    @if($currentOrder && count($orderItems) > 0)
+                    <div class="btn-group" role="group">
+                        <button wire:click="openSplitBillModal" class="btn btn-info">
+                            <i class="ti ti-cut me-1"></i> Split
+                        </button>
+                        <button wire:click="openPaymentModal" class="btn btn-success">
+                            <i class="ti ti-cash me-1"></i> Pay
+                        </button>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -739,15 +549,12 @@
                         </select>
                     </div>
 
-                    <div class="unassigned-items">
-                        <h6 class="mb-3">
-                            <i class="ti ti-list me-2"></i> All Items (Click to assign to diner)
-                        </h6>
-                        <div class="row g-2">
-                            @foreach($orderItems as $index => $item)
-                                @if($item['status'] !== 'voided')
-                                <div class="col-md-6">
-                                    <div class="draggable-item">
+                    <div class="row g-3">
+                        @foreach($orderItems as $index => $item)
+                            @if($item['status'] !== 'voided')
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>
                                                 <div class="fw-medium">{{ $item['name'] }}</div>
@@ -758,44 +565,43 @@
                                         <div class="mt-2">
                                             @foreach($splitItems as $splitIndex => $split)
                                             <button wire:click="assignItemToSplit({{ $index }}, {{ $splitIndex }})"
-                                                    class="btn btn-sm btn-outline-primary me-1">
+                                                    class="btn btn-sm btn-outline-primary me-1 mb-1">
                                                 Diner {{ $split['diner'] }}
                                             </button>
                                             @endforeach
                                         </div>
                                     </div>
                                 </div>
-                                @endif
-                            @endforeach
-                        </div>
+                            </div>
+                            @endif
+                        @endforeach
                     </div>
 
-                    <div class="split-container mt-4">
+                    <div class="row g-3 mt-3">
                         @foreach($splitItems as $splitIndex => $split)
-                        <div class="split-column">
-                            <h6>
-                                <i class="ti ti-user me-2"></i>
-                                Diner {{ $split['diner'] }}
-                            </h6>
-
-                            @forelse($split['items'] as $item)
-                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded">
-                                <div class="small">
-                                    {{ $item['name'] }}
-                                    <span class="text-muted">({{ $item['quantity'] }}x)</span>
+                        <div class="col-md-{{ 12 / count($splitItems) }}">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <i class="ti ti-user me-2"></i> Diner {{ $split['diner'] }}
                                 </div>
-                                <div class="fw-bold small">TZS {{ number_format($item['subtotal'], 0) }}</div>
-                            </div>
-                            @empty
-                            <div class="text-center text-muted small py-3">
-                                No items assigned
-                            </div>
-                            @endforelse
+                                <div class="card-body">
+                                    @forelse($split['items'] as $item)
+                                    <div class="d-flex justify-content-between mb-2 small">
+                                        <span>{{ $item['name'] }} ({{ $item['quantity'] }}x)</span>
+                                        <span>TZS {{ number_format($item['subtotal'], 0) }}</span>
+                                    </div>
+                                    @empty
+                                    <div class="text-center text-muted small py-3">
+                                        No items assigned
+                                    </div>
+                                    @endforelse
 
-                            <div class="border-top pt-2 mt-2">
-                                <div class="d-flex justify-content-between">
-                                    <span class="fw-bold">Total:</span>
-                                    <span class="fw-bold text-primary">TZS {{ number_format($split['total'], 0) }}</span>
+                                    <div class="border-top pt-2 mt-2">
+                                        <div class="d-flex justify-content-between fw-bold">
+                                            <span>Total:</span>
+                                            <span class="text-primary">TZS {{ number_format($split['total'], 0) }}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -816,7 +622,7 @@
     {{-- Payment Modal --}}
     @if($showPaymentModal)
     <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); z-index: 1060;">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
@@ -826,41 +632,87 @@
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-info">
-                        <div class="d-flex justify-content-between">
+                        <div class="d-flex justify-content-between mb-2">
                             <span>Order Total:</span>
-                            <span class="fw-bold">TZS {{ number_format($this->total, 0) }}</span>
+                            <span class="fw-bold fs-5">TZS {{ number_format($this->total, 0) }}</span>
+                        </div>
+                        @if($remainingAmount > 0)
+                        <div class="d-flex justify-content-between text-warning">
+                            <span>Remaining:</span>
+                            <span class="fw-bold">TZS {{ number_format($remainingAmount, 0) }}</span>
+                        </div>
+                        @endif
+                    </div>
+
+                    {{-- Quick Payment Buttons --}}
+                    <div class="d-flex gap-2 mb-3">
+                        <button wire:click="quickPayCash" class="btn btn-success">
+                            <i class="ti ti-cash me-1"></i> Cash
+                        </button>
+                        <button wire:click="addPaymentRow" class="btn btn-outline-primary">
+                            <i class="ti ti-plus me-1"></i> Split Payment
+                        </button>
+                    </div>
+
+                    {{-- Payment Rows --}}
+                    @foreach($paymentRows as $index => $row)
+                    <div class="card mb-2">
+                        <div class="card-body py-2">
+                            <div class="row g-2 align-items-center">
+                                <div class="col-md-5">
+                                    <label class="form-label small mb-1">Amount</label>
+                                    <input type="number"
+                                           wire:model.live="paymentRows.{{ $index }}.amount"
+                                           class="form-control form-control-sm"
+                                           step="0.01"
+                                           min="0">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small mb-1">Payment Method</label>
+                                    <select wire:model="paymentRows.{{ $index }}.method_id" class="form-select form-select-sm">
+                                        <option value="">Select...</option>
+                                        @foreach($availablePaymentMethods as $id => $name)
+                                            <option value="{{ $id }}">{{ $name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-1">
+                                    @if(count($paymentRows) > 1)
+                                    <button wire:click="removePaymentRow({{ $index }})"
+                                            class="btn btn-sm btn-outline-danger mt-3"
+                                            title="Remove">
+                                        <i class="ti ti-x"></i>
+                                    </button>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
                     </div>
+                    @endforeach
 
-                    <div class="mb-3">
-                        <label class="form-label">Amount</label>
-                        <input type="number"
-                               wire:model="paymentAmount"
-                               class="form-control form-control-lg"
-                               step="0.01">
-                    </div>
+                    @php
+                        $totalPayment = collect($paymentRows)->sum('amount');
+                        $change = max(0, $totalPayment - $this->total);
+                    @endphp
 
-                    <div class="mb-3">
-                        <label class="form-label">Payment Method</label>
-                        <select wire:model="paymentMethodId" class="form-select">
-                            @foreach($availablePaymentMethods as $id => $name)
-                                <option value="{{ $id }}">{{ $name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    @if($paymentAmount > $this->total)
+                    @if($change > 0)
                     <div class="alert alert-success">
                         <div class="d-flex justify-content-between">
                             <span>Change:</span>
-                            <span class="fw-bold">TZS {{ number_format($paymentAmount - $this->total, 0) }}</span>
+                            <span class="fw-bold">TZS {{ number_format($change, 0) }}</span>
                         </div>
+                    </div>
+                    @endif
+
+                    @if($totalPayment < $this->total)
+                    <div class="alert alert-warning">
+                        <small><i class="ti ti-alert-triangle me-1"></i> Payment amount is less than order total</small>
                     </div>
                     @endif
                 </div>
                 <div class="modal-footer">
                     <button wire:click="closePaymentModal" class="btn btn-secondary">Cancel</button>
-                    <button wire:click="processPayment" class="btn btn-success btn-lg">
+                    <button wire:click="processPayment" class="btn btn-success btn-lg" {{ $totalPayment < $this->total ? 'disabled' : '' }}>
                         <i class="ti ti-check me-1"></i> Complete Payment
                     </button>
                 </div>
