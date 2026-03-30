@@ -120,6 +120,11 @@
         </a>
       </li>
       <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.sales*") ? "active" : "" }}' href="{{ route('owner.sales') }}">
+          <i class="ti ti-cash me-2"></i> Sales
+        </a>
+      </li>
+      <li class="nav-item">
         <a class='dropdown-item {{ request()->routeIs("owner.reports.stock") ? "active" : "" }}' href="{{ route('owner.reports.stock') }}">
           <i class="ti ti-ruler-2 me-2"></i> Stock Report
         </a>
@@ -466,41 +471,45 @@
       </ul>
     </li>
   <!-- People -->
+
   <li class="nav-item">
     <div class="nav-heading">People</div>
     <hr class="mx-5 nav-line mb-1" />
   </li>
-  <li class="nav-item">
-    <a class='nav-link {{ request()->routeIs("owner.staffs*") ? "active" : "" }}' href="{{ route('owner.staffs') }}">
-      <span class="nav-icon"><i class="ti ti-users-group fs-5"></i></span>
-      <span class="text">Staff</span>
+  
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.people*') || request()->routeIs('owner.people*') ? 'active' : '' }}"
+      href="#!"
+      role="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="{{ request()->routeIs('owner.people*') || request()->routeIs('owner.people*') ? 'true' : 'false' }}">
+      <span class="nav-icon"><i class="ti ti-users fs-5"></i></span>
+      <span class="text">People</span>
     </a>
+    <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.people*') || request()->routeIs('owner.people*') ? 'show' : '' }}">
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.people.Staffs") ? "active" : "" }}' href="{{ route('owner.people.Staffs') }}">
+          <i class="ti ti-package me-2"></i> Staffs/ User Management
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.people.customers") ? "active" : "" }}' href="{{ route('owner.people.customers') }}">
+          <i class="ti ti-ruler-2 me-2"></i>Customers
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.people.suppliers*") ? "active" : "" }}' href="{{ route('owner.people.suppliers') }}">
+          <i class="ti ti-truck me-2"></i>Suppliers
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.people.user-roles*") ? "active" : "" }}' href="{{ route('owner.people.user-roles') }}">
+          <i class="ti ti-user me-2"></i>Add User Roles
+        </a>
+      </li>
+    </ul>
   </li>
-  <li class="nav-item">
-    <a class='nav-link {{ request()->routeIs("owner.customers*") ? "active" : "" }}' href="{{ route('owner.customers') }}">
-      <span class="nav-icon"><i class="ti ti-user-check fs-5"></i></span>
-      <span class="text">Customers</span>
-    </a>
-  </li>
-
-  <!-- Transactions -->
-  <li class="nav-item">
-    <div class="nav-heading">Transactions</div>
-    <hr class="mx-5 nav-line mb-1" />
-  </li>
-  <li class="nav-item">
-    <a class='nav-link {{ request()->routeIs("owner.sales*") ? "active" : "" }}' href="{{ route('owner.sales') }}">
-      <span class="nav-icon"><i class="ti ti-currency-dollar fs-5"></i></span>
-      <span class="text">Sales</span>
-    </a>
-  </li>
-  <li class="nav-item">
-    <a class='nav-link {{ request()->routeIs("owner.purchases*") ? "active" : "" }}' href="{{ route('owner.purchases') }}">
-      <span class="nav-icon"><i class="ti ti-shopping-cart fs-5"></i></span>
-      <span class="text">Purchases</span>
-    </a>
-  </li>
-
+  
   <!-- Inventory -->
   <li class="nav-item">
     <div class="nav-heading">Inventory</div>
@@ -528,17 +537,12 @@
       </li>
       <li class="nav-item">
         <a class='dropdown-item {{ request()->routeIs("owner.inventory.stocktransfers") ? "active" : "" }}' href="{{ route('owner.inventory.stocktransfers') }}">
-          <i class="ti ti-arrows-transfer me-2"></i> Stock Transfers
+          <i class="ti ti-arrows-exchange me-2"></i> Stock Transfers
         </a>
       </li>
     </ul>
   </li>
-  <li class="nav-item">
-    <a class='nav-link {{ request()->routeIs("owner.suppliers*") ? "active" : "" }}' href="{{ route('owner.suppliers') }}">
-      <span class="nav-icon"><i class="ti ti-truck fs-5"></i></span>
-      <span class="text">Suppliers</span>
-    </a>
-  </li>
+  
   <!-- Configuration -->
   <li class="nav-item">
     <div class="nav-heading">Configuration</div>

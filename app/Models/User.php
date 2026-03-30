@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -26,6 +27,7 @@ class User extends Authenticatable
         'email',
         'phone',
         'role',
+        'role_id',
         'status',
         'avatar',
         'password',
@@ -124,6 +126,32 @@ class User extends Authenticatable
     public function businessRoles(): HasMany
     {
         return $this->hasMany(UserBusinessRole::class);
+    }
+
+    /**
+     * Get the dynamic role assigned to this user
+     */
+    public function assignedRole(): BelongsTo
+    {
+        return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    /**
+     * Check if user has a specific permission
+     */
+    public function hasPermission(string $permissionName): bool
+    {
+        // If user has a dynamic role, check its permissions
+        if ($this->role_id && $this->assignedRole) {
+            return $this->assignedRole->hasPermission($permissionName);
+        }
+
+        // For system roles (admin, owner), grant all permissions
+        if (in_array($this->role, ['admin', 'owner'])) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

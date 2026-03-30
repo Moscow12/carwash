@@ -17,7 +17,7 @@ class BarOutletSeeder extends Seeder
      */
     public function run(): void
     {
-        $businesses = Business::whereIn('type', ['hotel', 'restaurant', 'bar'])->get();
+        $businesses = Business::whereIn('type', ['hotel', 'restaurant', 'bar', 'both'])->get();
 
         if ($businesses->isEmpty()) {
             $this->command->warn('No hotel/restaurant/bar businesses found. Please create businesses first.');

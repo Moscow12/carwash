@@ -131,9 +131,20 @@
                                         </div>
                                         <div>
                                             <span class="fw-medium">{{ $staff->name }}</span>
+                                            @if($staff->user)
+                                                <span class="badge bg-info bg-opacity-10 text-info ms-2" title="Has system login access">
+                                                    <i class="ti ti-key fs-6"></i>
+                                                </span>
+                                            @endif
                                             @if($staff->business)
                                                 <br>
                                                 <small class="text-muted">{{ $staff->business->name }}</small>
+                                            @endif
+                                            @if($staff->user && $staff->user->assignedRole)
+                                                <br>
+                                                <small class="text-primary">
+                                                    <i class="ti ti-shield-check"></i> {{ $staff->user->assignedRole->display_name }}
+                                                </small>
                                             @endif
                                         </div>
                                     </div>
@@ -299,6 +310,55 @@
                                     wrapper="false"
                                 />
                             </div>
+
+                            <!-- System Login Access -->
+                            <div class="col-12">
+                                <hr class="my-2">
+                                <h6 class="mb-3">System Login Access</h6>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" wire:model.live="canLogin" id="canLoginSwitch">
+                                    <label class="form-check-label" for="canLoginSwitch">
+                                        <strong>Allow this staff member to login to the system</strong>
+                                        <br>
+                                        <small class="text-muted">Enable this to create a user account for system access</small>
+                                    </label>
+                                </div>
+                            </div>
+
+                            @if($canLogin)
+                                <div class="col-12">
+                                    <div class="alert alert-info mb-3">
+                                        <i class="ti ti-info-circle me-2"></i>
+                                        <small>This staff member will be able to login using their <strong>email address ({{ $email ?: 'enter email above' }})</strong> and the password you set below.</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">User Role <span class="text-danger">*</span></label>
+                                    <x-forms.select2
+                                        name="selectedRoleId"
+                                        :options="collect($availableRoles)"
+                                        wire:model="selectedRoleId"
+                                        placeholder="Select Role"
+                                        wrapper="false"
+                                    />
+                                    @error('selectedRoleId')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                    <small class="text-muted">Assign permissions by selecting a role</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Password <span class="text-danger">{{ $editingId && $this->canLogin ? '' : '*' }}</span></label>
+                                    <input type="password" wire:model="password" class="form-control @error('password') is-invalid @enderror" placeholder="{{ $editingId ? 'Leave blank to keep current' : 'Min 8 characters' }}">
+                                    @error('password')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    @if($editingId)
+                                        <small class="text-muted d-block">Leave blank to keep the current password</small>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     </div>
                     <div class="modal-footer">

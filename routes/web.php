@@ -91,6 +91,7 @@ use App\Livewire\Owner\Reports\Staffcommisions;
 use App\Livewire\Owner\Sales\Posscreen;
 use App\Livewire\Owner\Settings\Hotelsettings;
 use App\Livewire\Owner\Settings\Setup as OwnerSettings;
+use App\Livewire\Owner\Staffs\Userroles;
 
 Route::get('/admin/login', AdminLogin::class)->name('admin.login');
 Route::post('/admin/login', [LoginController::class, 'login'])->name('admin.login.post');
@@ -136,12 +137,16 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
     Route::get('/businesses', OwnerBusinesses::class)->name('owner.businesses');
     Route::get('/items', OwnerItems::class)->name('owner.items');
     Route::get('/items/edit/{itemId}', Edititems::class)->name('owner.items.edit');
-    Route::get('/staffs', OwnerStaffs::class)->name('owner.staffs');
-    Route::get('/customers', OwnerCustomers::class)->name('owner.customers');
+    Route::get('/staffs', OwnerStaffs::class)->name('owner.people.Staffs');
+    Route::get('/user-roles', Userroles::class)->name('owner.people.user-roles');
+    Route::get('/roles', \App\Livewire\Owner\Staffs\RolesIndex::class)->name('owner.people.roles');
+    Route::get('/roles/create', \App\Livewire\Owner\Staffs\CreateRole::class)->name('owner.people.roles.create');
+    Route::get('/roles/edit/{roleId}', \App\Livewire\Owner\Staffs\EditRole::class)->name('owner.people.roles.edit');
+    Route::get('/customers', OwnerCustomers::class)->name('owner.people.customers');
     Route::get('/sales', OwnerSales::class)->name('owner.sales');
     Route::get('/purchases', OwnerPurchases::class)->name('owner.purchases');
     Route::get('/stocktaking', OwnerStocktaking::class)->name('owner.stocktaking');
-    Route::get('/suppliers', OwnerSuppliers::class)->name('owner.suppliers');
+    Route::get('/suppliers', OwnerSuppliers::class)->name('owner.people.suppliers');
     Route::get('/units', Units::class)->name('owner.units');
     Route::get('/my-business', Mybusiness::class)->name('owner.mybusiness');
     Route::get('/categories', Categories::class)->name('owner.categories');
