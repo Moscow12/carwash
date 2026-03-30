@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class PosOrderItem extends Model
 {
@@ -24,9 +23,6 @@ class PosOrderItem extends Model
         'subtotal',
         'status',
         'kitchen_notes',
-        'is_voided',
-        'voided_at',
-        'voided_by',
         'voided_reason',
     ];
 
@@ -38,8 +34,6 @@ class PosOrderItem extends Model
         'modifiers' => 'array',
         'subtotal' => 'decimal:2',
         'quantity' => 'decimal:3',
-        'is_voided' => 'boolean',
-        'voided_at' => 'datetime',
     ];
 
     // Relationships
@@ -56,15 +50,5 @@ class PosOrderItem extends Model
     public function kitchenTickets(): HasMany
     {
         return $this->hasMany(KitchenTicket::class, 'order_item_id');
-    }
-
-    public function voidedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'voided_by');
-    }
-
-    public function voidLogs(): MorphMany
-    {
-        return $this->morphMany(VoidLog::class, 'voidable');
     }
 }

@@ -196,17 +196,35 @@ class Dashboard extends Component
 
     private function loadTodayStats()
     {
-        $query = $this->getOrderQuery();
+        $totalOrders = (int) $this->getOrderQuery()->count();
 
-        $totalOrders = $query->count();
-        $totalRevenue = $query->where('status', 'paid')->sum('total');
-        $averageOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
-        $totalCovers = $query->sum('covers');
+        // Calculate revenue from order items (matches top selling items logic)
+        $revenueQuery = DB::table('pos_order_items')
+            ->join('pos_orders', 'pos_order_items.order_id', '=', 'pos_orders.id')
+            ->where('pos_orders.business_id', $this->selectedBusiness)
+            ->whereBetween('pos_orders.created_at', [
+                Carbon::parse($this->startDate)->startOfDay(),
+                Carbon::parse($this->endDate)->endOfDay()
+            ])
+            ->where('pos_order_items.status', '!=', 'voided');
+
+        if ($this->selectedOutlet && $this->selectedOutlet !== 'all') {
+            $revenueQuery->where('pos_orders.outlet_id', $this->selectedOutlet);
+        }
+
+        $totalRevenue = (float) $revenueQuery->sum(DB::raw('COALESCE(pos_order_items.subtotal, pos_order_items.unit_price * pos_order_items.quantity)'));
+
+        $ordersWithRevenue = (int) $this->getOrderQuery()->whereHas('items', function($q) {
+            $q->where('status', '!=', 'voided');
+        })->count();
+
+        $averageOrderValue = $ordersWithRevenue > 0 ? $totalRevenue / $ordersWithRevenue : 0;
+        $totalCovers = (int) $this->getOrderQuery()->sum('covers');
 
         $this->todayStats = [
             'total_orders' => $totalOrders,
             'total_revenue' => $totalRevenue,
-            'average_order_value' => $averageOrderValue,
+            'average_order_value' => (float) $averageOrderValue,
             'total_covers' => $totalCovers,
         ];
     }
@@ -214,9 +232,8 @@ class Dashboard extends Component
     private function loadRevenueData()
     {
         // Get daily revenue for the selected period
-        $query = $this->getOrderQuery();
-
-        $revenueByDate = $query->where('status', 'paid')
+        $revenueByDate = $this->getOrderQuery()
+            ->where('status', 'paid')
             ->select(
                 DB::raw('DATE(created_at) as date'),
                 DB::raw('SUM(total) as revenue'),
@@ -229,16 +246,14 @@ class Dashboard extends Component
         $this->revenueData = $revenueByDate->map(function($item) {
             return [
                 'date' => Carbon::parse($item->date)->format('M d'),
-                'revenue' => $item->revenue,
-                'orders' => $item->orders,
+                'revenue' => (float) $item->revenue,
+                'orders' => (int) $item->orders,
             ];
         })->toArray();
     }
 
     private function loadTopSellingItems()
     {
-        $query = $this->getOrderQuery();
-
         $topItems = DB::table('pos_order_items')
             ->join('pos_orders', 'pos_order_items.order_id', '=', 'pos_orders.id')
             ->join('menu_items', 'pos_order_items.menu_item_id', '=', 'menu_items.id')
@@ -247,7 +262,7 @@ class Dashboard extends Component
                 Carbon::parse($this->startDate)->startOfDay(),
                 Carbon::parse($this->endDate)->endOfDay()
             ])
-            ->whereNotIn('pos_order_items.status', ['voided']);
+            ->where('pos_order_items.status', '!=', 'voided');
 
         if ($this->selectedOutlet && $this->selectedOutlet !== 'all') {
             $topItems->where('pos_orders.outlet_id', $this->selectedOutlet);
@@ -256,7 +271,7 @@ class Dashboard extends Component
         $topItems = $topItems->select(
                 'menu_items.name',
                 DB::raw('SUM(pos_order_items.quantity) as total_quantity'),
-                DB::raw('SUM(pos_order_items.total) as total_revenue')
+                DB::raw('SUM(COALESCE(pos_order_items.subtotal, pos_order_items.unit_price * pos_order_items.quantity)) as total_revenue')
             )
             ->groupBy('menu_items.id', 'menu_items.name')
             ->orderBy('total_quantity', 'desc')
@@ -265,9 +280,9 @@ class Dashboard extends Component
 
         $this->topSellingItems = $topItems->map(function($item) {
             return [
-                'name' => $item->name,
-                'quantity' => $item->total_quantity,
-                'revenue' => $item->total_revenue,
+                'name' => (string) $item->name,
+                'quantity' => (float) ($item->total_quantity ?? 0),
+                'revenue' => (float) ($item->total_revenue ?? 0),
             ];
         })->toArray();
     }
@@ -301,34 +316,33 @@ class Dashboard extends Component
             });
 
         $this->kitchenStats = [
-            'total_tickets' => $totalTickets,
-            'queued' => $queuedTickets,
-            'preparing' => $preparingTickets,
-            'ready' => $readyTickets,
-            'avg_turnaround' => round($avgTurnaround ?? 0),
+            'total_tickets' => (int) $totalTickets,
+            'queued' => (int) $queuedTickets,
+            'preparing' => (int) $preparingTickets,
+            'ready' => (int) $readyTickets,
+            'avg_turnaround' => (int) round($avgTurnaround ?? 0),
         ];
     }
 
     private function loadRecentOrders()
     {
-        $query = $this->getOrderQuery();
-
-        $orders = $query->with(['table', 'servedBy'])
+        $orders = $this->getOrderQuery()
+            ->with(['table', 'servedBy'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
 
         $this->recentOrders = $orders->map(function($order) {
             return [
-                'id' => $order->id,
-                'order_no' => $order->order_no,
-                'table' => $order->table?->table_number ?? 'N/A',
-                'order_type' => $order->order_type,
-                'covers' => $order->covers,
-                'total' => $order->total,
-                'status' => $order->status,
-                'waiter' => $order->servedBy?->name ?? 'N/A',
-                'created_at' => $order->created_at->diffForHumans(),
+                'id' => (string) $order->id,
+                'order_no' => (string) $order->order_no,
+                'table' => (string) ($order->table?->table_number ?? 'N/A'),
+                'order_type' => (string) $order->order_type,
+                'covers' => (int) $order->covers,
+                'total' => (float) $order->total,
+                'status' => (string) $order->status,
+                'waiter' => (string) ($order->servedBy?->name ?? 'N/A'),
+                'created_at' => (string) $order->created_at->diffForHumans(),
             ];
         })->toArray();
     }
