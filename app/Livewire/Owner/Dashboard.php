@@ -25,7 +25,7 @@ class Dashboard extends Component
     public function mount()
     {
         $owner = Auth::user();
-        $businessIds = $owner->ownedBusinesses()->pluck('id');
+        $businessIds = $owner->assignedBusinesses()->pluck('id');
 
         $this->totalBusinesses = $businessIds->count();
         $this->totalSales = sales::whereIn('business_id', $businessIds)->count();

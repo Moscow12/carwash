@@ -79,7 +79,7 @@ class Edititems extends Component
     public function mount($itemId)
     {
         $this->itemId = $itemId;
-        $this->ownerBusinesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
+        $this->ownerBusinesses = Auth::user()->assignedBusinesses()->orderBy('name')->get();
         $this->availableUnits = unit::where('status', 'active')->orderBy('name')->get();
 
         $this->loadItem();
@@ -95,7 +95,7 @@ class Edititems extends Component
         }
 
         // Verify ownership
-        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
         if (!$businessIds->contains($this->item->business_id)) {
             session()->flash('error', 'Unauthorized access.');
             return redirect()->route('owner.list-items');
@@ -184,7 +184,7 @@ class Edititems extends Component
         }
 
         // Verify business ownership
-        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
         if (!$businessIds->contains($this->business_id)) {
             session()->flash('error', 'Invalid business selected.');
             return;

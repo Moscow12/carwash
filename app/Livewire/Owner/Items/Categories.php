@@ -40,7 +40,7 @@ class Categories extends Component
 
     public function mount()
     {
-        $this->ownerBusinesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
+        $this->ownerBusinesses = Auth::user()->assignedBusinesses()->orderBy('name')->get();
         $this->hasBusinesses = $this->ownerBusinesses->count() > 0;
 
         if ($this->ownerBusinesses->count() === 1) {
@@ -91,7 +91,7 @@ class Categories extends Component
         $category = category::findOrFail($this->categoryId);
 
         // Verify ownership
-        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
         if (!$businessIds->contains($category->business_id)) {
             session()->flash('error', 'Unauthorized action.');
             $this->showDeleteModal = false;
@@ -109,7 +109,7 @@ class Categories extends Component
         $this->validate();
 
         // Verify business ownership
-        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
         if (!$businessIds->contains($this->business_id)) {
             session()->flash('error', 'Invalid business selected.');
             return;
@@ -163,7 +163,7 @@ class Categories extends Component
 
     public function render()
     {
-        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
 
         $categories = category::whereIn('business_id', $businessIds)
             ->when($this->search, function ($query) {

@@ -51,7 +51,7 @@ class Index extends Component
 
     public function mount()
     {
-        $firstBusiness = Auth::user()->ownedBusinesses()->first();
+        $firstBusiness = Auth::user()->assignedBusinesses()->first();
         if ($firstBusiness) {
             $this->selectedBusiness = $firstBusiness->id;
             $this->business_id = $firstBusiness->id;
@@ -64,7 +64,7 @@ class Index extends Component
     public function loadAvailableRoles()
     {
         $user = Auth::user();
-        $businessIds = $user->ownedBusinesses()->pluck('id')->toArray();
+        $businessIds = $user->assignedBusinesses()->pluck('id')->toArray();
 
         $this->availableRoles = Role::where('is_active', true)
             ->where(function($q) use ($businessIds) {
@@ -331,7 +331,7 @@ class Index extends Component
     {
         $this->loadStats();
 
-        $businesses = Auth::user()->ownedBusinesses()->orderBy('name')->pluck('name', 'id');
+        $businesses = Auth::user()->assignedBusinesses()->orderBy('name')->pluck('name', 'id');
 
         $staffs = staffs::query()
             ->when($this->selectedBusiness, fn($q) => $q->where('business_id', $this->selectedBusiness))

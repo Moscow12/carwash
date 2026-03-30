@@ -98,12 +98,12 @@ class Hotelsettings extends Component
 
     public function mount()
     {
-        $this->ownerBusinesses = Auth::user()->ownedBusinesses()
+        $this->ownerBusinesses = Auth::user()->assignedBusinesses()
             ->where('type', 'hotel')
             ->orderBy('name')
             ->pluck('name', 'id');
 
-        $firstBusiness = Auth::user()->ownedBusinesses()->where('type', 'hotel')->first();
+        $firstBusiness = Auth::user()->assignedBusinesses()->where('type', 'hotel')->first();
         if ($firstBusiness) {
             $this->selectedBusiness = $firstBusiness->id;
             $this->loadSettings();

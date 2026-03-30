@@ -36,7 +36,7 @@ class Index extends Component
 
     public function mount()
     {
-        $firstBusiness = Auth::user()->ownedBusinesses()->first();
+        $firstBusiness = Auth::user()->assignedBusinesses()->first();
         if ($firstBusiness) {
             $this->selectedBusiness = $firstBusiness->id;
             $this->business_id = $firstBusiness->id;
@@ -184,7 +184,7 @@ class Index extends Component
     {
         $this->loadStats();
 
-        $businesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
+        $businesses = Auth::user()->assignedBusinesses()->orderBy('name')->get();
 
         $customers = customers::query()
             ->when($this->selectedBusiness, fn($q) => $q->where('business_id', $this->selectedBusiness))

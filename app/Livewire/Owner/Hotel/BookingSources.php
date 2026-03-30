@@ -35,7 +35,7 @@ class BookingSources extends Component
 
     public function mount()
     {
-        $hotel = Auth::user()->ownedBusinesses()
+        $hotel = Auth::user()->assignedBusinesses()
             ->where('type', 'hotel')
             ->where('status', 'active')
             ->first();
@@ -119,7 +119,7 @@ class BookingSources extends Component
 
     public function render()
     {
-        $hotels = Auth::user()->ownedBusinesses()
+        $hotels = Auth::user()->assignedBusinesses()
             ->where('type', 'hotel')
             ->where('status', 'active')
             ->orderBy('name')

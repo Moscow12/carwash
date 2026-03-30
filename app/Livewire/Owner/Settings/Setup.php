@@ -181,7 +181,7 @@ class Setup extends Component
 
     public function mount()
     {
-        $this->ownerBusinesses = Auth::user()->ownedBusinesses()
+        $this->ownerBusinesses = Auth::user()->assignedBusinesses()
             ->orderBy('name')
             ->pluck('name', 'id')
             ->toArray();

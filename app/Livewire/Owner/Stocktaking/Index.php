@@ -63,7 +63,7 @@ class Index extends Component
 
     public function mount()
     {
-        $this->ownerBusinesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
+        $this->ownerBusinesses = Auth::user()->assignedBusinesses()->orderBy('name')->get();
 
         $firstBusiness = $this->ownerBusinesses->first();
         if ($firstBusiness) {
@@ -494,7 +494,7 @@ class Index extends Component
 
     public function render()
     {
-        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
 
         $stocktakings = stocktaking::whereIn('business_id', $businessIds)
             ->when($this->selectedBusiness, fn($q) => $q->where('business_id', $this->selectedBusiness))

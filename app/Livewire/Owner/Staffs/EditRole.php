@@ -39,7 +39,7 @@ class EditRole extends Component
         $this->business_id = $this->role->business_id;
         $this->selectedPermissions = $this->role->permissions->pluck('id')->toArray();
 
-        $this->ownerBusinesses = Auth::user()->ownedBusinesses()
+        $this->ownerBusinesses = Auth::user()->assignedBusinesses()
             ->orderBy('name')
             ->pluck('name', 'id')
             ->toArray();

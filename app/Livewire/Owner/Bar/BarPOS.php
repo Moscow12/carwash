@@ -90,24 +90,10 @@ class BarPOS extends Component
     {
         $user = Auth::user();
 
-        // Get owned businesses
-        $ownedBusinesses = $user->ownedBusinesses()
+        // Get accessible businesses (handles both owned and assigned)
+        $this->ownerBusinesses = $user->assignedBusinesses()
             ->orderBy('name')
-            ->get(['id', 'name']);
-
-        // Get assigned businesses via UserBusinessRole
-        $assignedBusinesses = DB::table('user_business_roles')
-            ->join('businesses', 'user_business_roles.business_id', '=', 'businesses.id')
-            ->where('user_business_roles.user_id', $user->id)
-            ->where('user_business_roles.is_active', true)
-            ->select('businesses.id', 'businesses.name')
-            ->distinct()
             ->get();
-
-        // Merge and deduplicate
-        $allBusinesses = $ownedBusinesses->merge($assignedBusinesses)->unique('id');
-
-        $this->ownerBusinesses = $allBusinesses;
 
         $firstBusiness = $this->ownerBusinesses->first();
         if ($firstBusiness) {
@@ -173,7 +159,7 @@ class BarPOS extends Component
             ->exists();
 
         // Check if user owns this business
-        $ownsBusiness = $user->ownedBusinesses()->where('id', $this->selectedBusiness)->exists();
+        $ownsBusiness = $user->assignedBusinesses()->where('id', $this->selectedBusiness)->exists();
 
         // Build query
         $query = PosOutlet::where('business_id', $this->selectedBusiness)

@@ -129,6 +129,30 @@ class User extends Authenticatable
     }
 
     /**
+     * Get businesses this user is assigned to (for staff)
+     */
+    public function assignedBusinesses()
+    {
+        // If user is owner, return owned businesses
+        if ($this->role === 'owner') {
+            return $this->ownedBusinesses();
+        }
+
+        // If user is staff, return businesses from user_business_roles
+        if ($this->role === 'staff') {
+            return Business::whereIn('id', function($query) {
+                $query->select('business_id')
+                    ->from('user_business_roles')
+                    ->where('user_id', $this->id)
+                    ->where('is_active', true);
+            });
+        }
+
+        // For admin or other roles, return all businesses
+        return Business::query();
+    }
+
+    /**
      * Get the dynamic role assigned to this user
      */
     public function assignedRole(): BelongsTo

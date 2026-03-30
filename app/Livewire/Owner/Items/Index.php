@@ -19,7 +19,7 @@ class Index extends Component
 
     public function mount()
     {
-        $firstBusiness = Auth::user()->ownedBusinesses()->first();
+        $firstBusiness = Auth::user()->assignedBusinesses()->first();
         if ($firstBusiness) {
             $this->selectedBusiness = $firstBusiness->id;
         }
@@ -32,7 +32,7 @@ class Index extends Component
 
     public function render()
     {
-        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
 
         $items = items::whereIn('business_id', $businessIds)
             ->when($this->selectedBusiness, function ($query) {

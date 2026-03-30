@@ -88,7 +88,7 @@ class Itemregister extends Component
 
     public function mount()
     {
-        $this->ownerBusinesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
+        $this->ownerBusinesses = Auth::user()->assignedBusinesses()->orderBy('name')->get();
         $this->availableUnits = unit::where('status', 'active')->orderBy('name')->get();
 
         if ($this->ownerBusinesses->count() === 1) {
@@ -172,7 +172,7 @@ class Itemregister extends Component
         $item = items::findOrFail($this->itemId);
 
         // Verify ownership
-        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
         if (!$businessIds->contains($item->business_id)) {
             session()->flash('error', 'Unauthorized action.');
             $this->showDeleteModal = false;
@@ -195,7 +195,7 @@ class Itemregister extends Component
         $item = items::findOrFail($id);
 
         // Verify ownership
-        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
         if (!$businessIds->contains($item->business_id)) {
             session()->flash('error', 'Unauthorized action.');
             return;
@@ -228,7 +228,7 @@ class Itemregister extends Component
         }
 
         // Verify business ownership
-        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
         if (!$businessIds->contains($this->business_id)) {
             session()->flash('error', 'Invalid business selected.');
             return;
@@ -331,7 +331,7 @@ class Itemregister extends Component
 
     public function render()
     {
-        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
 
         $items = items::whereIn('business_id', $businessIds)
             ->when($this->search, function ($query) {

@@ -39,7 +39,7 @@ class Uploaditems extends Component
 
     public function mount()
     {
-        $this->ownerBusinesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
+        $this->ownerBusinesses = Auth::user()->assignedBusinesses()->orderBy('name')->get();
         $this->availableUnits = unit::where('status', 'active')->orderBy('name')->get();
 
         if ($this->ownerBusinesses->count() === 1) {
@@ -123,7 +123,7 @@ class Uploaditems extends Component
         ]);
 
         // Verify business ownership
-        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
         if (!$businessIds->contains($this->business_id)) {
             session()->flash('error', 'Invalid business selected.');
             return;

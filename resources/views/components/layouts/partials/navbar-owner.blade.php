@@ -470,6 +470,35 @@
         </li>
       </ul>
     </li>
+
+    <!-- Inventory -->
+      <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.inventory*') ? 'active' : '' }}"
+      href="#!"
+      role="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="{{ request()->routeIs('owner.inventory*') ? 'true' : 'false' }}">
+      <span class="nav-icon"><i class="ti ti-package fs-5"></i></span>
+      <span class="text">Inventory Management</span>
+    </a>
+    <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.inventory*') ? 'show' : '' }}">
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.inventory.purchases") ? "active" : "" }}' href="{{ route('owner.inventory.purchases') }}">
+          <i class="ti ti-shopping-cart me-2"></i> Purchase Orders
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.stocktaking*") ? "active" : "" }}' href="{{ route('owner.stocktaking') }}">
+          <i class="ti ti-clipboard-list me-2"></i> Stocktaking
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.inventory.stocktransfers") ? "active" : "" }}' href="{{ route('owner.inventory.stocktransfers') }}">
+          <i class="ti ti-arrows-exchange me-2"></i> Stock Transfers
+        </a>
+      </li>
+    </ul>
+  </li>
   <!-- People -->
 
   <li class="nav-item">
@@ -509,39 +538,8 @@
       </li>
     </ul>
   </li>
-  
-  <!-- Inventory -->
-  <li class="nav-item">
-    <div class="nav-heading">Inventory</div>
-    <hr class="mx-5 nav-line mb-1" />
-  </li>
-  <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.inventory*') ? 'active' : '' }}"
-      href="#!"
-      role="button"
-      data-bs-toggle="dropdown"
-      aria-expanded="{{ request()->routeIs('owner.inventory*') ? 'true' : 'false' }}">
-      <span class="nav-icon"><i class="ti ti-package fs-5"></i></span>
-      <span class="text">Inventory Management</span>
-    </a>
-    <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.inventory*') ? 'show' : '' }}">
-      <li class="nav-item">
-        <a class='dropdown-item {{ request()->routeIs("owner.inventory.purchases") ? "active" : "" }}' href="{{ route('owner.inventory.purchases') }}">
-          <i class="ti ti-shopping-cart me-2"></i> Purchase Orders
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class='dropdown-item {{ request()->routeIs("owner.stocktaking*") ? "active" : "" }}' href="{{ route('owner.stocktaking') }}">
-          <i class="ti ti-clipboard-list me-2"></i> Stocktaking
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class='dropdown-item {{ request()->routeIs("owner.inventory.stocktransfers") ? "active" : "" }}' href="{{ route('owner.inventory.stocktransfers') }}">
-          <i class="ti ti-arrows-exchange me-2"></i> Stock Transfers
-        </a>
-      </li>
-    </ul>
-  </li>
+ 
+ 
   
   <!-- Configuration -->
   <li class="nav-item">

@@ -208,9 +208,9 @@ class Index extends Component
 
     public function render()
     {
-        $businessIds = Auth::user()->ownedBusinesses()->pluck('id');
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
 
-        $businesses = Auth::user()->ownedBusinesses()
+        $businesses = Auth::user()->assignedBusinesses()
             ->when($this->search, function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%');
             })

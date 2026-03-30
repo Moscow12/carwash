@@ -202,7 +202,7 @@ class Mybusiness extends Component
 
     public function render()
     {
-        $businesses = Auth::user()->ownedBusinesses()
+        $businesses = Auth::user()->assignedBusinesses()
             ->when($this->search, function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%');
             })

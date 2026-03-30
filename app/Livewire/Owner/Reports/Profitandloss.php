@@ -70,7 +70,7 @@ class Profitandloss extends Component
     public function mount()
     {
         $owner = Auth::user();
-        $businessCollection = $owner->ownedBusinesses()->get();
+        $businessCollection = $owner->assignedBusinesses()->get();
 
         // Convert to array for Livewire serialization
         $this->businesses = $businessCollection->map(function ($business) {

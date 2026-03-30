@@ -35,7 +35,7 @@ class History extends Component
 
     public function mount($itemId = null)
     {
-        $firstBusiness = Auth::user()->ownedBusinesses()->first();
+        $firstBusiness = Auth::user()->assignedBusinesses()->first();
         if ($firstBusiness) {
             $this->selectedBusiness = $firstBusiness->id;
         }
@@ -205,7 +205,7 @@ class History extends Component
     {
         $this->loadStats();
 
-        $businesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
+        $businesses = Auth::user()->assignedBusinesses()->orderBy('name')->get();
         $items = $this->getItems();
         $item = $this->getItem();
 

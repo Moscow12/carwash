@@ -46,7 +46,7 @@ class Staffcommisions extends Component
     public function mount()
     {
         $owner = Auth::user();
-        $businessCollection = $owner->ownedBusinesses()->get();
+        $businessCollection = $owner->assignedBusinesses()->get();
 
         $this->businesses = $businessCollection->map(function ($business) {
             return [

@@ -32,8 +32,8 @@ class KitchenScreen extends Component
     {
         $user = Auth::user();
 
-        // Get owned businesses with restaurant outlets
-        $ownedBusinessesWithOutlets = $user->ownedBusinesses()
+        // Get accessible businesses (handles both owned and assigned)
+        $businessesWithOutlets = $user->assignedBusinesses()
             ->whereHas('outlets', function($query) {
                 $query->where('type', 'restaurant')
                       ->orWhere('type', 'bar')
@@ -42,45 +42,12 @@ class KitchenScreen extends Component
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        // Also include businesses explicitly marked as restaurant type
-        $ownedBusinessesByType = $user->ownedBusinesses()
+        $businessesByType = $user->assignedBusinesses()
             ->where('type', 'restaurant')
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        // Merge owned businesses
-        $ownedBusinesses = $ownedBusinessesWithOutlets->merge($ownedBusinessesByType)->unique('id');
-
-        // Get assigned businesses via UserBusinessRole
-        $assignedBusinessIds = DB::table('user_business_roles')
-            ->where('user_id', $user->id)
-            ->where('is_active', true)
-            ->pluck('business_id')
-            ->unique();
-
-        $assignedBusinesses = collect();
-        if ($assignedBusinessIds->isNotEmpty()) {
-            $assignedBusinesses = DB::table('businesses')
-                ->whereIn('id', $assignedBusinessIds)
-                ->where(function($query) {
-                    $query->where('type', 'restaurant')
-                          ->orWhereExists(function($subQuery) {
-                              $subQuery->select(DB::raw(1))
-                                  ->from('pos_outlets')
-                                  ->whereColumn('pos_outlets.business_id', 'businesses.id')
-                                  ->where(function($q) {
-                                      $q->where('type', 'restaurant')
-                                        ->orWhere('type', 'bar')
-                                        ->orWhere('type', 'cafe');
-                                  });
-                          });
-                })
-                ->select('id', 'name')
-                ->get();
-        }
-
-        // Merge and deduplicate
-        $allBusinesses = $ownedBusinesses->merge($assignedBusinesses)->unique('id');
+        $allBusinesses = $businessesWithOutlets->merge($businessesByType)->unique('id');
 
         $this->ownerBusinesses = $allBusinesses->pluck('name', 'id')->toArray();
 
@@ -136,7 +103,7 @@ class KitchenScreen extends Component
             ->exists();
 
         // Check if user owns this business
-        $ownsBusinesss = $user->ownedBusinesses()->where('id', $this->selectedBusiness)->exists();
+        $ownsBusinesss = $user->assignedBusinesses()->where('id', $this->selectedBusiness)->exists();
 
         // Build query
         $query = PosOutlet::where('business_id', $this->selectedBusiness)

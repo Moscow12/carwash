@@ -58,7 +58,7 @@ class Expenses extends Component
 
     public function mount()
     {
-        $firstBusiness = Auth::user()->ownedBusinesses()->first();
+        $firstBusiness = Auth::user()->assignedBusinesses()->first();
         if ($firstBusiness) {
             $this->selectedBusiness = $firstBusiness->id;
         }
@@ -316,7 +316,7 @@ class Expenses extends Component
     {
         $this->loadStats();
 
-        $businesses = Auth::user()->ownedBusinesses()->orderBy('name')->get();
+        $businesses = Auth::user()->assignedBusinesses()->orderBy('name')->get();
 
         $expenses = collect();
         $paidCount = 0;

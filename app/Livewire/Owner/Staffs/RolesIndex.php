@@ -67,7 +67,7 @@ class RolesIndex extends Component
             ->where(function($q) use ($user) {
                 // Show system-wide roles or roles for businesses owned by user
                 $q->whereNull('business_id')
-                  ->orWhereIn('business_id', $user->ownedBusinesses()->pluck('id'));
+                  ->orWhereIn('business_id', $user->assignedBusinesses()->pluck('id'));
             });
 
         if ($this->search) {

@@ -253,7 +253,7 @@ class Addhotel extends Component
 
     public function render()
     {
-        $hotels = Auth::user()->ownedBusinesses()
+        $hotels = Auth::user()->assignedBusinesses()
             ->where('type', 'hotel')
             ->when($this->search, function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')
@@ -266,8 +266,8 @@ class Addhotel extends Component
             ->paginate(10);
 
         // Calculate stats
-        $this->totalHotels = Auth::user()->ownedBusinesses()->where('type', 'hotel')->count();
-        $this->activeHotels = Auth::user()->ownedBusinesses()->where('type', 'hotel')->where('status', 'active')->count();
+        $this->totalHotels = Auth::user()->assignedBusinesses()->where('type', 'hotel')->count();
+        $this->activeHotels = Auth::user()->assignedBusinesses()->where('type', 'hotel')->where('status', 'active')->count();
         $this->inactiveHotels = $this->totalHotels - $this->activeHotels;
 
         return view('livewire.owner.hotel.addhotel', [

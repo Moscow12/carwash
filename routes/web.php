@@ -131,8 +131,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/settings', SettingsIndex::class)->name('admin.settings');
 });
 
-// Owner Dashboard (Protected Routes - Owner Only)
-Route::middleware(['auth', 'role:owner'])->prefix('owner')->group(function () {
+// Owner Dashboard (Protected Routes - Owner and Staff)
+Route::middleware(['auth', 'role:owner,staff'])->prefix('owner')->group(function () {
     Route::get('/', OwnerDashboard::class)->name('owner.dashboard');
     Route::get('/businesses', OwnerBusinesses::class)->name('owner.businesses');
     Route::get('/items', OwnerItems::class)->name('owner.items');

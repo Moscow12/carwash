@@ -51,7 +51,7 @@ class Stock extends Component
     {
         $owner = Auth::user();
 
-        $this->businesses = $owner->ownedBusinesses()
+        $this->businesses = $owner->assignedBusinesses()
             ->pluck('name', 'id')
             ->toArray();
 
