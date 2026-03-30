@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 class="mb-1">Staff Management</h4>
-            <p class="text-muted mb-0">Manage your carwash staff members</p>
+            <p class="text-muted mb-0">Manage your business staff members</p>
         </div>
         <button wire:click="openModal" class="btn btn-primary">
             <i class="ti ti-plus me-1"></i> Add Staff
@@ -79,12 +79,12 @@
         <div class="card-body">
             <div class="row g-3 align-items-end">
                 <div class="col-md-4">
-                    <label class="form-label small">Carwash</label>
+                    <label class="form-label small">Business</label>
                     <x-forms.select2
-                        name="selectedCarwash"
-                        :options="$carwashes"
-                        wire:model.live="selectedCarwash"
-                        placeholder="All Carwashes"
+                        name="selectedBusiness"
+                        :options="$businesses"
+                        wire:model.live="selectedBusiness"
+                        placeholder="All Businesses"
                         wrapper="false"
                     />
                 </div>
@@ -92,7 +92,7 @@
                     <label class="form-label small">Status</label>
                     <x-forms.select2
                         name="statusFilter"
-                        :options="[['id' => '', 'name' => 'All Status'], ['id' => 'active', 'name' => 'Active'], ['id' => 'inactive', 'name' => 'Inactive']]"
+                        :options="collect(['' => 'All Status', 'active' => 'Active', 'inactive' => 'Inactive'])"
                         wire:model.live="statusFilter"
                         placeholder="All Status"
                         wrapper="false"
@@ -131,9 +131,20 @@
                                         </div>
                                         <div>
                                             <span class="fw-medium">{{ $staff->name }}</span>
-                                            @if($staff->carwash)
+                                            @if($staff->user)
+                                                <span class="badge bg-info bg-opacity-10 text-info ms-2" title="Has system login access">
+                                                    <i class="ti ti-key fs-6"></i>
+                                                </span>
+                                            @endif
+                                            @if($staff->business)
                                                 <br>
-                                                <small class="text-muted">{{ $staff->carwash->name }}</small>
+                                                <small class="text-muted">{{ $staff->business->name }}</small>
+                                            @endif
+                                            @if($staff->user && $staff->user->assignedRole)
+                                                <br>
+                                                <small class="text-primary">
+                                                    <i class="ti ti-shield-check"></i> {{ $staff->user->assignedRole->display_name }}
+                                                </small>
                                             @endif
                                         </div>
                                     </div>
@@ -250,7 +261,7 @@
                                 <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
                                 <x-forms.select2
                                     name="payment_mode"
-                                    :options="[['id' => 'commission', 'name' => 'Commission Based'], ['id' => 'salary', 'name' => 'Monthly Salary'], ['id' => 'hourly', 'name' => 'Hourly Rate']]"
+                                    :options="collect(['commission' => 'Commission Based', 'salary' => 'Monthly Salary', 'hourly' => 'Hourly Rate'])"
                                     wire:model="payment_mode"
                                     wrapper="false"
                                 />
@@ -259,7 +270,7 @@
                                 <label class="form-label">Commission Type</label>
                                 <x-forms.select2
                                     name="commission_type"
-                                    :options="[['id' => 'fixed', 'name' => 'Fixed Amount'], ['id' => 'percentage', 'name' => 'Percentage']]"
+                                    :options="collect(['fixed' => 'Fixed Amount', 'percentage' => 'Percentage'])"
                                     wire:model="commission_type"
                                     wrapper="false"
                                 />
@@ -278,15 +289,15 @@
                                 <h6 class="mb-3">Assignment</h6>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Carwash <span class="text-danger">*</span></label>
+                                <label class="form-label">Business <span class="text-danger">*</span></label>
                                 <x-forms.select2
-                                    name="carwash_id"
-                                    :options="$carwashes"
-                                    wire:model="carwash_id"
-                                    placeholder="Select Carwash"
+                                    name="business_id"
+                                    :options="collect($businesses)"
+                                    wire:model="business_id"
+                                    placeholder="Select Business"
                                     wrapper="false"
                                 />
-                                @error('carwash_id')
+                                @error('business_id')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -294,11 +305,60 @@
                                 <label class="form-label">Status</label>
                                 <x-forms.select2
                                     name="status"
-                                    :options="[['id' => 'active', 'name' => 'Active'], ['id' => 'inactive', 'name' => 'Inactive']]"
+                                    :options="collect(['active' => 'Active', 'inactive' => 'Inactive'])"
                                     wire:model="status"
                                     wrapper="false"
                                 />
                             </div>
+
+                            <!-- System Login Access -->
+                            <div class="col-12">
+                                <hr class="my-2">
+                                <h6 class="mb-3">System Login Access</h6>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" wire:model.live="canLogin" id="canLoginSwitch">
+                                    <label class="form-check-label" for="canLoginSwitch">
+                                        <strong>Allow this staff member to login to the system</strong>
+                                        <br>
+                                        <small class="text-muted">Enable this to create a user account for system access</small>
+                                    </label>
+                                </div>
+                            </div>
+
+                            @if($canLogin)
+                                <div class="col-12">
+                                    <div class="alert alert-info mb-3">
+                                        <i class="ti ti-info-circle me-2"></i>
+                                        <small>This staff member will be able to login using their <strong>email address ({{ $email ?: 'enter email above' }})</strong> and the password you set below.</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">User Role <span class="text-danger">*</span></label>
+                                    <x-forms.select2
+                                        name="selectedRoleId"
+                                        :options="collect($availableRoles)"
+                                        wire:model="selectedRoleId"
+                                        placeholder="Select Role"
+                                        wrapper="false"
+                                    />
+                                    @error('selectedRoleId')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                    <small class="text-muted">Assign permissions by selecting a role</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Password <span class="text-danger">{{ $editingId && $this->canLogin ? '' : '*' }}</span></label>
+                                    <input type="password" wire:model="password" class="form-control @error('password') is-invalid @enderror" placeholder="{{ $editingId ? 'Leave blank to keep current' : 'Min 8 characters' }}">
+                                    @error('password')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    @if($editingId)
+                                        <small class="text-muted d-block">Leave blank to keep the current password</small>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     </div>
                     <div class="modal-footer">

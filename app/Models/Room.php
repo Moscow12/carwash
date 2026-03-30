@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Builder;
 
 class Room extends Model
@@ -13,7 +14,7 @@ class Room extends Model
     use HasUuids;
 
     protected $fillable = [
-        'carwash_id',
+        'business_id',
         'branch_id',
         'room_type_id',
         'number',
@@ -30,9 +31,9 @@ class Room extends Model
     ];
 
     // Relationships
-    public function carwash(): BelongsTo
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function branch(): BelongsTo
@@ -63,6 +64,22 @@ class Room extends Model
     public function roomAllocations(): HasMany
     {
         return $this->hasMany(RoomAllocation::class, 'room_id');
+    }
+
+    public function currentReservation(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Reservation::class,
+            RoomAllocation::class,
+            'room_id',        // Foreign key on room_allocations table
+            'id',             // Foreign key on reservations table
+            'id',             // Local key on rooms table
+            'reservation_id'  // Local key on room_allocations table
+        )
+        ->whereIn('reservations.status', ['confirmed', 'checked_in'])
+        ->where('reservations.check_in_date', '<=', now())
+        ->where('reservations.check_out_date', '>=', now())
+        ->latest('reservations.created_at');
     }
 
     // Scopes

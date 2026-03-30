@@ -6,15 +6,18 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PosOrder extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $fillable = [
         'order_no',
-        'carwash_id',
+        'business_id',
         'outlet_id',
         'session_id',
         'table_id',
@@ -25,6 +28,7 @@ class PosOrder extends Model
         'covers',
         'subtotal',
         'discount_amount',
+        'discount_id',
         'tax_amount',
         'service_charge',
         'total',
@@ -44,9 +48,9 @@ class PosOrder extends Model
     ];
 
     // Relationships
-    public function carwash(): BelongsTo
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function outlet(): BelongsTo
@@ -81,7 +85,7 @@ class PosOrder extends Model
 
     public function servedBy(): BelongsTo
     {
-        return $this->belongsTo(staff::class, 'served_by');
+        return $this->belongsTo(staffs::class, 'served_by');
     }
 
     public function items(): HasMany
@@ -102,6 +106,37 @@ class PosOrder extends Model
     public function hotelPayments(): HasMany
     {
         return $this->hasMany(HotelPayment::class, 'pos_order_id');
+    }
+
+    public function discount(): BelongsTo
+    {
+        return $this->belongsTo(OrderDiscount::class, 'discount_id');
+    }
+
+    public function payments(): MorphMany
+    {
+        return $this->morphMany(Payment::class, 'payable');
+    }
+
+    public function discounts(): MorphMany
+    {
+        return $this->morphMany(OrderDiscount::class, 'discountable');
+    }
+
+    public function voidLogs(): MorphMany
+    {
+        return $this->morphMany(VoidLog::class, 'voidable');
+    }
+
+    public function barTabs(): BelongsToMany
+    {
+        return $this->belongsToMany(BarTab::class, 'bar_tab_orders', 'order_id', 'tab_id')
+                    ->withTimestamps();
+    }
+
+    public function tableReservations(): HasMany
+    {
+        return $this->hasMany(TableReservation::class, 'pos_order_id');
     }
 
     // Scopes

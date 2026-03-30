@@ -13,7 +13,7 @@ class RatePlan extends Model
     use HasUuids;
 
     protected $fillable = [
-        'carwash_id',
+        'business_id',
         'room_type_id',
         'name',
         'meal_plan',
@@ -31,9 +31,9 @@ class RatePlan extends Model
     ];
 
     // Relationships
-    public function carwash(): BelongsTo
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function roomType(): BelongsTo

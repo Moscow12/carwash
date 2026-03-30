@@ -11,10 +11,10 @@
                 </div>
                 <div class="col-md-4">
                     <x-forms.select2
-                        name="selectedCarwash"
-                        placeholder="All Carwashes"
-                        :options="$carwashes->pluck('name', 'id')"
-                        wire:model.live="selectedCarwash"
+                        name="selectedBusiness"
+                        placeholder="All Businesses"
+                        :options="$businesses->pluck('name', 'id')"
+                        wire:model.live="selectedBusiness"
                         wrapper="false"
                     />
                 </div>
@@ -28,7 +28,7 @@
                             <th>Name</th>
                             <th>Type</th>
                             <th>Selling Price</th>
-                            <th>Carwash</th>
+                            <th>Business</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -39,7 +39,7 @@
                             <td>{{ $item->name }}</td>
                             <td><span class="badge bg-info">{{ $item->type }}</span></td>
                             <td>{{ number_format($item->selling_price) }}</td>
-                            <td>{{ $item->carwash->name ?? '-' }}</td>
+                            <td>{{ $item->business->name ?? '-' }}</td>
                             <td>
                                 <span class="badge bg-{{ $item->status === 'active' ? 'success' : 'secondary' }}">
                                     {{ ucfirst($item->status) }}

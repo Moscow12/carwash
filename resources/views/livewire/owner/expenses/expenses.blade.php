@@ -95,10 +95,10 @@
             <div class="row g-3">
                 <div class="col-md-3">
                     <x-forms.select2
-                        name="selectedCarwash"
+                        name="selectedBusiness"
                         label="Business Location"
-                        :options="$carwashes"
-                        wire:model.live="selectedCarwash"
+                        :options="$businesses"
+                        wire:model.live="selectedBusiness"
                         placeholder="All locations"
                         wrapper="false"
                     />
@@ -258,7 +258,7 @@
                                 <td>{{ $expense->recurring_display }}</td>
                                 <td>{{ $expense->category?->name ?? '-' }}</td>
                                 <td>{{ $expense->subcategory?->name ?? '-' }}</td>
-                                <td>{{ $expense->carwash?->name ?? '-' }}</td>
+                                <td>{{ $expense->business?->name ?? '-' }}</td>
                                 <td>
                                     <span class="badge bg-{{ $expense->payment_status_badge_class }}">
                                         {{ ucfirst($expense->payment_status) }}

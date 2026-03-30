@@ -16,6 +16,9 @@ class PosOrderItem extends Model
         'menu_item_id',
         'quantity',
         'unit_price',
+        'discount_amount',
+        'tax_amount',
+        'total',
         'modifiers',
         'subtotal',
         'status',
@@ -25,8 +28,12 @@ class PosOrderItem extends Model
 
     protected $casts = [
         'unit_price' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
+        'total' => 'decimal:2',
         'modifiers' => 'array',
         'subtotal' => 'decimal:2',
+        'quantity' => 'decimal:3',
     ];
 
     // Relationships

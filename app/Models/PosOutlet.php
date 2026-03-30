@@ -13,7 +13,7 @@ class PosOutlet extends Model
     use HasUuids;
 
     protected $fillable = [
-        'carwash_id',
+        'business_id',
         'branch_id',
         'name',
         'type',
@@ -23,9 +23,9 @@ class PosOutlet extends Model
     ];
 
     // Relationships
-    public function carwash(): BelongsTo
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function branch(): BelongsTo
@@ -56,6 +56,56 @@ class PosOutlet extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(PosOrder::class, 'outlet_id');
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(items::class, 'outlet_id');
+    }
+
+    public function sales(): HasMany
+    {
+        return $this->hasMany(sales::class, 'outlet_id');
+    }
+
+    public function purchases(): HasMany
+    {
+        return $this->hasMany(purchase::class, 'outlet_id');
+    }
+
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(expenses::class, 'outlet_id');
+    }
+
+    public function stocktakings(): HasMany
+    {
+        return $this->hasMany(stocktaking::class, 'outlet_id');
+    }
+
+    public function stockTransfers(): HasMany
+    {
+        return $this->hasMany(StockTransfer::class, 'outlet_id');
+    }
+
+    public function itemBalances(): HasMany
+    {
+        return $this->hasMany(item_balance::class, 'outlet_id');
+    }
+
+    public function printerStations(): HasMany
+    {
+        return $this->hasMany(OutletPrinterStation::class, 'outlet_id');
+    }
+
+    public function barProfile(): HasMany
+    {
+        return $this->hasMany(BarProfile::class, 'outlet_id');
+    }
+
+    public function tableReservations(): HasMany
+    {
+        return $this->hasMany(TableReservation::class, 'outlet_id');
     }
 
     // Scopes

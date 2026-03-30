@@ -20,12 +20,14 @@ class KitchenTicket extends Model
         'received_at',
         'started_at',
         'ready_at',
+        'served_at',
     ];
 
     protected $casts = [
         'received_at' => 'datetime',
         'started_at' => 'datetime',
         'ready_at' => 'datetime',
+        'served_at' => 'datetime',
     ];
 
     // Relationships

@@ -14,9 +14,9 @@ class Setup extends Component
 {
     use WithFileUploads;
 
-    // Carwash selection
-    public $selectedCarwash = '';
-    public $ownerCarwashes = [];
+    // Business selection
+    public $selectedBusiness = '';
+    public $ownerBusinesses = [];
 
     // Active tab
     public $activeTab = 'business';
@@ -181,18 +181,20 @@ class Setup extends Component
 
     public function mount()
     {
-        $this->ownerCarwashes = Auth::user()->ownedCarwashes()->orderBy('name')->get();
+        $this->ownerBusinesses = Auth::user()->assignedBusinesses()
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->toArray();
 
-        $firstCarwash = $this->ownerCarwashes->first();
-        if ($firstCarwash) {
-            $this->selectedCarwash = $firstCarwash->id;
+        if (!empty($this->ownerBusinesses)) {
+            $this->selectedBusiness = array_key_first($this->ownerBusinesses);
             $this->loadSettings();
         }
 
         $this->pos_keyboard_shortcuts = CarwashSetting::getDefaultKeyboardShortcuts();
     }
 
-    public function updatedSelectedCarwash()
+    public function updatedSelectedBusiness()
     {
         $this->loadSettings();
     }
@@ -204,9 +206,9 @@ class Setup extends Component
 
     public function loadSettings()
     {
-        if (!$this->selectedCarwash) return;
+        if (!$this->selectedBusiness) return;
 
-        $settings = CarwashSetting::getForCarwash($this->selectedCarwash);
+        $settings = CarwashSetting::getForBusiness($this->selectedBusiness);
 
         // Load payment methods
         $this->loadPaymentMethods();
@@ -343,13 +345,13 @@ class Setup extends Component
 
     public function saveSettings()
     {
-        if (!$this->selectedCarwash) {
-            session()->flash('error', 'Please select a carwash first.');
+        if (!$this->selectedBusiness) {
+            session()->flash('error', 'Please select a business first.');
             return;
         }
 
         try {
-            $settings = CarwashSetting::getForCarwash($this->selectedCarwash);
+            $settings = CarwashSetting::getForBusiness($this->selectedBusiness);
 
             // Handle logo upload
             $logoPath = $settings->business_logo;
@@ -481,7 +483,7 @@ class Setup extends Component
 
     public function resetToDefaults()
     {
-        if (!$this->selectedCarwash) return;
+        if (!$this->selectedBusiness) return;
 
         $defaults = CarwashSetting::getDefaults();
 
@@ -533,8 +535,8 @@ class Setup extends Component
             'paymentMethodName' => 'required|min:2',
         ]);
 
-        if (!$this->selectedCarwash) {
-            session()->flash('error', 'Please select a carwash first.');
+        if (!$this->selectedBusiness) {
+            session()->flash('error', 'Please select a business first.');
             return;
         }
 
@@ -556,7 +558,7 @@ class Setup extends Component
                     'name' => $this->paymentMethodName,
                     'description' => $this->paymentMethodDescription ?: null,
                     'status' => $this->paymentMethodStatus,
-                    'carwash_id' => $this->selectedCarwash,
+                    'business_id' => $this->selectedBusiness,
                 ]);
                 session()->flash('message', 'Payment method added successfully.');
             }
@@ -596,14 +598,14 @@ class Setup extends Component
 
     public function loadPaymentMethods()
     {
-        if (!$this->selectedCarwash) {
+        if (!$this->selectedBusiness) {
             $this->availablePaymentMethods = [];
             return;
         }
 
-        $this->availablePaymentMethods = payment_method::where('carwash_id', $this->selectedCarwash)
+        $this->availablePaymentMethods = payment_method::where('business_id', $this->selectedBusiness)
             ->orderBy('name')
-            ->get()
+            ->get(['id', 'name', 'description', 'status'])
             ->toArray();
     }
 

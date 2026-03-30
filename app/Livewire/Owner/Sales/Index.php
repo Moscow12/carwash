@@ -17,7 +17,7 @@ class Index extends Component
     use WithPagination;
 
     public $search = '';
-    public $selectedCarwash = '';
+    public $selectedBusiness = '';
     public $saleStatusFilter = '';
     public $paymentStatusFilter = '';
     public $dateFrom = '';
@@ -51,14 +51,14 @@ class Index extends Component
     public $receiptSale = null;
     public $receiptSaleItems = [];
     public $receiptSalePayments = [];
-    public $receiptCarwashInfo = null;
-    public $receiptCarwashSettings = null;
+    public $receiptBusinessInfo = null;
+    public $receiptBusinessSettings = null;
 
     public function mount()
     {
-        $firstCarwash = Auth::user()->ownedCarwashes()->first();
-        if ($firstCarwash) {
-            $this->selectedCarwash = $firstCarwash->id;
+        $firstBusiness = Auth::user()->assignedBusinesses()->first();
+        if ($firstBusiness) {
+            $this->selectedBusiness = $firstBusiness->id;
         }
         $this->dateFrom = now()->startOfMonth()->format('Y-m-d');
         $this->dateTo = now()->format('Y-m-d');
@@ -69,7 +69,7 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function updatedSelectedCarwash()
+    public function updatedSelectedBusiness()
     {
         $this->resetPage();
         $this->loadStats();
@@ -104,7 +104,7 @@ class Index extends Component
 
     public function loadStats()
     {
-        if (!$this->selectedCarwash) {
+        if (!$this->selectedBusiness) {
             $this->totalSales = 0;
             $this->totalRevenue = 0;
             $this->paidSales = 0;
@@ -114,7 +114,7 @@ class Index extends Component
             return;
         }
 
-        $baseQuery = sales::where('carwash_id', $this->selectedCarwash)
+        $baseQuery = sales::where('business_id', $this->selectedBusiness)
             ->where('sale_status', '!=', 'canceled') // Exclude canceled sales
             ->when($this->dateFrom, fn($q) => $q->whereDate('sale_date', '>=', $this->dateFrom))
             ->when($this->dateTo, fn($q) => $q->whereDate('sale_date', '<=', $this->dateTo));
@@ -166,8 +166,8 @@ class Index extends Component
 
         $this->paymentSaleId = $saleId;
 
-        // Load payment methods for this carwash
-        $this->availablePaymentMethods = payment_method::where('carwash_id', $sale->carwash_id)
+        // Load payment methods for this business
+        $this->availablePaymentMethods = payment_method::where('business_id', $sale->business_id)
             ->where('status', 'active')
             ->get()
             ->toArray();
@@ -315,15 +315,15 @@ class Index extends Component
 
     public function showReceipt($saleId)
     {
-        $sale = sales::with(['customer', 'user', 'items.item', 'payments.paymentMethod', 'carwash.settings'])
+        $sale = sales::with(['customer', 'user', 'items.item', 'payments.paymentMethod', 'business.settings'])
             ->find($saleId);
         if (!$sale) return;
 
         $this->receiptSale = $sale->toArray();
         $this->receiptSaleItems = $sale->items->toArray();
         $this->receiptSalePayments = $sale->payments->toArray();
-        $this->receiptCarwashInfo = $sale->carwash ? $sale->carwash->toArray() : null;
-        $this->receiptCarwashSettings = $sale->carwash && $sale->carwash->settings ? $sale->carwash->settings->toArray() : null;
+        $this->receiptBusinessInfo = $sale->business ? $sale->business->toArray() : null;
+        $this->receiptBusinessSettings = $sale->business && $sale->business->settings ? $sale->business->settings->toArray() : null;
         $this->showReceiptModal = true;
     }
 
@@ -333,18 +333,18 @@ class Index extends Component
         $this->receiptSale = null;
         $this->receiptSaleItems = [];
         $this->receiptSalePayments = [];
-        $this->receiptCarwashInfo = null;
-        $this->receiptCarwashSettings = null;
+        $this->receiptBusinessInfo = null;
+        $this->receiptBusinessSettings = null;
     }
 
     public function render()
     {
         $this->loadStats();
 
-        $carwashes = Auth::user()->ownedCarwashes()->orderBy('name')->get();
+        $businesses = Auth::user()->assignedBusinesses()->orderBy('name')->get();
 
         $query = sales::query()
-            ->when($this->selectedCarwash, fn($q) => $q->where('carwash_id', $this->selectedCarwash))
+            ->when($this->selectedBusiness, fn($q) => $q->where('business_id', $this->selectedBusiness))
             ->when($this->saleStatusFilter, fn($q) => $q->where('sale_status', $this->saleStatusFilter))
             ->when($this->paymentStatusFilter, fn($q) => $q->where('payment_status', $this->paymentStatusFilter))
             ->when($this->dateFrom, fn($q) => $q->whereDate('sale_date', '>=', $this->dateFrom))
@@ -367,7 +367,7 @@ class Index extends Component
 
         return view('livewire.owner.sales.index', [
             'sales' => $sales,
-            'carwashes' => $carwashes
+            'businesses' => $businesses
         ]);
     }
 }

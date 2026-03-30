@@ -11,7 +11,7 @@ class HotelProfile extends Model
     use HasUuids;
 
     protected $fillable = [
-        'carwash_id',
+        'business_id',
         'star_rating',
         'check_in_time',
         'check_out_time',
@@ -31,9 +31,9 @@ class HotelProfile extends Model
     ];
 
     // Relationships
-    public function carwash(): BelongsTo
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     // Accessors

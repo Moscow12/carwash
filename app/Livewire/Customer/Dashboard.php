@@ -6,7 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Booking;
-use App\Models\carwashes;
+use App\Models\Business;
 
 #[Layout('components.layouts.app-customer')]
 class Dashboard extends Component
@@ -28,7 +28,7 @@ class Dashboard extends Component
             ->where('status', 'completed')
             ->count();
         $this->recentBookings = Booking::where('customer_id', $user->id)
-            ->with(['carwash', 'item'])
+            ->with(['business', 'item'])
             ->latest()
             ->take(5)
             ->get();

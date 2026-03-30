@@ -21,6 +21,7 @@ return new class extends Migration
             $table->timestamp('received_at')->nullable();
             $table->timestamp('started_at')->nullable();
             $table->timestamp('ready_at')->nullable();
+            $table->timestamp('served_at')->nullable();
             $table->timestamps();
 
             $table->index('status');

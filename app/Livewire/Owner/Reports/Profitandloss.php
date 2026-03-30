@@ -7,10 +7,11 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\carwashes;
+use App\Models\Business;
 use App\Models\sales;
 use App\Models\sales_item;
-use App\Models\purchase;
+use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderItem;
 use App\Models\expenses;
 use App\Models\items;
 use App\Models\category;
@@ -21,7 +22,7 @@ use Carbon\Carbon;
 class Profitandloss extends Component
 {
     #[Url]
-    public $carwash_id = '';
+    public $business_id = '';
 
     #[Url]
     public $date_filter = 'this_year';
@@ -32,7 +33,7 @@ class Profitandloss extends Component
     #[Url]
     public $end_date = '';
 
-    public $carwashes = [];
+    public $businesses = [];
     public $activeTab = 'products';
 
     // Report data
@@ -69,24 +70,24 @@ class Profitandloss extends Component
     public function mount()
     {
         $owner = Auth::user();
-        $carwashCollection = $owner->ownedCarwashes()->get();
+        $businessCollection = $owner->assignedBusinesses()->get();
 
         // Convert to array for Livewire serialization
-        $this->carwashes = $carwashCollection->map(function ($carwash) {
+        $this->businesses = $businessCollection->map(function ($business) {
             return [
-                'id' => $carwash->id,
-                'name' => $carwash->name,
+                'id' => $business->id,
+                'name' => $business->name,
             ];
         })->toArray();
 
-        if (count($this->carwashes) > 0 && empty($this->carwash_id)) {
-            $this->carwash_id = $this->carwashes[0]['id'];
+        if (count($this->businesses) > 0 && empty($this->business_id)) {
+            $this->business_id = $this->businesses[0]['id'];
         }
 
         $this->calculateReport();
     }
 
-    public function updatedCarwashId()
+    public function updatedBusinessId()
     {
         $this->calculateReport();
     }
@@ -162,7 +163,7 @@ class Profitandloss extends Component
 
     public function calculateReport()
     {
-        if (empty($this->carwash_id)) {
+        if (empty($this->business_id)) {
             return;
         }
 
@@ -171,32 +172,29 @@ class Profitandloss extends Component
 
         // Calculate Total Sales (excluding tax, discount already applied)
         $this->totalSales = (float) sales_item::whereHas('sale', function ($query) use ($startDate, $endDate) {
-            $query->where('carwash_id', $this->carwash_id)
+            $query->where('business_id', $this->business_id)
                 ->where('sale_status', 'completed')
                 ->whereBetween('sale_date', [$startDate, $endDate]);
         })->sum(DB::raw('(price * quantity) - COALESCE(discount, 0)'));
 
         // Calculate Total Sell Discount
         $this->totalSellDiscount = (float) sales_item::whereHas('sale', function ($query) use ($startDate, $endDate) {
-            $query->where('carwash_id', $this->carwash_id)
+            $query->where('business_id', $this->business_id)
                 ->where('sale_status', 'completed')
                 ->whereBetween('sale_date', [$startDate, $endDate]);
         })->sum('discount');
 
-        // Calculate Total Purchase (excluding tax, discount)
-        $this->totalPurchase = (float) purchase::where('carwash_id', $this->carwash_id)
-            ->where('purchase_status', 'received')
+        // Calculate Total Purchase (excluding tax, using subtotal)
+        $this->totalPurchase = (float) PurchaseOrder::where('business_id', $this->business_id)
+            ->where('status', 'received')
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum(DB::raw('(price * quantity) - COALESCE(discount, 0)'));
+            ->sum('subtotal');
 
-        // Calculate Total Purchase Discount
-        $this->totalPurchaseDiscount = (float) purchase::where('carwash_id', $this->carwash_id)
-            ->where('purchase_status', 'received')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum('discount');
+        // Calculate Total Purchase Discount (PurchaseOrder doesn't have discount)
+        $this->totalPurchaseDiscount = 0;
 
         // Calculate Total Expenses
-        $this->totalExpense = (float) expenses::where('carwash_id', $this->carwash_id)
+        $this->totalExpense = (float) expenses::where('business_id', $this->business_id)
             ->where('status', 'active')
             ->whereBetween('expense_date', [$startDate, $endDate])
             ->sum('total_amount');
@@ -257,8 +255,8 @@ class Profitandloss extends Component
 
     protected function calculateStockValues($startDate, $endDate)
     {
-        // Get all items for this carwash
-        $items = items::where('carwash_id', $this->carwash_id)->get();
+        // Get all items for this business
+        $items = items::where('business_id', $this->business_id)->get();
 
         $openingPurchase = 0;
         $openingSale = 0;
@@ -276,16 +274,18 @@ class Profitandloss extends Component
 
             // Opening stock - calculate by reversing transactions in the period
             $stockSold = (float) sales_item::whereHas('sale', function ($query) use ($startDate, $endDate) {
-                $query->where('carwash_id', $this->carwash_id)
+                $query->where('business_id', $this->business_id)
                     ->where('sale_status', 'completed')
                     ->whereBetween('sale_date', [$startDate, $endDate]);
             })->where('item_id', $item->id)->sum('quantity');
 
-            $stockPurchased = (float) purchase::where('carwash_id', $this->carwash_id)
+            $stockPurchased = (float) PurchaseOrderItem::whereHas('purchaseOrder', function($query) use ($startDate, $endDate) {
+                    $query->where('business_id', $this->business_id)
+                        ->where('status', 'received')
+                        ->whereBetween('created_at', [$startDate, $endDate]);
+                })
                 ->where('item_id', $item->id)
-                ->where('purchase_status', 'received')
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->sum('quantity');
+                ->sum('quantity_received');
 
             $openingStock = $currentStock + $stockSold - $stockPurchased;
             $openingPurchase += $openingStock * $costPrice;
@@ -302,7 +302,7 @@ class Profitandloss extends Component
     {
         // COGS = Sum of (quantity sold * cost price) for each item
         return sales_item::whereHas('sale', function ($query) use ($startDate, $endDate) {
-            $query->where('carwash_id', $this->carwash_id)
+            $query->where('business_id', $this->business_id)
                 ->where('sale_status', 'completed')
                 ->whereBetween('sale_date', [$startDate, $endDate]);
         })->with('item')->get()->sum(function ($saleItem) {
@@ -320,7 +320,7 @@ class Profitandloss extends Component
                 DB::raw('SUM(quantity) as total_quantity')
             )
             ->whereHas('sale', function ($query) use ($startDate, $endDate) {
-                $query->where('carwash_id', $this->carwash_id)
+                $query->where('business_id', $this->business_id)
                     ->where('sale_status', 'completed')
                     ->whereBetween('sale_date', [$startDate, $endDate]);
             })
@@ -353,7 +353,7 @@ class Profitandloss extends Component
             )
             ->join('items', 'sales_items.item_id', '=', 'items.id')
             ->whereHas('sale', function ($query) use ($startDate, $endDate) {
-                $query->where('carwash_id', $this->carwash_id)
+                $query->where('business_id', $this->business_id)
                     ->where('sale_status', 'completed')
                     ->whereBetween('sale_date', [$startDate, $endDate]);
             })
@@ -384,7 +384,7 @@ class Profitandloss extends Component
                 'customer_id',
                 DB::raw('SUM(total_amount) as total_sales')
             )
-            ->where('carwash_id', $this->carwash_id)
+            ->where('business_id', $this->business_id)
             ->where('sale_status', 'completed')
             ->whereBetween('sale_date', [$startDate, $endDate])
             ->whereNotNull('customer_id')
@@ -393,7 +393,7 @@ class Profitandloss extends Component
             ->get()
             ->map(function ($record) use ($startDate, $endDate) {
                 $cogs = (float) sales_item::whereHas('sale', function ($query) use ($record, $startDate, $endDate) {
-                    $query->where('carwash_id', $this->carwash_id)
+                    $query->where('business_id', $this->business_id)
                         ->where('customer_id', $record->customer_id)
                         ->where('sale_status', 'completed')
                         ->whereBetween('sale_date', [$startDate, $endDate]);
@@ -420,7 +420,7 @@ class Profitandloss extends Component
                 DB::raw('DATE(sale_date) as sale_date'),
                 DB::raw('SUM(total_amount) as total_sales')
             )
-            ->where('carwash_id', $this->carwash_id)
+            ->where('business_id', $this->business_id)
             ->where('sale_status', 'completed')
             ->whereBetween('sale_date', [$startDate, $endDate])
             ->groupBy(DB::raw('DATE(sale_date)'))
@@ -429,7 +429,7 @@ class Profitandloss extends Component
             ->map(function ($record) {
                 $date = Carbon::parse($record->sale_date);
                 $cogs = (float) sales_item::whereHas('sale', function ($query) use ($date) {
-                    $query->where('carwash_id', $this->carwash_id)
+                    $query->where('business_id', $this->business_id)
                         ->where('sale_status', 'completed')
                         ->whereDate('sale_date', $date);
                 })->with('item')->get()->sum(function ($saleItem) {
@@ -456,7 +456,7 @@ class Profitandloss extends Component
                 DB::raw('DAYOFWEEK(sale_date) as day_number'),
                 DB::raw('SUM(total_amount) as total_sales')
             )
-            ->where('carwash_id', $this->carwash_id)
+            ->where('business_id', $this->business_id)
             ->where('sale_status', 'completed')
             ->whereBetween('sale_date', [$startDate, $endDate])
             ->groupBy(DB::raw('DAYNAME(sale_date)'), DB::raw('DAYOFWEEK(sale_date)'))
@@ -465,7 +465,7 @@ class Profitandloss extends Component
             ->map(function ($record) use ($startDate, $endDate) {
                 // Calculate COGS for this day of week
                 $cogs = (float) sales_item::whereHas('sale', function ($query) use ($record, $startDate, $endDate) {
-                    $query->where('carwash_id', $this->carwash_id)
+                    $query->where('business_id', $this->business_id)
                         ->where('sale_status', 'completed')
                         ->whereBetween('sale_date', [$startDate, $endDate])
                         ->whereRaw('DAYOFWEEK(sale_date) = ?', [$record->day_number]);

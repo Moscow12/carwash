@@ -49,9 +49,9 @@
                 <span><i class="ti ti-home-2 fs-5"></i></span>
                 <span>Dashboard</span>
               </a>
-              <a href="{{ route('owner.carwashes') }}" class="dropdown-item d-flex align-items-center gap-2">
+              <a href="{{ route('owner.businesses') }}" class="dropdown-item d-flex align-items-center gap-2">
                 <span><i class="ti ti-car-garage fs-5"></i></span>
-                <span>My Carwashes</span>
+                <span>My Businesses</span>
               </a>
             </div>
             <div class="border-top p-3">

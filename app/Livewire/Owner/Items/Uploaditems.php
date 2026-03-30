@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Str;
 use App\Models\items;
-use App\Models\carwashes;
+use App\Models\Business;
 use App\Models\category;
 use App\Models\unit;
 
@@ -19,7 +19,7 @@ class Uploaditems extends Component
     use WithFileUploads;
 
     public $file;
-    public $carwash_id = '';
+    public $business_id = '';
     public $parsedItems = [];
     public $parseErrors = [];
     public $successCount = 0;
@@ -28,27 +28,27 @@ class Uploaditems extends Component
     public $importing = false;
     public $importComplete = false;
 
-    public $ownerCarwashes = [];
+    public $ownerBusinesses = [];
     public $availableCategories = [];
     public $availableUnits = [];
 
     protected $rules = [
         'file' => 'required|mimes:csv,txt|max:5120',
-        'carwash_id' => 'required|exists:carwashes,id',
+        'business_id' => 'required|exists:businesses,id',
     ];
 
     public function mount()
     {
-        $this->ownerCarwashes = Auth::user()->ownedCarwashes()->orderBy('name')->get();
+        $this->ownerBusinesses = Auth::user()->assignedBusinesses()->orderBy('name')->get();
         $this->availableUnits = unit::where('status', 'active')->orderBy('name')->get();
 
-        if ($this->ownerCarwashes->count() === 1) {
-            $this->carwash_id = $this->ownerCarwashes->first()->id;
+        if ($this->ownerBusinesses->count() === 1) {
+            $this->business_id = $this->ownerBusinesses->first()->id;
             $this->loadCategories();
         }
     }
 
-    public function updatedCarwashId($value)
+    public function updatedBusinessId($value)
     {
         $this->loadCategories();
         $this->reset(['parsedItems', 'parseErrors', 'showPreview', 'importComplete']);
@@ -56,8 +56,8 @@ class Uploaditems extends Component
 
     public function loadCategories()
     {
-        if ($this->carwash_id) {
-            $this->availableCategories = category::where('carwash_id', $this->carwash_id)
+        if ($this->business_id) {
+            $this->availableCategories = category::where('business_id', $this->business_id)
                 ->where('status', 'active')
                 ->orderBy('name')
                 ->get();
@@ -119,13 +119,13 @@ class Uploaditems extends Component
     {
         $this->validate([
             'file' => 'required|mimes:csv,txt|max:5120',
-            'carwash_id' => 'required|exists:carwashes,id',
+            'business_id' => 'required|exists:businesses,id',
         ]);
 
-        // Verify carwash ownership
-        $carwashIds = Auth::user()->ownedCarwashes()->pluck('id');
-        if (!$carwashIds->contains($this->carwash_id)) {
-            session()->flash('error', 'Invalid carwash selected.');
+        // Verify business ownership
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
+        if (!$businessIds->contains($this->business_id)) {
+            session()->flash('error', 'Invalid business selected.');
             return;
         }
 
@@ -225,7 +225,7 @@ class Uploaditems extends Component
         if (!empty($data['category_name'])) {
             $category = collect($this->availableCategories)->firstWhere('name', $data['category_name']);
             if (!$category) {
-                $errors[] = "Row {$rowNumber}: Category '{$data['category_name']}' not found for this carwash";
+                $errors[] = "Row {$rowNumber}: Category '{$data['category_name']}' not found for this business";
             }
         } else {
             $errors[] = "Row {$rowNumber}: Category name is required";
@@ -292,7 +292,7 @@ class Uploaditems extends Component
                     'status' => strtolower($data['status']),
                     'category_id' => $category['id'],
                     'unit_id' => $unit['id'],
-                    'carwash_id' => $this->carwash_id,
+                    'business_id' => $this->business_id,
                 ]);
 
                 $this->successCount++;

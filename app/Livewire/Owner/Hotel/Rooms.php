@@ -1,0 +1,217 @@
+<?php
+
+namespace App\Livewire\Owner\Hotel;
+
+use Livewire\Component;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Rule;
+use Livewire\WithPagination;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Business;
+use App\Models\Room;
+use App\Models\RoomType;
+use App\Models\HotelBranch;
+
+#[Layout('components.layouts.app-owner')]
+class Rooms extends Component
+{
+    use WithPagination;
+
+    public $search = '';
+    public $selectedHotel = null;
+    public $selectedBranch = null;
+    public $statusFilter = '';
+    public $floorFilter = '';
+    public $showModal = false;
+    public $editMode = false;
+    public $roomId = null;
+
+    #[Rule('required|exists:room_types,id')]
+    public $room_type_id = '';
+
+    #[Rule('required|string|max:20')]
+    public $number = '';
+
+    #[Rule('nullable|string|max:10')]
+    public $floor = '';
+
+    #[Rule('required|in:available,occupied,cleaning,maintenance,out_of_order')]
+    public $status = 'available';
+
+    #[Rule('required|boolean')]
+    public $is_smoking = false;
+
+    #[Rule('required|boolean')]
+    public $is_active = true;
+
+    #[Rule('nullable|string|max:500')]
+    public $notes = '';
+
+    public $roomTypes = [];
+    public $branches = [];
+
+    public function mount()
+    {
+        $hotel = Auth::user()->assignedBusinesses()
+            ->where('type', 'hotel')
+            ->where('status', 'active')
+            ->first();
+
+        if ($hotel) {
+            $this->selectedHotel = $hotel->id;
+            $this->selectedBranch = $hotel->hotelBranches()->where('is_main', true)->first()?->id;
+            $this->loadDropdownData();
+        }
+    }
+
+    public function updatedSelectedHotel($value)
+    {
+        $hotel = Business::find($value);
+        $this->selectedBranch = $hotel?->hotelBranches()->where('is_main', true)->first()?->id;
+        $this->loadDropdownData();
+        $this->resetPage();
+    }
+
+    public function updatedSelectedBranch()
+    {
+        $this->resetPage();
+    }
+
+    public function loadDropdownData()
+    {
+        if (!$this->selectedHotel) {
+            return;
+        }
+
+        $this->roomTypes = RoomType::where('business_id', $this->selectedHotel)
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        $this->branches = HotelBranch::where('business_id', $this->selectedHotel)
+            ->where('status', 'active')
+            ->orderBy('is_main', 'desc')
+            ->orderBy('name')
+            ->get();
+    }
+
+    public function openModal()
+    {
+        $this->resetForm();
+        $this->editMode = false;
+        $this->showModal = true;
+        $this->loadDropdownData();
+    }
+
+    public function editRoom($id)
+    {
+        $room = Room::findOrFail($id);
+
+        $this->roomId = $room->id;
+        $this->room_type_id = $room->room_type_id;
+        $this->number = $room->number;
+        $this->floor = $room->floor ?? '';
+        $this->status = $room->status;
+        $this->is_smoking = $room->is_smoking;
+        $this->is_active = $room->is_active;
+        $this->notes = $room->notes ?? '';
+
+        $this->editMode = true;
+        $this->showModal = true;
+        $this->loadDropdownData();
+    }
+
+    public function save()
+    {
+        $this->validate();
+
+        $data = [
+            'business_id' => $this->selectedHotel,
+            'branch_id' => $this->selectedBranch,
+            'room_type_id' => $this->room_type_id,
+            'number' => $this->number,
+            'floor' => $this->floor ?: null,
+            'status' => $this->status,
+            'is_smoking' => $this->is_smoking,
+            'is_active' => $this->is_active,
+            'notes' => $this->notes ?: null,
+        ];
+
+        if ($this->editMode) {
+            $room = Room::findOrFail($this->roomId);
+            $room->update($data);
+            session()->flash('message', 'Room updated successfully.');
+        } else {
+            Room::create($data);
+            session()->flash('message', 'Room created successfully.');
+        }
+
+        $this->closeModal();
+    }
+
+    public function changeRoomStatus($id, $newStatus)
+    {
+        $room = Room::findOrFail($id);
+        $room->update(['status' => $newStatus]);
+        session()->flash('message', 'Room status updated successfully.');
+    }
+
+    public function closeModal()
+    {
+        $this->showModal = false;
+        $this->resetForm();
+    }
+
+    public function resetForm()
+    {
+        $this->reset(['roomId', 'room_type_id', 'number', 'floor', 'status', 'is_smoking', 'is_active', 'notes']);
+        $this->status = 'available';
+        $this->is_active = true;
+        $this->is_smoking = false;
+        $this->resetValidation();
+    }
+
+    public function render()
+    {
+        $hotels = Auth::user()->assignedBusinesses()
+            ->where('type', 'hotel')
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        $query = Room::with(['roomType', 'branch'])
+            ->where('business_id', $this->selectedHotel);
+
+        if ($this->selectedBranch) {
+            $query->where('branch_id', $this->selectedBranch);
+        }
+
+        if ($this->search) {
+            $query->where('number', 'like', '%' . $this->search . '%');
+        }
+
+        if ($this->statusFilter) {
+            $query->where('status', $this->statusFilter);
+        }
+
+        if ($this->floorFilter) {
+            $query->where('floor', $this->floorFilter);
+        }
+
+        $rooms = $query->orderBy('floor')->orderBy('number')->paginate(20);
+
+        $stats = [
+            'total' => Room::where('business_id', $this->selectedHotel)->where('is_active', true)->count(),
+            'available' => Room::where('business_id', $this->selectedHotel)->where('status', 'available')->count(),
+            'occupied' => Room::where('business_id', $this->selectedHotel)->where('status', 'occupied')->count(),
+            'cleaning' => Room::where('business_id', $this->selectedHotel)->where('status', 'cleaning')->count(),
+            'maintenance' => Room::where('business_id', $this->selectedHotel)->where('status', 'maintenance')->count(),
+        ];
+
+        return view('livewire.owner.hotel.rooms', [
+            'hotels' => $hotels,
+            'rooms' => $rooms,
+            'stats' => $stats,
+        ]);
+    }
+}

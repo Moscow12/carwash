@@ -21,6 +21,8 @@ class MenuItem extends Model
         'sku',
         'price',
         'cost_price',
+        'tax_rate_id',
+        'printer_station',
         'image',
         'allergens',
         'is_vegetarian',
@@ -63,6 +65,26 @@ class MenuItem extends Model
     public function orderItems(): HasMany
     {
         return $this->hasMany(PosOrderItem::class, 'menu_item_id');
+    }
+
+    public function taxRate(): BelongsTo
+    {
+        return $this->belongsTo(TaxRate::class);
+    }
+
+    public function recipes(): HasMany
+    {
+        return $this->hasMany(MenuItemRecipe::class);
+    }
+
+    public function happyHourPrices(): HasMany
+    {
+        return $this->hasMany(BarHappyHourPrice::class);
+    }
+
+    public function bottleServices(): HasMany
+    {
+        return $this->hasMany(BarBottleService::class);
     }
 
     // Scopes

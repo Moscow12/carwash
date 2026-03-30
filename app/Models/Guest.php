@@ -7,19 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Guest extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'carwash_id',
+        'business_id',
         'customer_id',
         'first_name',
         'last_name',
         'email',
         'phone',
         'nationality',
+        'country',
+        'coming_from',
+        'going_to',
         'id_type',
         'id_number',
         'date_of_birth',
@@ -39,10 +43,14 @@ class Guest extends Model
         'blacklisted' => 'boolean',
     ];
 
+    protected $appends = [
+        'full_name',
+    ];
+
     // Relationships
-    public function carwash(): BelongsTo
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function customer(): BelongsTo
@@ -73,6 +81,31 @@ class Guest extends Model
     public function communicationLogs(): HasMany
     {
         return $this->hasMany(CommunicationLog::class, 'guest_id');
+    }
+
+    public function reservationGuests(): HasMany
+    {
+        return $this->hasMany(ReservationGuest::class);
+    }
+
+    public function amenityRequests(): HasMany
+    {
+        return $this->hasMany(HotelAmenityRequest::class);
+    }
+
+    public function wakeupCalls(): HasMany
+    {
+        return $this->hasMany(WakeupCall::class);
+    }
+
+    public function laundryOrders(): HasMany
+    {
+        return $this->hasMany(LaundryOrder::class);
+    }
+
+    public function barTabs(): HasMany
+    {
+        return $this->hasMany(BarTab::class);
     }
 
     // Scopes

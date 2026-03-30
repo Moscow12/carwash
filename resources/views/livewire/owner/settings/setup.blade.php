@@ -3,15 +3,15 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 class="mb-1">Settings</h4>
-            <p class="text-muted mb-0">Configure your carwash settings and preferences</p>
+            <p class="text-muted mb-0">Configure your business settings and preferences</p>
         </div>
         <div class="d-flex gap-2 align-items-center">
-            @if(count($ownerCarwashes) > 1)
+            @if(count($ownerBusinesses) > 1)
                 <div style="width: 200px;">
                     <x-forms.select2
-                        name="selectedCarwash"
-                        :options="$ownerCarwashes"
-                        wire:model.live="selectedCarwash"
+                        name="selectedBusiness"
+                        :options="$ownerBusinesses"
+                        wire:model.live="selectedBusiness"
                         wrapper="false"
                     />
                 </div>
@@ -575,7 +575,7 @@
                                 <label class="form-label">Default Payment Method</label>
                                 <x-forms.select2
                                     name="default_payment_method"
-                                    :options="collect($availablePaymentMethods)->filter(fn($m) => $m['status'] === 'active')->values()->toArray()"
+                                    :options="collect($availablePaymentMethods)->filter(fn($m) => $m['status'] === 'active')->pluck('name', 'id')->toArray()"
                                     wire:model="default_payment_method"
                                     placeholder="Select default method"
                                     wrapper="false"
@@ -831,7 +831,7 @@
                     <!-- Modules -->
                     @if($activeTab === 'modules')
                         <h5 class="card-title mb-4"><i class="ti ti-puzzle me-2"></i>Modules</h5>
-                        <p class="text-muted mb-4">Enable or disable modules for your carwash</p>
+                        <p class="text-muted mb-4">Enable or disable modules for your business</p>
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <div class="form-check form-switch">
@@ -988,7 +988,7 @@
                             <label class="form-label">Status</label>
                             <x-forms.select2
                                 name="paymentMethodStatus"
-                                :options="[['id' => 'active', 'name' => 'Active'], ['id' => 'inactive', 'name' => 'Inactive']]"
+                                :options="['active' => 'Active', 'inactive' => 'Inactive']"
                                 wire:model="paymentMethodStatus"
                                 wrapper="false"
                             />

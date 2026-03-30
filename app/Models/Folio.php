@@ -6,15 +6,17 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Folio extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $fillable = [
         'folio_no',
-        'carwash_id',
+        'business_id',
         'reservation_id',
         'guest_id',
         'status',
@@ -34,9 +36,9 @@ class Folio extends Model
     ];
 
     // Relationships
-    public function carwash(): BelongsTo
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function reservation(): BelongsTo
@@ -62,6 +64,21 @@ class Folio extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(HotelPayment::class, 'folio_id');
+    }
+
+    public function polymorphicPayments(): MorphMany
+    {
+        return $this->morphMany(Payment::class, 'payable');
+    }
+
+    public function posOrders(): HasMany
+    {
+        return $this->hasMany(PosOrder::class, 'folio_id');
+    }
+
+    public function barTabs(): HasMany
+    {
+        return $this->hasMany(BarTab::class, 'folio_id');
     }
 
     // Scopes

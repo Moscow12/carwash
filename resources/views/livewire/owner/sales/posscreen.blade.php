@@ -311,6 +311,18 @@
             background: #ccc;
             border-radius: 2px;
         }
+
+        /* Mobile adjustments */
+        @media (max-width: 767px) {
+            .input-group .select2-container .select2-selection {
+                min-height: 40px;
+            }
+
+            .input-group .btn {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+        }
     </style>
 
     {{-- Header --}}
@@ -319,9 +331,9 @@
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <span class="fw-bold text-primary">
                     <i class="ti ti-map-pin me-1"></i>
-                    @php $carwash = collect($ownerCarwashes)->firstWhere('id', $selectedCarwash); @endphp
-                    <span class="d-none d-sm-inline">{{ $carwash['name'] ?? 'Select Location' }}</span>
-                    <span class="d-sm-none">{{ Str::limit($carwash['name'] ?? 'Select', 10) }}</span>
+                    @php $businessName = $ownerBusinesses[$selectedBusiness] ?? 'Select Location'; @endphp
+                    <span class="d-none d-sm-inline">{{ $businessName }}</span>
+                    <span class="d-sm-none">{{ Str::limit($businessName, 10) }}</span>
                 </span>
                 <span class="text-muted small d-none d-md-inline">
                     <i class="ti ti-calendar me-1"></i>
@@ -329,11 +341,11 @@
                 </span>
             </div>
             <div class="d-flex gap-2 align-items-center">
-                @if(count($ownerCarwashes) > 1)
+                @if(count($ownerBusinesses) > 1)
                 <x-forms.select2
-                    name="selectedCarwash"
-                    :options="collect($ownerCarwashes)"
-                    wire:model.live="selectedCarwash"
+                    name="selectedBusiness"
+                    :options="$ownerBusinesses"
+                    wire:model.live="selectedBusiness"
                     wrapper="false"
                     class="form-select form-select-sm"
                     style="width: auto; max-width: 150px;"
@@ -380,7 +392,7 @@
             {{-- Customer & Staff Selection --}}
             <div class="p-2 p-md-3 border-bottom">
                 <div class="row g-2">
-                    <div class="col-12 col-md-8">
+                    <div class="col-12 col-md-7">
                         <div class="input-group">
                             <span class="input-group-text"><i class="ti ti-user"></i></span>
                             <x-forms.select2
@@ -389,6 +401,7 @@
                                 wire:model="customer_id"
                                 placeholder="Walk-In Customer"
                                 wrapper="false"
+                                inputGroup="true"
                                 class="form-select"
                             />
                             <button wire:click="openCustomerModal" class="btn btn-primary" title="Add Customer">
@@ -396,7 +409,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-5">
                         <x-forms.select2
                             name="selectedStaff"
                             :options="$availableStaffs"
@@ -515,10 +528,25 @@
                 @forelse($availableItems as $item)
                 <div wire:click="addToCart('{{ $item['id'] }}')" class="product-card">
                     <div class="product-icon">
-                        @if($item['type'] === 'Service')
-                            <i class="ti ti-car-garage text-primary fs-4"></i>
+                        @if(!empty($item['image']))
+                            <img src="{{ asset('storage/' . $item['image']) }}"
+                                 alt="{{ $item['name'] }}"
+                                 class="img-fluid rounded"
+                                 style="width: 100%; height: 60px; object-fit: cover;"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div style="display: none; align-items: center; justify-content: center; height: 60px;">
+                                @if($item['type'] === 'Service')
+                                    <i class="ti ti-car-garage text-primary fs-4"></i>
+                                @else
+                                    <i class="ti ti-package text-info fs-4"></i>
+                                @endif
+                            </div>
                         @else
-                            <i class="ti ti-package text-info fs-4"></i>
+                            @if($item['type'] === 'Service')
+                                <i class="ti ti-car-garage text-primary fs-4"></i>
+                            @else
+                                <i class="ti ti-package text-info fs-4"></i>
+                            @endif
                         @endif
                     </div>
                     <div class="small fw-medium text-truncate" title="{{ $item['name'] }}">{{ Str::limit($item['name'], 12) }}</div>
@@ -904,25 +932,25 @@
                         {{-- Header with Logo --}}
                         <div class="receipt-header">
                             @php
-                                $showLogo = ($carwashSettings['show_logo_on_receipt'] ?? false) && ($carwashInfo['logo'] ?? false);
-                                $logoUrl = $carwashInfo['logo'] ?? null;
+                                $showLogo = ($businessSettings['show_logo_on_receipt'] ?? false) && ($businessInfo['logo'] ?? false);
+                                $logoUrl = $businessInfo['logo'] ?? null;
                             @endphp
                             @if($showLogo && $logoUrl)
                                 <img src="{{ asset('storage/' . $logoUrl) }}" alt="Logo" class="receipt-logo" style="max-width: 120px; max-height: 60px; margin-bottom: 5px;">
                             @endif
-                            <div class="shop-name">{{ $carwashSettings['business_name'] ?? $carwashInfo['name'] ?? 'SHOP NAME' }}</div>
-                            <div class="shop-address">{{ $carwashSettings['business_address'] ?? $carwashInfo['address'] ?? '' }}</div>
+                            <div class="shop-name">{{ $businessSettings['business_name'] ?? $businessInfo['name'] ?? 'SHOP NAME' }}</div>
+                            <div class="shop-address">{{ $businessSettings['business_address'] ?? $businessInfo['address'] ?? '' }}</div>
                             <div class="shop-contact">
-                                @if($carwashSettings['business_phone'] ?? $carwashInfo['phone'] ?? false)
-                                    Mobile: {{ $carwashSettings['business_phone'] ?? $carwashInfo['phone'] }}
+                                @if($businessSettings['business_phone'] ?? $businessInfo['phone'] ?? false)
+                                    Mobile: {{ $businessSettings['business_phone'] ?? $businessInfo['phone'] }}
                                 @endif
                             </div>
                         </div>
 
                         {{-- Custom Receipt Header --}}
-                        @if($carwashSettings['receipt_header'] ?? false)
+                        @if($businessSettings['receipt_header'] ?? false)
                         <div class="receipt-custom-header">
-                            {!! nl2br(e($carwashSettings['receipt_header'])) !!}
+                            {!! nl2br(e($businessSettings['receipt_header'])) !!}
                         </div>
                         @endif
 
@@ -1034,8 +1062,8 @@
 
                         {{-- Footer --}}
                         <div class="receipt-footer">
-                            @if($carwashSettings['receipt_footer'] ?? false)
-                                <div class="custom-footer">{!! nl2br(e($carwashSettings['receipt_footer'])) !!}</div>
+                            @if($businessSettings['receipt_footer'] ?? false)
+                                <div class="custom-footer">{!! nl2br(e($businessSettings['receipt_footer'])) !!}</div>
                             @else
                                 <div class="thank-you">Thank you for your business!</div>
                                 <div class="visit-again">Please visit again</div>

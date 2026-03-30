@@ -145,10 +145,10 @@
                 </div>
                 <div class="col-md-2">
                     <x-forms.select2
-                        name="selectedCarwash"
-                        :options="$ownerCarwashes"
-                        wire:model.live="selectedCarwash"
-                        placeholder="All Carwashes"
+                        name="selectedBusiness"
+                        :options="$ownerBusinesses"
+                        wire:model.live="selectedBusiness"
+                        placeholder="All Businesses"
                         wrapper="false"
                     />
                 </div>

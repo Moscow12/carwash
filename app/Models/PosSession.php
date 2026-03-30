@@ -55,6 +55,21 @@ class PosSession extends Model
         return $this->hasMany(PosOrder::class, 'session_id');
     }
 
+    public function waiterAssignments(): HasMany
+    {
+        return $this->hasMany(WaiterAssignment::class, 'session_id');
+    }
+
+    public function barTabs(): HasMany
+    {
+        return $this->hasMany(BarTab::class, 'session_id');
+    }
+
+    public function shiftSchedules(): HasMany
+    {
+        return $this->hasMany(ShiftSchedule::class, 'session_id');
+    }
+
     // Scopes
     public function scopeOpen(Builder $query): Builder
     {

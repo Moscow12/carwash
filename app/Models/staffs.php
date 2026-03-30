@@ -4,14 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class staffs extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $table = 'staffs';
 
     protected $fillable = [
+        'user_id',
         'name',
         'position',
         'phone',
@@ -20,7 +24,7 @@ class staffs extends Model
         'commission_type',
         'amount',
         'status',
-        'carwash_id',
+        'business_id',
     ];
 
     protected $casts = [
@@ -28,14 +32,29 @@ class staffs extends Model
     ];
 
     // Relationships
-    public function carwash()
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function salesItems()
+    public function business(): BelongsTo
+    {
+        return $this->belongsTo(Business::class, 'business_id');
+    }
+
+    public function salesItems(): HasMany
     {
         return $this->hasMany(sales_item::class, 'staff_id');
+    }
+
+    public function shiftSchedules(): HasMany
+    {
+        return $this->hasMany(ShiftSchedule::class, 'staff_id');
+    }
+
+    public function waiterAssignments(): HasMany
+    {
+        return $this->hasMany(WaiterAssignment::class, 'waiter_id');
     }
 
     // Scopes
@@ -49,9 +68,9 @@ class staffs extends Model
         return $query->where('status', 'inactive');
     }
 
-    public function scopeForCarwash($query, $carwashId)
+    public function scopeForBusiness($query, $businessId)
     {
-        return $query->where('carwash_id', $carwashId);
+        return $query->where('business_id', $businessId);
     }
 
     // Computed attributes

@@ -20,9 +20,9 @@ use App\Models\item_balance;
 #[Layout('components.layouts.app-owner')]
 class Posscreen extends Component
 {
-    // Carwash selection
-    public $selectedCarwash = '';
-    public $ownerCarwashes = [];
+    // Business selection
+    public $selectedBusiness = '';
+    public $ownerBusinesses = [];
 
     // Product filters
     public $search = '';
@@ -78,21 +78,23 @@ class Posscreen extends Component
     public $lastSale = null;
     public $lastSaleItems = [];
     public $lastSalePayments = [];
-    public $carwashInfo = null;
-    public $carwashSettings = null;
+    public $businessInfo = null;
+    public $businessSettings = null;
 
     public function mount()
     {
-        $this->ownerCarwashes = Auth::user()->ownedCarwashes()->orderBy('name')->get();
+        $this->ownerBusinesses = Auth::user()->assignedBusinesses()
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->toArray();
 
-        $firstCarwash = $this->ownerCarwashes->first();
-        if ($firstCarwash) {
-            $this->selectedCarwash = $firstCarwash->id;
+        if (!empty($this->ownerBusinesses)) {
+            $this->selectedBusiness = array_key_first($this->ownerBusinesses);
             $this->loadData();
         }
     }
 
-    public function updatedSelectedCarwash()
+    public function updatedSelectedBusiness()
     {
         $this->loadData();
         $this->clearCart();
@@ -110,7 +112,7 @@ class Posscreen extends Component
 
     public function loadData()
     {
-        if (!$this->selectedCarwash) return;
+        if (!$this->selectedBusiness) return;
 
         $this->loadItems();
         $this->loadCategories();
@@ -121,54 +123,64 @@ class Posscreen extends Component
 
     public function loadItems()
     {
-        if (!$this->selectedCarwash) {
+        if (!$this->selectedBusiness) {
             $this->availableItems = [];
             return;
         }
 
-        $this->availableItems = items::where('carwash_id', $this->selectedCarwash)
+        $this->availableItems = items::where('business_id', $this->selectedBusiness)
             ->where('status', 'active')
             ->when($this->selectedCategory, fn($q) => $q->where('category_id', $this->selectedCategory))
             ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))
-            ->with('category', 'unit')
             ->orderBy('name')
-            ->get()
+            ->get([
+                'id',
+                'name',
+                'selling_price',
+                'type',
+                'require_plate_number',
+                'commission',
+                'commission_type',
+                'image',
+                'product_stock'
+            ])
             ->toArray();
     }
 
     public function loadCategories()
     {
-        $this->availableCategories = category::where('carwash_id', $this->selectedCarwash)
+        $this->availableCategories = category::where('business_id', $this->selectedBusiness)
             ->where('status', 'active')
             ->orderBy('name')
-            ->get()
+            ->pluck('name', 'id')
             ->toArray();
     }
 
     public function loadCustomers()
     {
-        $this->availableCustomers = customers::where('carwash_id', $this->selectedCarwash)
+        $this->availableCustomers = customers::where('business_id', $this->selectedBusiness)
             ->where('status', 'active')
             ->orderBy('name')
             ->get()
+            ->pluck('name', 'id')
             ->toArray();
     }
 
     public function loadStaffs()
     {
-        $this->availableStaffs = staffs::where('carwash_id', $this->selectedCarwash)
+        $this->availableStaffs = staffs::where('business_id', $this->selectedBusiness)
             ->where('status', 'active')
             ->orderBy('name')
-            ->get()
+            ->pluck('name', 'id')
             ->toArray();
     }
 
     public function loadPaymentMethods()
     {
-        $this->availablePaymentMethods = payment_method::where('carwash_id', $this->selectedCarwash)
+        $this->availablePaymentMethods = payment_method::where('business_id', $this->selectedBusiness)
             ->where('status', 'active')
             ->orderBy('name')
-            ->get()
+            ->pluck('name', 'id')
             ->toArray();
     }
 
@@ -338,7 +350,7 @@ class Posscreen extends Component
                 'name' => $this->newCustomerName,
                 'phone' => $this->newCustomerPhone,
                 'email' => $this->newCustomerEmail ?: null,
-                'carwash_id' => $this->selectedCarwash,
+                'business_id' => $this->selectedBusiness,
                 'user_id' => Auth::id(),
                 'status' => 'active',
             ]);
@@ -361,8 +373,18 @@ class Posscreen extends Component
         }
 
         // Get default cash payment method
-        $cashMethod = collect($this->availablePaymentMethods)->firstWhere('name', 'Cash');
-        $defaultMethodId = $cashMethod ? $cashMethod['id'] : ($this->availablePaymentMethods[0]['id'] ?? '');
+        $defaultMethodId = '';
+        foreach ($this->availablePaymentMethods as $id => $name) {
+            if (stripos($name, 'cash') !== false) {
+                $defaultMethodId = $id;
+                break;
+            }
+        }
+
+        // Fallback to first available method if cash not found
+        if (!$defaultMethodId && !empty($this->availablePaymentMethods)) {
+            $defaultMethodId = array_key_first($this->availablePaymentMethods);
+        }
 
         if (!$defaultMethodId) {
             session()->flash('error', 'No payment method available.');
@@ -400,37 +422,34 @@ class Posscreen extends Component
         // Get default payment method based on type
         $defaultMethodId = '';
         if ($type === 'cash') {
-            $cashMethod = collect($this->availablePaymentMethods)->firstWhere('name', 'Cash');
-            $defaultMethodId = $cashMethod ? $cashMethod['id'] : ($this->availablePaymentMethods[0]['id'] ?? '');
+            foreach ($this->availablePaymentMethods as $id => $name) {
+                if (stripos($name, 'cash') !== false) {
+                    $defaultMethodId = $id;
+                    break;
+                }
+            }
         } elseif ($type === 'card') {
-            $cardMethod = collect($this->availablePaymentMethods)->first(fn($m) => stripos($m['name'], 'card') !== false);
-            $defaultMethodId = $cardMethod ? $cardMethod['id'] : ($this->availablePaymentMethods[0]['id'] ?? '');
-        } elseif ($type === 'multiple') {
-            // For multiple payments, start with an empty row
-            $defaultMethodId = $this->availablePaymentMethods[0]['id'] ?? '';
-        } else {
-            $defaultMethodId = $this->availablePaymentMethods[0]['id'] ?? '';
+            foreach ($this->availablePaymentMethods as $id => $name) {
+                if (stripos($name, 'card') !== false) {
+                    $defaultMethodId = $id;
+                    break;
+                }
+            }
+        }
+
+        // Fallback to first available method
+        if (!$defaultMethodId && !empty($this->availablePaymentMethods)) {
+            $defaultMethodId = array_key_first($this->availablePaymentMethods);
         }
 
         // Initialize payment rows
-        if ($type === 'multiple') {
-            // For multiple payments, start with empty amount to encourage splitting
-            $this->paymentRows = [
-                [
-                    'amount' => $this->cartTotal,
-                    'payment_method_id' => $defaultMethodId,
-                    'note' => '',
-                ]
-            ];
-        } else {
-            $this->paymentRows = [
-                [
-                    'amount' => $this->cartTotal,
-                    'payment_method_id' => $defaultMethodId,
-                    'note' => '',
-                ]
-            ];
-        }
+        $this->paymentRows = [
+            [
+                'amount' => $this->cartTotal,
+                'payment_method_id' => $defaultMethodId,
+                'note' => '',
+            ]
+        ];
 
         // Legacy support
         $this->paymentAmount = $this->cartTotal;
@@ -451,7 +470,9 @@ class Posscreen extends Component
     // Multiple Payment Row Management
     public function addPaymentRow()
     {
-        $defaultMethodId = $this->availablePaymentMethods[0]['id'] ?? '';
+        $defaultMethodId = !empty($this->availablePaymentMethods)
+            ? array_key_first($this->availablePaymentMethods)
+            : '';
         $this->paymentRows[] = [
             'amount' => 0,
             'payment_method_id' => $defaultMethodId,
@@ -530,7 +551,7 @@ class Posscreen extends Component
 
             // Create sale
             $sale = sales::create([
-                'carwash_id' => $this->selectedCarwash,
+                'business_id' => $this->selectedBusiness,
                 'sale_status' => 'completed',
                 'sale_type' => 'in-store',
                 'sale_date' => now(),
@@ -597,9 +618,11 @@ class Posscreen extends Component
             DB::rollBack();
             $errorMessage = $this->getCustomErrorMessage($e);
             session()->flash('error', $errorMessage);
+            \Log::error('Sale Query Error: ' . $e->getMessage());
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'An error occurred while processing the sale. Please try again.');
+            session()->flash('error', 'An error occurred while processing the sale: ' . $e->getMessage());
+            \Log::error('Sale Processing Error: ' . $e->getMessage());
         }
     }
 
@@ -620,8 +643,8 @@ class Posscreen extends Component
         if (str_contains($message, 'payment_method_id')) {
             return 'Please select a valid payment method.';
         }
-        if (str_contains($message, 'carwash_id')) {
-            return 'Please select a carwash first.';
+        if (str_contains($message, 'business_id')) {
+            return 'Please select a business first.';
         }
         if (str_contains($message, 'Duplicate entry')) {
             return 'This transaction appears to be a duplicate. Please refresh the page.';
@@ -636,7 +659,7 @@ class Posscreen extends Component
     private function updateItemBalance($itemId, $quantity, $transactionType)
     {
         $lastBalance = item_balance::where('item_id', $itemId)
-            ->where('carwash_id', $this->selectedCarwash)
+            ->where('business_id', $this->selectedBusiness)
             ->latest()
             ->first();
 
@@ -646,7 +669,7 @@ class Posscreen extends Component
         item_balance::create([
             'item_id' => $itemId,
             'user_id' => Auth::id(),
-            'carwash_id' => $this->selectedCarwash,
+            'business_id' => $this->selectedBusiness,
             'previous_balance' => $previousBalance,
             'current_balance' => $newBalance,
             'quantity_changed' => abs($quantity),
@@ -659,11 +682,11 @@ class Posscreen extends Component
     // Recent sales
     public function openRecentModal()
     {
-        $this->recentSales = sales::where('carwash_id', $this->selectedCarwash)
-            ->with(['customer', 'user', 'items.item'])
+        $this->recentSales = sales::where('business_id', $this->selectedBusiness)
+            ->with(['customer:id,name,phone', 'user:id,name'])
             ->latest()
             ->take(10)
-            ->get()
+            ->get(['id', 'sale_date', 'total_amount', 'payment_status', 'customer_id', 'user_id'])
             ->toArray();
 
         $this->showRecentModal = true;
@@ -678,7 +701,7 @@ class Posscreen extends Component
     // Receipt methods
     public function showReceipt($saleId)
     {
-        $sale = sales::with(['customer', 'user', 'items.item', 'payments.paymentMethod', 'carwash.settings'])
+        $sale = sales::with(['customer', 'user', 'items.item', 'payments.paymentMethod', 'business.settings'])
             ->find($saleId);
 
         if (!$sale) return;
@@ -686,8 +709,8 @@ class Posscreen extends Component
         $this->lastSale = $sale->toArray();
         $this->lastSaleItems = $sale->items->toArray();
         $this->lastSalePayments = $sale->payments->toArray();
-        $this->carwashInfo = $sale->carwash ? $sale->carwash->toArray() : null;
-        $this->carwashSettings = $sale->carwash && $sale->carwash->settings ? $sale->carwash->settings->toArray() : null;
+        $this->businessInfo = $sale->business ? $sale->business->toArray() : null;
+        $this->businessSettings = $sale->business && $sale->business->settings ? $sale->business->settings->toArray() : null;
         $this->showReceiptModal = true;
     }
 
@@ -697,8 +720,8 @@ class Posscreen extends Component
         $this->lastSale = null;
         $this->lastSaleItems = [];
         $this->lastSalePayments = [];
-        $this->carwashInfo = null;
-        $this->carwashSettings = null;
+        $this->businessInfo = null;
+        $this->businessSettings = null;
     }
 
     public function printReceipt()

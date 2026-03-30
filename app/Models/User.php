@@ -6,14 +6,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasUuids;
+    use HasFactory, Notifiable, HasUuids, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -25,6 +27,7 @@ class User extends Authenticatable
         'email',
         'phone',
         'role',
+        'role_id',
         'status',
         'avatar',
         'password',
@@ -54,11 +57,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Get carwashes owned by this user
+     * Get businesses owned by this user
      */
-    public function ownedCarwashes(): HasMany
+    public function ownedBusinesses(): HasMany
     {
-        return $this->hasMany(carwashes::class, 'owner_id');
+        return $this->hasMany(Business::class, 'owner_id');
     }
 
     /**
@@ -115,5 +118,87 @@ class User extends Authenticatable
     public function hasRole(string $role): bool
     {
         return $this->role === $role;
+    }
+
+    /**
+     * Get business roles for this user
+     */
+    public function businessRoles(): HasMany
+    {
+        return $this->hasMany(UserBusinessRole::class);
+    }
+
+    /**
+     * Get businesses this user is assigned to (for staff)
+     */
+    public function assignedBusinesses()
+    {
+        // If user is owner, return owned businesses
+        if ($this->role === 'owner') {
+            return $this->ownedBusinesses();
+        }
+
+        // If user is staff, return businesses from user_business_roles
+        if ($this->role === 'staff') {
+            return Business::whereIn('id', function($query) {
+                $query->select('business_id')
+                    ->from('user_business_roles')
+                    ->where('user_id', $this->id)
+                    ->where('is_active', true);
+            });
+        }
+
+        // For admin or other roles, return all businesses
+        return Business::query();
+    }
+
+    /**
+     * Get the dynamic role assigned to this user
+     */
+    public function assignedRole(): BelongsTo
+    {
+        return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    /**
+     * Check if user has a specific permission
+     */
+    public function hasPermission(string $permissionName): bool
+    {
+        // If user has a dynamic role, check its permissions
+        if ($this->role_id && $this->assignedRole) {
+            return $this->assignedRole->hasPermission($permissionName);
+        }
+
+        // For system roles (admin, owner), grant all permissions
+        if (in_array($this->role, ['admin', 'owner'])) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Get staff profile linked to this user
+     */
+    public function staffProfile(): HasMany
+    {
+        return $this->hasMany(staffs::class);
+    }
+
+    /**
+     * Get payments received by this user
+     */
+    public function paymentsReceived(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'received_by');
+    }
+
+    /**
+     * Get void logs created by this user
+     */
+    public function voidLogs(): HasMany
+    {
+        return $this->hasMany(VoidLog::class, 'voided_by');
     }
 }
