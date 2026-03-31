@@ -778,15 +778,25 @@ class Posscreen extends Component
                 $this->showPlateModal = true;
                 $this->closeScanner();
             } else {
-                $this->addItemToCart($item->toArray());
-                session()->flash('message', 'Item added: ' . $item->name);
+                // Check if item already in cart to show appropriate message
+                $cartKey = $item->id;
+                $isExisting = isset($this->cart[$cartKey]);
 
-                // Keep scanner open for continuous scanning
-                // or close it after successful scan
-                // $this->closeScanner();
+                $this->addItemToCart($item->toArray());
+
+                if ($isExisting) {
+                    $quantity = $this->cart[$cartKey]['quantity'];
+                    session()->flash('message', 'Item quantity updated: ' . $item->name . ' (Qty: ' . $quantity . ')');
+                } else {
+                    session()->flash('message', 'Item added: ' . $item->name);
+                }
+
+                // Close scanner after successful scan
+                $this->closeScanner();
             }
         } else {
             session()->flash('error', 'Item not found with barcode: ' . $code);
+            // Don't close scanner on error so user can try again
         }
     }
 
