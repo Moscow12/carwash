@@ -505,13 +505,16 @@
             {{-- Search & Filters --}}
             <div class="p-2 p-md-3 bg-white border-bottom">
                 <div class="row g-2">
-                    <div class="col-7 col-md-6">
+                    <div class="col-7 col-md-7">
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="ti ti-search"></i></span>
                             <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Search...">
+                            <button wire:click="openScanner" class="btn btn-primary" type="button" title="Scan Barcode">
+                                <i class="ti ti-scan"></i>
+                            </button>
                         </div>
                     </div>
-                    <div class="col-5 col-md-6">
+                    <div class="col-5 col-md-5">
                         <x-forms.select2
                             name="selectedCategory"
                             :options="$availableCategories"
@@ -1084,6 +1087,48 @@
     </div>
     @endif
 
+    {{-- Barcode Scanner Modal --}}
+    @if($showScannerModal)
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.9); z-index: 1100;">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow bg-dark">
+                <div class="modal-header border-0 pb-2 bg-dark text-white">
+                    <h5 class="modal-title"><i class="ti ti-scan me-2"></i> Scan Barcode</h5>
+                    <button type="button" class="btn-close btn-close-white" wire:click="closeScanner"></button>
+                </div>
+                <div class="modal-body p-2 bg-dark">
+                    {{-- Camera preview --}}
+                    <div class="scanner-container position-relative">
+                        <video id="scanner-preview" class="w-100 rounded" style="max-height: 400px; background: #000;" autoplay playsinline></video>
+
+                        {{-- Scanning overlay --}}
+                        <div class="scanner-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
+                            <div class="scanner-frame" style="width: 80%; height: 200px; border: 3px solid #0d6efd; border-radius: 10px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);"></div>
+                        </div>
+
+                        {{-- Loading indicator --}}
+                        <div id="scanner-loading" class="position-absolute top-50 start-50 translate-middle text-center text-white">
+                            <div class="spinner-border text-primary mb-2" role="status"></div>
+                            <div>Starting camera...</div>
+                        </div>
+                    </div>
+
+                    {{-- Instructions --}}
+                    <div class="text-center text-white mt-3">
+                        <i class="ti ti-info-circle me-1"></i>
+                        <small>Position the barcode within the frame</small>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-dark">
+                    <button wire:click="closeScanner" class="btn btn-light w-100">
+                        <i class="ti ti-x me-1"></i> Close Scanner
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Thermal Receipt Print Styles --}}
     <style>
         /* Receipt Thermal Styles */
@@ -1436,6 +1481,125 @@
                 }, 500);
             };
         }
+    </script>
 
+    {{-- ZXing Barcode Scanner Library --}}
+    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
+
+    <script>
+        let codeReader = null;
+        let scannerStream = null;
+
+        // Initialize scanner when Livewire is loaded
+        document.addEventListener('livewire:initialized', () => {
+            // Listen for start-scanner event
+            Livewire.on('start-scanner', () => {
+                startBarcodeScanner();
+            });
+
+            // Listen for stop-scanner event
+            Livewire.on('stop-scanner', () => {
+                stopBarcodeScanner();
+            });
+        });
+
+        async function startBarcodeScanner() {
+            const preview = document.getElementById('scanner-preview');
+            const loading = document.getElementById('scanner-loading');
+
+            if (!preview) return;
+
+            try {
+                // Show loading
+                if (loading) loading.style.display = 'block';
+
+                // Initialize code reader
+                codeReader = new ZXing.BrowserMultiFormatReader();
+
+                // Get video devices
+                const videoInputDevices = await codeReader.listVideoInputDevices();
+
+                // Prefer back camera on mobile
+                let selectedDeviceId = videoInputDevices[0]?.deviceId;
+                const backCamera = videoInputDevices.find(device =>
+                    device.label.toLowerCase().includes('back') ||
+                    device.label.toLowerCase().includes('rear') ||
+                    device.label.toLowerCase().includes('environment')
+                );
+                if (backCamera) {
+                    selectedDeviceId = backCamera.deviceId;
+                }
+
+                // Hide loading
+                if (loading) loading.style.display = 'none';
+
+                // Start decoding
+                codeReader.decodeFromVideoDevice(selectedDeviceId, 'scanner-preview', (result, err) => {
+                    if (result) {
+                        // Barcode detected - dispatch event to Livewire
+                        const code = result.getText();
+                        console.log('Barcode scanned:', code);
+
+                        // Dispatch to Livewire
+                        Livewire.dispatch('barcode-scanned', { code: code });
+
+                        // Optional: Add vibration feedback if supported
+                        if (navigator.vibrate) {
+                            navigator.vibrate(200);
+                        }
+
+                        // Optional: Play beep sound
+                        playBeep();
+                    }
+
+                    if (err && err.name !== 'NotFoundException') {
+                        console.error('Scanner error:', err);
+                    }
+                });
+
+            } catch (err) {
+                console.error('Failed to start scanner:', err);
+                alert('Failed to access camera. Please grant camera permissions and try again.');
+                if (loading) loading.style.display = 'none';
+                Livewire.dispatch('stop-scanner');
+            }
+        }
+
+        function stopBarcodeScanner() {
+            if (codeReader) {
+                codeReader.reset();
+                codeReader = null;
+            }
+
+            // Stop all video streams
+            const preview = document.getElementById('scanner-preview');
+            if (preview && preview.srcObject) {
+                const tracks = preview.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                preview.srcObject = null;
+            }
+        }
+
+        // Play beep sound on successful scan
+        function playBeep() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            gainNode.gain.value = 0.3;
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            stopBarcodeScanner();
+        });
     </script>
 </div>

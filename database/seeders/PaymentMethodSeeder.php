@@ -26,28 +26,8 @@ class PaymentMethodSeeder extends Seeder
                 'description' => 'Cash payment',
             ],
             [
-                'name' => 'Room Charge',
-                'description' => 'Charge to hotel room folio for deferred payment',
-            ],
-            [
-                'name' => 'Tab',
-                'description' => 'Bar tab for deferred payment',
-            ],
-            [
-                'name' => 'Credit Card',
-                'description' => 'Credit or debit card payment',
-            ],
-            [
                 'name' => 'Mobile Payment',
                 'description' => 'Mobile wallet payment (e.g., Apple Pay, Google Pay)',
-            ],
-            [
-                'name' => 'Bank Transfer',
-                'description' => 'Direct bank transfer payment',
-            ],
-            [
-                'name' => 'Check',
-                'description' => 'Payment by check',
             ],
         ];
 
