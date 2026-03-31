@@ -177,6 +177,18 @@ class Posscreen extends Component
             ->orderBy('name')
             ->pluck('name', 'id')
             ->toArray();
+
+        // Auto-select logged-in user's staff record if exists
+        if (empty($this->selectedStaff)) {
+            $userStaff = staffs::where('business_id', $this->selectedBusiness)
+                ->where('user_id', Auth::id())
+                ->where('status', 'active')
+                ->first();
+
+            if ($userStaff) {
+                $this->selectedStaff = $userStaff->id;
+            }
+        }
     }
 
     public function loadPaymentMethods()
