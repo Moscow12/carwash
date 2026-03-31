@@ -38,7 +38,7 @@ class Itemregister extends Component
 
     public $showScannerModal = false;
 
-    #[Rule('required|string|max:500')]
+    #[Rule('nullable|string|max:500')]
     public $description = '';
 
     #[Rule('required|numeric|min:0')]
@@ -287,6 +287,7 @@ class Itemregister extends Component
     public function openScannerModal()
     {
         $this->showScannerModal = true;
+        $this->dispatch('scanner-opened');
     }
 
     public function closeScannerModal()
