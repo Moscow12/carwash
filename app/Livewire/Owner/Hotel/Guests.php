@@ -197,27 +197,32 @@ class Guests extends Component
             ->orderBy('name')
             ->get();
 
-        $query = Guest::withCount(['reservations', 'folios'])
-            ->where('business_id', $this->selectedHotel);
+        try {
+            $query = Guest::withCount(['reservations', 'folios'])
+                ->where('business_id', $this->selectedHotel);
 
-        if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('first_name', 'like', '%' . $this->search . '%')
-                  ->orWhere('last_name', 'like', '%' . $this->search . '%')
-                  ->orWhere('email', 'like', '%' . $this->search . '%')
-                  ->orWhere('phone', 'like', '%' . $this->search . '%');
-            });
+            if ($this->search) {
+                $query->where(function ($q) {
+                    $q->where('first_name', 'like', '%' . $this->search . '%')
+                      ->orWhere('last_name', 'like', '%' . $this->search . '%')
+                      ->orWhere('email', 'like', '%' . $this->search . '%')
+                      ->orWhere('phone', 'like', '%' . $this->search . '%');
+                });
+            }
+
+            if ($this->vipFilter) {
+                $query->where('vip_level', $this->vipFilter);
+            }
+
+            if ($this->statusFilter) {
+                $query->where('status', $this->statusFilter);
+            }
+
+            $guests = $query->latest()->paginate(15);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Unable to load guest data. Please contact support if this issue persists.');
+            $guests = Guest::where('business_id', $this->selectedHotel)->paginate(15);
         }
-
-        if ($this->vipFilter) {
-            $query->where('vip_level', $this->vipFilter);
-        }
-
-        if ($this->statusFilter) {
-            $query->where('status', $this->statusFilter);
-        }
-
-        $guests = $query->latest()->paginate(15);
 
         $stats = [
             'total' => Guest::where('business_id', $this->selectedHotel)->count(),
