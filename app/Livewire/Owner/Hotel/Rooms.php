@@ -49,6 +49,8 @@ class Rooms extends Component
 
     public $roomTypes = [];
     public $branches = [];
+    public $isProcessing = false;
+    public $validationErrors = [];
 
     public function mount()
     {
@@ -101,6 +103,33 @@ class Rooms extends Component
             ->orderBy('is_main', 'desc')
             ->orderBy('name')
             ->get();
+
+        // Auto-create main branch if business has no branches
+        if ($this->branches->isEmpty()) {
+            $business = Business::find($this->selectedHotel);
+            if ($business) {
+                $mainBranch = HotelBranch::create([
+                    'business_id' => $this->selectedHotel,
+                    'name' => $business->name . ' - Main Branch',
+                    'code' => 'MAIN',
+                    'is_main' => true,
+                    'phone' => $business->phone ?? null,
+                    'address' => $business->address ?? null,
+                    'status' => 'active',
+                ]);
+
+                // Reload branches
+                $this->branches = HotelBranch::where('business_id', $this->selectedHotel)
+                    ->where('status', 'active')
+                    ->orderBy('is_main', 'desc')
+                    ->orderBy('name')
+                    ->get();
+
+                $this->selectedBranch = $mainBranch->id;
+
+                session()->flash('message', 'Main branch automatically created for ' . $business->name);
+            }
+        }
     }
 
     public function openModal()
@@ -131,40 +160,91 @@ class Rooms extends Component
 
     public function save()
     {
-        $this->validate();
-
-        // Check if business has branches - if not, branch_id should be null
-        if ($this->branches->isEmpty()) {
-            $this->selectedBranch = null;
-        } elseif (!$this->selectedBranch) {
-            session()->flash('error', 'Please select a branch for this room.');
-            return;
-        }
-
-        $data = [
-            'business_id' => $this->selectedHotel,
-            'branch_id' => $this->selectedBranch,
-            'room_type_id' => $this->room_type_id,
-            'number' => $this->number,
-            'floor' => $this->floor ?: null,
-            'status' => $this->status,
-            'is_smoking' => $this->is_smoking,
-            'is_active' => $this->is_active,
-            'notes' => $this->notes ?: null,
-        ];
+        // Start processing
+        $this->isProcessing = true;
+        $this->validationErrors = [];
 
         try {
+            // Validate input
+            $this->validate();
+
+            // Ensure branch_id is properly set
+            if (!$this->selectedBranch || $this->selectedBranch === '' || $this->selectedBranch === 'null') {
+                // If no branch selected, reload data to check/create branch
+                $this->loadDropdownData();
+
+                // After loading, if still no branch, set to null
+                if ($this->branches->isEmpty()) {
+                    $this->selectedBranch = null;
+                } elseif (!$this->selectedBranch) {
+                    $this->isProcessing = false;
+                    session()->flash('error', 'Please select a branch for this room.');
+                    return;
+                }
+            }
+
+            // Check for duplicate room number
+            $duplicateCheck = Room::where('business_id', $this->selectedHotel)
+                ->where('number', $this->number);
+
+            if ($this->selectedBranch) {
+                $duplicateCheck->where('branch_id', $this->selectedBranch);
+            }
+
+            if ($this->editMode) {
+                $duplicateCheck->where('id', '!=', $this->roomId);
+            }
+
+            if ($duplicateCheck->exists()) {
+                $this->isProcessing = false;
+                session()->flash('error', 'A room with number "' . $this->number . '" already exists in this branch.');
+                return;
+            }
+
+            $data = [
+                'business_id' => $this->selectedHotel,
+                'branch_id' => $this->selectedBranch ?: null,
+                'room_type_id' => $this->room_type_id,
+                'number' => $this->number,
+                'floor' => $this->floor ?: null,
+                'status' => $this->status,
+                'is_smoking' => $this->is_smoking,
+                'is_active' => $this->is_active,
+                'notes' => $this->notes ?: null,
+            ];
+
             if ($this->editMode) {
                 $room = Room::findOrFail($this->roomId);
                 $room->update($data);
-                session()->flash('message', 'Room updated successfully.');
+                session()->flash('message', 'Room updated successfully!');
             } else {
                 Room::create($data);
-                session()->flash('message', 'Room created successfully.');
+                session()->flash('message', 'Room created successfully!');
             }
+
+            $this->isProcessing = false;
             $this->closeModal();
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->isProcessing = false;
+            $this->validationErrors = $e->validator->errors()->all();
+            session()->flash('error', 'Please check the form for errors.');
+
+        } catch (\Illuminate\Database\QueryException $e) {
+            $this->isProcessing = false;
+
+            // User-friendly database error messages
+            if (str_contains($e->getMessage(), 'Duplicate entry')) {
+                session()->flash('error', 'This room number already exists. Please use a different number.');
+            } elseif (str_contains($e->getMessage(), 'foreign key constraint')) {
+                session()->flash('error', 'Invalid room type or branch selected. Please refresh the page and try again.');
+            } else {
+                session()->flash('error', 'Database error: Unable to save room. Please try again.');
+            }
+
         } catch (\Exception $e) {
-            session()->flash('error', 'Unable to save room. Please ensure all required fields are filled correctly.');
+            $this->isProcessing = false;
+            session()->flash('error', 'An unexpected error occurred: ' . $e->getMessage());
         }
     }
 
@@ -183,7 +263,7 @@ class Rooms extends Component
 
     public function resetForm()
     {
-        $this->reset(['roomId', 'room_type_id', 'number', 'floor', 'status', 'is_smoking', 'is_active', 'notes']);
+        $this->reset(['roomId', 'room_type_id', 'number', 'floor', 'status', 'is_smoking', 'is_active', 'notes', 'isProcessing', 'validationErrors']);
         $this->status = 'available';
         $this->is_active = true;
         $this->is_smoking = false;
