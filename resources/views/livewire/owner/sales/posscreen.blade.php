@@ -165,9 +165,9 @@
         }
 
         @media (max-width: 575px) {
-            .product-icon { width: 40px; height: 40px; }
-            .product-card { padding: 8px 6px; }
-            .product-card .small { font-size: 11px; }
+            .product-icon { width: 50px; height: 50px; }
+            .product-card { padding: 12px 8px; min-height: 140px; }
+            .product-card .small { font-size: 12px; }
         }
 
         /* Cart Table */
@@ -183,8 +183,21 @@
 
         @media (max-width: 575px) {
             .cart-table table { font-size: 13px; }
-            .cart-table .btn-sm { padding: 4px 6px; }
-            .cart-table input.form-control { width: 40px !important; padding: 4px; }
+            .cart-table .qty-btn {
+                padding: 8px 10px;
+                min-width: 36px;
+                min-height: 36px;
+            }
+            .cart-table input.form-control {
+                width: 48px !important;
+                padding: 6px 4px;
+                font-size: 14px;
+                min-height: 36px;
+            }
+        }
+
+        .qty-btn {
+            padding: 4px 8px;
         }
 
         /* Cart Summary */
@@ -204,17 +217,29 @@
             z-index: 100;
         }
 
+        .btn-action {
+            min-height: 42px;
+        }
+
         @media (max-width: 767px) {
             .pos-footer {
-                padding: 8px 10px;
+                padding: 10px;
             }
             .pos-footer .btn-action {
-                padding: 8px 12px;
-                font-size: 13px;
+                padding: 10px 14px;
+                font-size: 14px;
+                min-height: 48px;
+                flex: 1;
+                min-width: 70px;
             }
             .pos-footer .total-display {
-                padding: 8px 12px;
-                font-size: 14px;
+                padding: 10px 15px;
+                font-size: 16px;
+                width: 100%;
+                text-align: center;
+                background: #fff;
+                border-radius: 8px;
+                margin-bottom: 8px;
             }
             .pos-footer .total-display .fs-4 {
                 font-size: 16px !important;
@@ -410,13 +435,24 @@
                         </div>
                     </div>
                     <div class="col-12 col-md-5">
-                        <x-forms.select2
-                            name="selectedStaff"
-                            :options="$availableStaffs"
-                            wire:model="selectedStaff"
-                            placeholder="Select Staff"
-                            wrapper="false"
-                        />
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="ti ti-user-check"></i></span>
+                            <x-forms.select2
+                                name="selectedStaff"
+                                :options="$availableStaffs"
+                                wire:model="selectedStaff"
+                                placeholder="Select Staff"
+                                wrapper="false"
+                                inputGroup="true"
+                                class="form-select"
+                            />
+                        </div>
+                        @if($selectedStaff && count($availableStaffs) > 0)
+                            <small class="text-muted d-block mt-1">
+                                <i class="ti ti-info-circle"></i>
+                                Staff: {{ $availableStaffs[$selectedStaff] ?? 'Selected' }}
+                            </small>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -570,43 +606,49 @@
 
     {{-- Footer Actions --}}
     <div class="pos-footer">
+        {{-- Total Display - First on mobile --}}
+        <div class="total-display d-md-none mb-2">
+            <span class="small">Total:</span>
+            <span class="fs-4 fw-bold ms-2">TZS {{ number_format($cartTotal, 0) }}</span>
+        </div>
+
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            {{-- Total Display - First on mobile --}}
-            <div class="total-display order-first order-md-last">
-                <span class="small d-none d-sm-inline">Total:</span>
+            {{-- Total Display - Desktop --}}
+            <div class="total-display d-none d-md-block">
+                <span class="small">Total:</span>
                 <span class="fs-4 fw-bold">TZS {{ number_format($cartTotal, 0) }}</span>
             </div>
 
             {{-- Action Buttons --}}
-            <div class="d-flex gap-2 flex-wrap">
-                <button wire:click="openPaymentModal('credit')" class="btn btn-info btn-action" {{ empty($cart) ? 'disabled' : '' }}>
-                    <i class="ti ti-file-invoice"></i>
-                    <span class="btn-text ms-1 d-none d-sm-inline">Credit</span>
-                </button>
-                <button wire:click="openPaymentModal('card')" class="btn btn-warning btn-action" {{ empty($cart) ? 'disabled' : '' }}>
-                    <i class="ti ti-credit-card"></i>
-                    <span class="btn-text ms-1 d-none d-sm-inline">Card</span>
-                </button>
-                <button wire:click="openPaymentModal('multiple')" class="btn btn-secondary btn-action" {{ empty($cart) ? 'disabled' : '' }}>
-                    <i class="ti ti-wallet"></i>
-                    <span class="btn-text ms-1 d-none d-sm-inline">Multiple</span>
-                </button>
+            <div class="d-flex gap-2 flex-wrap w-md-auto w-100">
                 <button wire:click="quickCashOut" class="btn btn-success btn-action" {{ empty($cart) ? 'disabled' : '' }}>
                     <span wire:loading.remove wire:target="quickCashOut">
                         <i class="ti ti-cash"></i>
-                        <span class="btn-text ms-1 d-none d-sm-inline">Cash</span>
+                        <span class="btn-text ms-1">Cash</span>
                     </span>
                     <span wire:loading wire:target="quickCashOut">
                         <span class="spinner-border spinner-border-sm"></span>
                     </span>
                 </button>
+                <button wire:click="openPaymentModal('card')" class="btn btn-warning btn-action" {{ empty($cart) ? 'disabled' : '' }}>
+                    <i class="ti ti-credit-card"></i>
+                    <span class="btn-text ms-1 d-none d-md-inline">Card</span>
+                </button>
+                <button wire:click="openPaymentModal('credit')" class="btn btn-info btn-action" {{ empty($cart) ? 'disabled' : '' }}>
+                    <i class="ti ti-file-invoice"></i>
+                    <span class="btn-text ms-1 d-none d-md-inline">Credit</span>
+                </button>
+                <button wire:click="openPaymentModal('multiple')" class="btn btn-secondary btn-action d-none d-md-inline-flex" {{ empty($cart) ? 'disabled' : '' }}>
+                    <i class="ti ti-wallet"></i>
+                    <span class="btn-text ms-1">Multiple</span>
+                </button>
                 <button wire:click="clearCart" class="btn btn-outline-danger btn-action" {{ empty($cart) ? 'disabled' : '' }}>
                     <i class="ti ti-x"></i>
                     <span class="btn-text ms-1 d-none d-sm-inline">Clear</span>
                 </button>
-                <button wire:click="openRecentModal" class="btn btn-outline-secondary btn-action">
+                <button wire:click="openRecentModal" class="btn btn-outline-secondary btn-action d-none d-md-inline-flex">
                     <i class="ti ti-history"></i>
-                    <span class="btn-text ms-1 d-none d-md-inline">Recent</span>
+                    <span class="btn-text ms-1">Recent</span>
                 </button>
             </div>
         </div>
