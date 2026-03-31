@@ -287,6 +287,7 @@ class Itemregister extends Component
     public function openScannerModal()
     {
         $this->showScannerModal = true;
+        $this->dispatch('scanner-opened');
     }
 
     public function closeScannerModal()

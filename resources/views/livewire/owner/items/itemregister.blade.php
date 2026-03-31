@@ -17,235 +17,28 @@
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h3 class="mb-1">Items / Services</h3>
-            <p class="text-muted mb-0">Manage products and services for your businesses</p>
+            <h3 class="mb-1">{{ $editMode ? 'Edit Item' : 'Add New Item' }}</h3>
+            <p class="text-muted mb-0">{{ $editMode ? 'Update item information' : 'Create a new product or service' }}</p>
         </div>
-        <button wire:click="openModal" class="btn btn-primary">
-            <i class="ti ti-plus me-1"></i> Add Item
-        </button>
+        <a href="{{ route('owner.list-items') }}" class="btn btn-outline-secondary">
+            <i class="ti ti-arrow-left me-1"></i> Back to List
+        </a>
     </div>
 
-    {{-- Filters Card --}}
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body py-3">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label small text-muted mb-1">Search</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-transparent border-end-0">
-                            <i class="ti ti-search"></i>
-                        </span>
-                        <input type="text" wire:model.live.debounce.300ms="search"
-                               class="form-control border-start-0 ps-0"
-                               placeholder="Search items...">
-                    </div>
-                </div>
-                @if($ownerBusinesses->count() > 1)
-                <div class="col-md-2">
-                    <label class="form-label small text-muted mb-1">Business</label>
-                    <x-forms.select2
-                        name="filterBusiness"
-                        placeholder="All Businesses"
-                        :options="collect($ownerBusinesses)->pluck('name', 'id')"
-                        wire:model.live="filterBusiness"
-                        wrapper="false"
-                    />
-                </div>
-                @endif
-                <div class="col-md-2">
-                    <label class="form-label small text-muted mb-1">Category</label>
-                    <x-forms.select2
-                        name="filterCategory"
-                        placeholder="All Categories"
-                        :options="$filterCategories->pluck('name', 'id')"
-                        wire:model.live="filterCategory"
-                        wrapper="false"
-                    />
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label small text-muted mb-1">Type</label>
-                    <x-forms.select2
-                        name="filterType"
-                        placeholder="All Types"
-                        :options="collect(['' => 'All Types', 'Service' => 'Service', 'product' => 'Product'])"
-                        wire:model.live="filterType"
-                        wrapper="false"
-                    />
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label small text-muted mb-1">Status</label>
-                    <x-forms.select2
-                        name="filterStatus"
-                        placeholder="All Status"
-                        :options="collect(['' => 'All Status', 'active' => 'Active', 'inactive' => 'Inactive'])"
-                        wire:model.live="filterStatus"
-                        wrapper="false"
-                    />
-                </div>
-                <div class="col-md-1 text-end">
-                    <span class="badge bg-primary">{{ $items->total() }}</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Items Grid --}}
-    <div class="row g-3">
-        @forelse($items as $item)
-        <div class="col-md-6 col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="d-flex align-items-center">
-                            @if($item->image)
-                                <img src="{{ Storage::url($item->image) }}" alt="{{ $item->name }}"
-                                     class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                            @else
-                                <div class="avatar avatar-md bg-{{ $item->type === 'Service' ? 'primary' : 'info' }}-subtle text-{{ $item->type === 'Service' ? 'primary' : 'info' }} rounded me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                    <i class="ti ti-{{ $item->type === 'Service' ? 'wash' : 'package' }} fs-4"></i>
-                                </div>
-                            @endif
-                            <div>
-                                <h6 class="mb-0">{{ $item->name }}</h6>
-                                @if($item->barcode)
-                                    <small class="text-muted d-block"><i class="ti ti-barcode me-1"></i>{{ $item->barcode }}</small>
-                                @endif
-                                <span class="badge bg-{{ $item->type === 'Service' ? 'primary' : 'info' }}-subtle text-{{ $item->type === 'Service' ? 'primary' : 'info' }}">
-                                    {{ $item->type }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
-                                <i class="ti ti-dots-vertical"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <button wire:click="editItem('{{ $item->id }}')" class="dropdown-item">
-                                        <i class="ti ti-edit me-2"></i> Edit
-                                    </button>
-                                </li>
-                                <li>
-                                    <button wire:click="toggleStatus('{{ $item->id }}')" class="dropdown-item">
-                                        <i class="ti ti-{{ $item->status === 'active' ? 'eye-off' : 'eye' }} me-2"></i>
-                                        {{ $item->status === 'active' ? 'Disable' : 'Enable' }}
-                                    </button>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <button wire:click="confirmDelete('{{ $item->id }}')" class="dropdown-item text-danger">
-                                        <i class="ti ti-trash me-2"></i> Delete
-                                    </button>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <p class="text-muted small mb-3">{{ Str::limit($item->description, 60) }}</p>
-
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div>
-                            <span class="text-muted small">Selling Price</span>
-                            <h5 class="mb-0 text-success">TZS {{ number_format($item->selling_price, 0) }}</h5>
-                        </div>
-                        <div class="text-end">
-                            <span class="text-muted small">Cost</span>
-                            <div class="fw-medium">TZS {{ number_format($item->cost_price, 0) }}</div>
-                        </div>
-                    </div>
-
-                    <hr class="my-2">
-
-                    <div class="row g-2 small">
-                        <div class="col-6">
-                            <span class="text-muted">Category:</span>
-                            <span class="fw-medium d-block">{{ $item->category->name ?? '-' }}</span>
-                        </div>
-                        <div class="col-6">
-                            <span class="text-muted">Unit:</span>
-                            <span class="fw-medium d-block">{{ $item->unit->name ?? '-' }}</span>
-                        </div>
-                    </div>
-
-                    @if($ownerBusinesses->count() > 1)
-                    <div class="mt-2 pt-2 border-top">
-                        <small class="text-muted">
-                            <i class="ti ti-building-store me-1"></i>{{ $item->business->name ?? '-' }}
-                        </small>
-                    </div>
-                    @endif
-                </div>
-                <div class="card-footer bg-transparent border-top py-2">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="badge rounded-pill bg-{{ $item->status === 'active' ? 'success' : 'secondary' }}-subtle text-{{ $item->status === 'active' ? 'success' : 'secondary' }}">
-                            <i class="ti ti-{{ $item->status === 'active' ? 'check' : 'x' }} me-1"></i>
-                            {{ ucfirst($item->status) }}
-                        </span>
-                        <div class="d-flex gap-2">
-                            @if($item->require_plate_number === 'yes')
-                                <span class="badge bg-warning-subtle text-warning" title="Requires Plate Number">
-                                    <i class="ti ti-car"></i>
-                                </span>
-                            @endif
-                            @if($item->product_stock === 'yes')
-                                <span class="badge bg-info-subtle text-info" title="Track Stock">
-                                    <i class="ti ti-package"></i>
-                                </span>
-                            @endif
-                            @if($item->commission)
-                                <span class="badge bg-purple-subtle text-purple" title="Commission: {{ $item->commission }}{{ $item->commission_type === 'percentage' ? '%' : ' TZS' }}">
-                                    <i class="ti ti-percentage"></i>
-                                </span>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @empty
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center py-5">
-                    <i class="ti ti-package display-4 text-muted opacity-50 d-block mb-3"></i>
-                    <h5>No items found</h5>
-                    <p class="text-muted mb-3">Get started by adding your first item or service</p>
-                    <button wire:click="openModal" class="btn btn-primary btn-sm">
-                        <i class="ti ti-plus me-1"></i> Add Item
-                    </button>
-                </div>
-            </div>
-        </div>
-        @endforelse
-    </div>
-
-    {{-- Pagination --}}
-    @if($items->hasPages())
-    <div class="mt-4">
-        {{ $items->links() }}
-    </div>
-    @endif
-
-    {{-- Add/Edit Modal --}}
-    @if($showModal)
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" wire:keydown.escape="closeModal">
-        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="max-width: 900px;">
-            <div class="modal-content border-0 shadow" style="max-height: 90vh;">
-                <div class="modal-header border-bottom">
-                    <h5 class="modal-title">
-                        <i class="ti ti-{{ $editMode ? 'edit' : 'plus' }} me-2"></i>
-                        {{ $editMode ? 'Edit Item' : 'Add New Item' }}
-                    </h5>
-                    <button type="button" wire:click="closeModal" class="btn-close"></button>
-                </div>
-
-                <form wire:submit="save">
-                    <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 130px);">
-
-                        {{-- Basic Information --}}
-                        <h6 class="text-primary mb-3">
+    {{-- Registration Form --}}
+    <form wire:submit="save">
+        <div class="row g-4">
+            {{-- Left Column --}}
+            <div class="col-lg-8">
+                {{-- Basic Information --}}
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-bottom">
+                        <h6 class="mb-0 text-primary">
                             <i class="ti ti-info-circle me-1"></i> Basic Information
                         </h6>
-                        <div class="row g-3 mb-4">
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
                             @if($ownerBusinesses->count() > 1)
                             <div class="col-md-6">
                                 <x-forms.select2
@@ -309,16 +102,22 @@
 
                             <div class="col-12">
                                 <label class="form-label">Description <span class="text-danger">*</span></label>
-                                <textarea wire:model="description" class="form-control @error('description') is-invalid @enderror" rows="2" placeholder="Brief description of the item/service"></textarea>
+                                <textarea wire:model="description" class="form-control @error('description') is-invalid @enderror" rows="3" placeholder="Brief description of the item/service"></textarea>
                                 @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        {{-- Pricing --}}
-                        <h6 class="text-primary mb-3">
+                {{-- Pricing --}}
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-bottom">
+                        <h6 class="mb-0 text-primary">
                             <i class="ti ti-currency-dollar me-1"></i> Pricing
                         </h6>
-                        <div class="row g-3 mb-4">
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="form-label">Cost Price (TZS) <span class="text-danger">*</span></label>
                                 <input type="number" wire:model="cost_price" class="form-control @error('cost_price') is-invalid @enderror" placeholder="0" min="0" step="0.01">
@@ -335,12 +134,18 @@
                                 @error('market_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        {{-- Unit & Commission --}}
-                        <h6 class="text-primary mb-3">
+                {{-- Unit & Commission --}}
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-bottom">
+                        <h6 class="mb-0 text-primary">
                             <i class="ti ti-settings me-1"></i> Settings
                         </h6>
-                        <div class="row g-3 mb-4">
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
                             <div class="col-md-4">
                                 <x-forms.select2
                                     name="unit_id"
@@ -368,12 +173,18 @@
                                 />
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        {{-- Options --}}
-                        <h6 class="text-primary mb-3">
+                {{-- Options --}}
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-bottom">
+                        <h6 class="mb-0 text-primary">
                             <i class="ti ti-toggle-left me-1"></i> Options
                         </h6>
-                        <div class="row g-3 mb-4">
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="form-label">Track Stock?</label>
                                 <div class="d-flex gap-3">
@@ -418,188 +229,318 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        {{-- Image --}}
-                        <h6 class="text-primary mb-3">
-                            <i class="ti ti-photo me-1"></i> Image
+            {{-- Right Column --}}
+            <div class="col-lg-4">
+                {{-- Image Upload --}}
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-bottom">
+                        <h6 class="mb-0 text-primary">
+                            <i class="ti ti-photo me-1"></i> Item Image
                         </h6>
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label">Item Image</label>
-                                <input type="file" wire:model="image" class="form-control @error('image') is-invalid @enderror" accept="image/*">
-                                @error('image') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Upload Image</label>
+                            <input type="file" wire:model="image" class="form-control @error('image') is-invalid @enderror" accept="image/*">
+                            @error('image') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <small class="text-muted">Recommended: Square image, max 2MB</small>
+                        </div>
 
-                                <div class="mt-2 d-flex gap-3">
-                                    @if($image)
-                                        <div>
-                                            <small class="text-muted d-block mb-1">New Image Preview:</small>
-                                            <img src="{{ $image->temporaryUrl() }}" class="rounded" style="max-height: 80px;">
-                                        </div>
-                                    @endif
-                                    @if($existingImage && !$image)
-                                        <div>
-                                            <small class="text-muted d-block mb-1">Current Image:</small>
-                                            <img src="{{ Storage::url($existingImage) }}" class="rounded" style="max-height: 80px;">
-                                        </div>
-                                    @endif
+                        {{-- Image Preview --}}
+                        <div class="text-center">
+                            @if($image)
+                                <div class="mb-2">
+                                    <small class="text-muted d-block mb-2">New Image Preview:</small>
+                                    <img src="{{ $image->temporaryUrl() }}" class="rounded img-thumbnail" style="max-height: 200px;">
                                 </div>
-                            </div>
+                            @endif
+                            @if($existingImage && !$image)
+                                <div class="mb-2">
+                                    <small class="text-muted d-block mb-2">Current Image:</small>
+                                    <img src="{{ Storage::url($existingImage) }}" class="rounded img-thumbnail" style="max-height: 200px;">
+                                </div>
+                            @endif
+                            @if(!$image && !$existingImage)
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                                    <div class="text-center text-muted">
+                                        <i class="ti ti-photo fs-1"></i>
+                                        <p class="mb-0 small">No image</p>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     </div>
-
-                    <div class="modal-footer border-top bg-light">
-                        <button type="button" wire:click="closeModal" class="btn btn-outline-secondary">
-                            <i class="ti ti-x me-1"></i> Cancel
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <span wire:loading.remove wire:target="save">
-                                <i class="ti ti-{{ $editMode ? 'check' : 'plus' }} me-1"></i>
-                                {{ $editMode ? 'Update Item' : 'Create Item' }}
-                            </span>
-                            <span wire:loading wire:target="save">
-                                <span class="spinner-border spinner-border-sm me-1"></span> Saving...
-                            </span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    @endif
-
-    {{-- Delete Confirmation Modal --}}
-    @if($showDeleteModal)
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" wire:keydown.escape="closeDeleteModal">
-        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-body text-center py-4">
-                    <div class="avatar avatar-lg bg-danger-subtle text-danger rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
-                        <i class="ti ti-trash fs-2"></i>
-                    </div>
-                    <h5 class="mb-2">Delete Item?</h5>
-                    <p class="text-muted mb-0">Are you sure you want to delete this item? This action cannot be undone.</p>
                 </div>
-                <div class="modal-footer border-top justify-content-center gap-2">
-                    <button type="button" wire:click="closeDeleteModal" class="btn btn-outline-secondary">
-                        <i class="ti ti-x me-1"></i> Cancel
-                    </button>
-                    <button type="button" wire:click="deleteItem" class="btn btn-danger">
-                        <span wire:loading.remove wire:target="deleteItem">
-                            <i class="ti ti-trash me-1"></i> Delete
-                        </span>
-                        <span wire:loading wire:target="deleteItem">
-                            <span class="spinner-border spinner-border-sm me-1"></span> Deleting...
-                        </span>
-                    </button>
+
+                {{-- Action Buttons --}}
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <span wire:loading.remove wire:target="save">
+                                    <i class="ti ti-{{ $editMode ? 'check' : 'plus' }} me-1"></i>
+                                    {{ $editMode ? 'Update Item' : 'Create Item' }}
+                                </span>
+                                <span wire:loading wire:target="save">
+                                    <span class="spinner-border spinner-border-sm me-1"></span> Saving...
+                                </span>
+                            </button>
+                            <a href="{{ route('owner.list-items') }}" class="btn btn-outline-secondary">
+                                <i class="ti ti-x me-1"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    @endif
+    </form>
 
     {{-- Barcode Scanner Modal --}}
     @if($showScannerModal)
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" wire:keydown.escape="closeScannerModal">
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.9);" wire:keydown.escape="closeScannerModal">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header border-bottom">
+            <div class="modal-content border-0 shadow bg-dark">
+                <div class="modal-header border-bottom bg-dark text-white">
                     <h5 class="modal-title">
                         <i class="ti ti-scan me-2"></i> Scan Barcode
                     </h5>
-                    <button type="button" wire:click="closeScannerModal" class="btn-close" onclick="cleanupBarcodeScanner()"></button>
+                    <button type="button" wire:click="closeScannerModal" class="btn-close btn-close-white"></button>
                 </div>
-                <div class="modal-body">
-                    {{-- Scanner Container --}}
-                    <div id="barcode-reader" style="width: 100%; min-height: 250px;"></div>
+                <div class="modal-body p-2 bg-dark">
+                    {{-- Camera preview --}}
+                    <div class="scanner-container position-relative">
+                        <video id="item-scanner-preview" class="w-100 rounded" style="max-height: 400px; background: #000;" autoplay playsinline></video>
 
-                    {{-- Status Messages --}}
-                    <div id="scanner-status" class="text-center py-3">
-                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                        <span class="ms-2">Initializing camera...</span>
+                        {{-- Scanning overlay --}}
+                        <div class="scanner-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
+                            <div class="scanner-frame" style="width: 80%; height: 150px; border: 3px solid #0d6efd; border-radius: 10px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);"></div>
+                        </div>
+
+                        {{-- Loading indicator --}}
+                        <div id="item-scanner-loading" class="position-absolute top-50 start-50 translate-middle text-center text-white">
+                            <div class="spinner-border text-primary mb-2" role="status"></div>
+                            <div>Starting camera...</div>
+                        </div>
+
+                        {{-- Status Messages --}}
+                        <div id="item-scanner-status" class="position-absolute bottom-0 start-0 end-0 text-center py-2 bg-dark bg-opacity-75 text-white" style="display: none;"></div>
+                    </div>
+
+                    {{-- Instructions --}}
+                    <div class="text-center text-white mt-3">
+                        <i class="ti ti-info-circle me-1"></i>
+                        <small>Position the barcode within the frame</small>
                     </div>
 
                     {{-- Manual Entry Option --}}
-                    <div class="mt-3 pt-3 border-top">
-                        <label class="form-label small text-muted">Or enter manually:</label>
+                    <div class="mt-3 pt-3 border-top border-secondary">
+                        <label class="form-label small text-white-50">Or enter manually:</label>
                         <div class="input-group">
-                            <input type="text" id="manual-barcode-input" class="form-control"
+                            <input type="text" id="item-manual-barcode-input" class="form-control"
                                    placeholder="Enter barcode manually">
-                            <button type="button" class="btn btn-primary" onclick="submitManualBarcode()">
+                            <button type="button" class="btn btn-primary" onclick="window.submitItemManualBarcode()">
                                 <i class="ti ti-check me-1"></i> Use
                             </button>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-top bg-light">
-                    <small class="text-muted me-auto">
-                        <i class="ti ti-info-circle me-1"></i>
-                        Point camera at barcode
-                    </small>
-                    <button type="button" wire:click="closeScannerModal" class="btn btn-outline-secondary" onclick="cleanupBarcodeScanner()">
-                        <i class="ti ti-x me-1"></i> Cancel
+                <div class="modal-footer border-top border-secondary bg-dark">
+                    <button type="button" wire:click="closeScannerModal" class="btn btn-light w-100">
+                        <i class="ti ti-x me-1"></i> Close Scanner
                     </button>
                 </div>
             </div>
         </div>
     </div>
+    @endif
 
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    {{-- ZXing Barcode Scanner Library - Always available --}}
+    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
     <script>
-        var barcodeScanner = null;
-        var livewireComponent = @json($this->getId());
+        // Make variables global
+        window.itemBarcodeReader = null;
+        window.itemScannerInitialized = false;
 
-        function initBarcodeScanner() {
-            var statusEl = document.getElementById('scanner-status');
-
-            if (typeof Html5Qrcode === 'undefined') {
-                if (statusEl) statusEl.innerHTML = '<span class="text-danger">Scanner library not loaded. Use manual entry.</span>';
+        window.initItemBarcodeScanner = async function() {
+            // Wait for ZXing library to load
+            if (typeof ZXing === 'undefined') {
+                console.log('ZXing not loaded yet, retrying...');
+                setTimeout(window.initItemBarcodeScanner, 100);
                 return;
             }
 
-            barcodeScanner = new Html5Qrcode("barcode-reader");
+            const preview = document.getElementById('item-scanner-preview');
+            const loading = document.getElementById('item-scanner-loading');
+            const statusEl = document.getElementById('item-scanner-status');
 
-            barcodeScanner.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 100 } },
-                function(decodedText) {
-                    if (statusEl) statusEl.innerHTML = '<span class="text-success"><i class="ti ti-check me-1"></i>Scanned: ' + decodedText + '</span>';
-                    cleanupBarcodeScanner();
-                    Livewire.find(livewireComponent).call('setBarcodeFromScanner', decodedText);
-                },
-                function() {}
-            ).then(function() {
-                if (statusEl) statusEl.style.display = 'none';
-            }).catch(function(err) {
-                console.error('Camera error:', err);
-                if (statusEl) statusEl.innerHTML = '<span class="text-warning"><i class="ti ti-alert-circle me-1"></i>Camera not available. Use manual entry below.</span>';
-            });
-        }
-
-        function cleanupBarcodeScanner() {
-            if (barcodeScanner) {
-                barcodeScanner.stop().catch(function() {});
-                barcodeScanner = null;
+            if (!preview) {
+                console.log('Scanner preview element not found');
+                return;
             }
-        }
 
-        function submitManualBarcode() {
-            var input = document.getElementById('manual-barcode-input');
+            if (window.itemScannerInitialized) {
+                console.log('Scanner already initialized');
+                return;
+            }
+
+            window.itemScannerInitialized = true;
+
+            try {
+                // Show loading
+                if (loading) loading.style.display = 'block';
+                if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.className = 'position-absolute bottom-0 start-0 end-0 text-center py-2 bg-dark bg-opacity-75 text-info';
+                    statusEl.innerHTML = '<i class="ti ti-camera me-1"></i> Initializing camera...';
+                }
+
+                // Initialize code reader
+                window.itemBarcodeReader = new ZXing.BrowserMultiFormatReader();
+
+                // Get video devices
+                const videoInputDevices = await window.itemBarcodeReader.listVideoInputDevices();
+
+                if (videoInputDevices.length === 0) {
+                    throw new Error('No camera found');
+                }
+
+                // Prefer back camera on mobile
+                let selectedDeviceId = videoInputDevices[0]?.deviceId;
+                const backCamera = videoInputDevices.find(device =>
+                    device.label.toLowerCase().includes('back') ||
+                    device.label.toLowerCase().includes('rear') ||
+                    device.label.toLowerCase().includes('environment')
+                );
+                if (backCamera) {
+                    selectedDeviceId = backCamera.deviceId;
+                }
+
+                // Hide loading, show ready status
+                if (loading) loading.style.display = 'none';
+                if (statusEl) {
+                    statusEl.className = 'position-absolute bottom-0 start-0 end-0 text-center py-2 bg-dark bg-opacity-75 text-success';
+                    statusEl.innerHTML = '<i class="ti ti-camera-check me-1"></i> Camera ready - Point at barcode';
+                }
+
+                // Start decoding
+                window.itemBarcodeReader.decodeFromVideoDevice(selectedDeviceId, 'item-scanner-preview', (result, err) => {
+                    if (result) {
+                        // Barcode detected
+                        const code = result.getText();
+                        console.log('Barcode scanned:', code);
+
+                        // Show success message
+                        if (statusEl) {
+                            statusEl.className = 'position-absolute bottom-0 start-0 end-0 text-center py-2 bg-success text-white';
+                            statusEl.innerHTML = '<i class="ti ti-check me-1"></i> Barcode captured: ' + code;
+                        }
+
+                        // Vibration feedback if supported
+                        if (navigator.vibrate) {
+                            navigator.vibrate(200);
+                        }
+
+                        // Play beep sound
+                        window.playBeep();
+
+                        // Send to Livewire after short delay to show success message
+                        setTimeout(() => {
+                            window.cleanupItemBarcodeScanner();
+                            @this.call('setBarcodeFromScanner', code);
+                        }, 800);
+                    }
+
+                    if (err && err.name !== 'NotFoundException') {
+                        console.error('Scanner error:', err);
+                    }
+                });
+
+            } catch (err) {
+                console.error('Failed to start scanner:', err);
+                window.itemScannerInitialized = false;
+                if (loading) loading.style.display = 'none';
+                if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.className = 'position-absolute bottom-0 start-0 end-0 text-center py-2 bg-danger text-white';
+                    statusEl.innerHTML = '<i class="ti ti-camera-off me-1"></i> Camera not available. Use manual entry below.';
+                }
+            }
+        };
+
+        window.cleanupItemBarcodeScanner = function() {
+            window.itemScannerInitialized = false;
+
+            if (window.itemBarcodeReader) {
+                try {
+                    window.itemBarcodeReader.reset();
+                } catch (e) {
+                    console.log('Error resetting scanner:', e);
+                }
+                window.itemBarcodeReader = null;
+            }
+
+            // Stop all video streams
+            const preview = document.getElementById('item-scanner-preview');
+            if (preview && preview.srcObject) {
+                const tracks = preview.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                preview.srcObject = null;
+            }
+        };
+
+        window.submitItemManualBarcode = function() {
+            var input = document.getElementById('item-manual-barcode-input');
             if (input && input.value.trim()) {
-                cleanupBarcodeScanner();
-                Livewire.find(livewireComponent).call('setBarcodeFromScanner', input.value.trim());
+                window.cleanupItemBarcodeScanner();
+                @this.call('setBarcodeFromScanner', input.value.trim());
             }
-        }
+        };
+
+        // Play beep sound on successful scan
+        window.playBeep = function() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                gainNode.gain.value = 0.3;
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } catch (err) {
+                console.log('Audio not supported');
+            }
+        };
 
         // Handle Enter key in manual input
-        document.getElementById('manual-barcode-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
+        document.addEventListener('keypress', function(e) {
+            if (e.target.id === 'item-manual-barcode-input' && e.key === 'Enter') {
                 e.preventDefault();
-                submitManualBarcode();
+                window.submitItemManualBarcode();
             }
         });
 
-        // Initialize after small delay
-        setTimeout(initBarcodeScanner, 200);
+        // Listen for modal open event from Livewire
+        document.addEventListener('livewire:initialized', () => {
+            Livewire.on('scanner-opened', () => {
+                setTimeout(() => {
+                    window.initItemBarcodeScanner();
+                }, 300);
+            });
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            window.cleanupItemBarcodeScanner();
+        });
     </script>
-    @endif
 </div>

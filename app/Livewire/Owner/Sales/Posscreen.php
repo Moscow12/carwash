@@ -758,10 +758,7 @@ class Posscreen extends Component
         // Search for item by barcode
         $item = items::where('business_id', $this->selectedBusiness)
             ->where('status', 'active')
-            ->where(function($query) use ($code) {
-                $query->where('barcode', $code)
-                      ->orWhere('sku', $code);
-            })
+            ->where('barcode', $code)
             ->first([
                 'id',
                 'name',

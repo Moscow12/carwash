@@ -1111,6 +1111,9 @@
                             <div class="spinner-border text-primary mb-2" role="status"></div>
                             <div>Starting camera...</div>
                         </div>
+
+                        {{-- Status Messages --}}
+                        <div id="scanner-status" class="position-absolute bottom-0 start-0 end-0 text-center py-2 bg-dark bg-opacity-75 text-white" style="display: none;"></div>
                     </div>
 
                     {{-- Instructions --}}
@@ -1506,18 +1509,28 @@
         async function startBarcodeScanner() {
             const preview = document.getElementById('scanner-preview');
             const loading = document.getElementById('scanner-loading');
+            const statusEl = document.getElementById('scanner-status');
 
             if (!preview) return;
 
             try {
                 // Show loading
                 if (loading) loading.style.display = 'block';
+                if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.className = 'position-absolute bottom-0 start-0 end-0 text-center py-2 bg-dark bg-opacity-75 text-info';
+                    statusEl.innerHTML = '<i class="ti ti-camera me-1"></i> Initializing camera...';
+                }
 
                 // Initialize code reader
                 codeReader = new ZXing.BrowserMultiFormatReader();
 
                 // Get video devices
                 const videoInputDevices = await codeReader.listVideoInputDevices();
+
+                if (videoInputDevices.length === 0) {
+                    throw new Error('No camera found');
+                }
 
                 // Prefer back camera on mobile
                 let selectedDeviceId = videoInputDevices[0]?.deviceId;
@@ -1530,26 +1543,38 @@
                     selectedDeviceId = backCamera.deviceId;
                 }
 
-                // Hide loading
+                // Hide loading, show ready status
                 if (loading) loading.style.display = 'none';
+                if (statusEl) {
+                    statusEl.className = 'position-absolute bottom-0 start-0 end-0 text-center py-2 bg-dark bg-opacity-75 text-success';
+                    statusEl.innerHTML = '<i class="ti ti-camera-check me-1"></i> Camera ready - Point at barcode';
+                }
 
                 // Start decoding
                 codeReader.decodeFromVideoDevice(selectedDeviceId, 'scanner-preview', (result, err) => {
                     if (result) {
-                        // Barcode detected - dispatch event to Livewire
+                        // Barcode detected
                         const code = result.getText();
                         console.log('Barcode scanned:', code);
 
-                        // Dispatch to Livewire
-                        Livewire.dispatch('barcode-scanned', { code: code });
+                        // Show success message
+                        if (statusEl) {
+                            statusEl.className = 'position-absolute bottom-0 start-0 end-0 text-center py-2 bg-success text-white';
+                            statusEl.innerHTML = '<i class="ti ti-check me-1"></i> Barcode captured: ' + code;
+                        }
 
-                        // Optional: Add vibration feedback if supported
+                        // Vibration feedback if supported
                         if (navigator.vibrate) {
                             navigator.vibrate(200);
                         }
 
-                        // Optional: Play beep sound
+                        // Play beep sound
                         playBeep();
+
+                        // Dispatch to Livewire after short delay to show success message
+                        setTimeout(() => {
+                            Livewire.dispatch('barcode-scanned', { code: code });
+                        }, 800);
                     }
 
                     if (err && err.name !== 'NotFoundException') {
@@ -1559,9 +1584,18 @@
 
             } catch (err) {
                 console.error('Failed to start scanner:', err);
-                alert('Failed to access camera. Please grant camera permissions and try again.');
                 if (loading) loading.style.display = 'none';
-                Livewire.dispatch('stop-scanner');
+                if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.className = 'position-absolute bottom-0 start-0 end-0 text-center py-2 bg-danger text-white';
+                    statusEl.innerHTML = '<i class="ti ti-camera-off me-1"></i> Camera not available. Please grant camera permissions.';
+                }
+
+                // Show alert as well for critical error
+                setTimeout(() => {
+                    alert('Failed to access camera. Please grant camera permissions and try again.');
+                    Livewire.dispatch('stop-scanner');
+                }, 2000);
             }
         }
 
