@@ -81,6 +81,10 @@ class Posscreen extends Component
     public $businessInfo = null;
     public $businessSettings = null;
 
+    // Barcode Scanner
+    public $showScannerModal = false;
+    public $scannerActive = false;
+
     public function mount()
     {
         $this->ownerBusinesses = Auth::user()->assignedBusinesses()
@@ -727,6 +731,66 @@ class Posscreen extends Component
     public function printReceipt()
     {
         $this->dispatch('printReceipt');
+    }
+
+    // Barcode Scanner Methods
+    public function openScanner()
+    {
+        $this->showScannerModal = true;
+        $this->scannerActive = true;
+        $this->dispatch('start-scanner');
+    }
+
+    public function closeScanner()
+    {
+        $this->showScannerModal = false;
+        $this->scannerActive = false;
+        $this->dispatch('stop-scanner');
+    }
+
+    #[On('barcode-scanned')]
+    public function handleBarcodeScanned($code)
+    {
+        if (!$this->selectedBusiness || !$code) {
+            return;
+        }
+
+        // Search for item by barcode
+        $item = items::where('business_id', $this->selectedBusiness)
+            ->where('status', 'active')
+            ->where(function($query) use ($code) {
+                $query->where('barcode', $code)
+                      ->orWhere('sku', $code);
+            })
+            ->first([
+                'id',
+                'name',
+                'selling_price',
+                'type',
+                'require_plate_number',
+                'commission',
+                'commission_type',
+                'image',
+                'product_stock'
+            ]);
+
+        if ($item) {
+            // Check if item requires plate number
+            if ($item->require_plate_number === 'yes') {
+                $this->currentItemForPlate = $item->toArray();
+                $this->showPlateModal = true;
+                $this->closeScanner();
+            } else {
+                $this->addItemToCart($item->toArray());
+                session()->flash('message', 'Item added: ' . $item->name);
+
+                // Keep scanner open for continuous scanning
+                // or close it after successful scan
+                // $this->closeScanner();
+            }
+        } else {
+            session()->flash('error', 'Item not found with barcode: ' . $code);
+        }
     }
 
     public function render()
