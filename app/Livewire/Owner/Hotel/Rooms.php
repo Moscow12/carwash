@@ -59,16 +59,24 @@ class Rooms extends Component
 
         if ($hotel) {
             $this->selectedHotel = $hotel->id;
-            $this->selectedBranch = $hotel->hotelBranches()->where('is_main', true)->first()?->id;
             $this->loadDropdownData();
+            // Only set branch if branches exist
+            if ($this->branches->isNotEmpty()) {
+                $this->selectedBranch = $hotel->hotelBranches()->where('is_main', true)->first()?->id;
+            }
         }
     }
 
     public function updatedSelectedHotel($value)
     {
-        $hotel = Business::find($value);
-        $this->selectedBranch = $hotel?->hotelBranches()->where('is_main', true)->first()?->id;
         $this->loadDropdownData();
+        // Only set branch if branches exist
+        if ($this->branches->isNotEmpty()) {
+            $hotel = Business::find($value);
+            $this->selectedBranch = $hotel?->hotelBranches()->where('is_main', true)->first()?->id;
+        } else {
+            $this->selectedBranch = null;
+        }
         $this->resetPage();
     }
 
@@ -125,6 +133,14 @@ class Rooms extends Component
     {
         $this->validate();
 
+        // Check if business has branches - if not, branch_id should be null
+        if ($this->branches->isEmpty()) {
+            $this->selectedBranch = null;
+        } elseif (!$this->selectedBranch) {
+            session()->flash('error', 'Please select a branch for this room.');
+            return;
+        }
+
         $data = [
             'business_id' => $this->selectedHotel,
             'branch_id' => $this->selectedBranch,
@@ -137,16 +153,19 @@ class Rooms extends Component
             'notes' => $this->notes ?: null,
         ];
 
-        if ($this->editMode) {
-            $room = Room::findOrFail($this->roomId);
-            $room->update($data);
-            session()->flash('message', 'Room updated successfully.');
-        } else {
-            Room::create($data);
-            session()->flash('message', 'Room created successfully.');
+        try {
+            if ($this->editMode) {
+                $room = Room::findOrFail($this->roomId);
+                $room->update($data);
+                session()->flash('message', 'Room updated successfully.');
+            } else {
+                Room::create($data);
+                session()->flash('message', 'Room created successfully.');
+            }
+            $this->closeModal();
+        } catch (\Exception $e) {
+            session()->flash('error', 'Unable to save room. Please ensure all required fields are filled correctly.');
         }
-
-        $this->closeModal();
     }
 
     public function changeRoomStatus($id, $newStatus)
