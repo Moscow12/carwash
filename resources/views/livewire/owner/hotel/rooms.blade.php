@@ -18,6 +18,13 @@
         </div>
     @endif
 
+    @if (session()->has('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="ti ti-alert-circle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <!-- Hotel Selection -->
     @if($hotels->count() > 0)
         <div class="card shadow-sm mb-4">
@@ -223,6 +230,31 @@
                         <button type="button" class="btn-close" wire:click="closeModal"></button>
                     </div>
                     <div class="modal-body">
+                        <!-- Validation Errors -->
+                        @if(!empty($validationErrors))
+                            <div class="alert alert-danger">
+                                <strong><i class="ti ti-alert-circle me-2"></i>Please fix the following errors:</strong>
+                                <ul class="mb-0 mt-2">
+                                    @foreach($validationErrors as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        <!-- Processing Overlay -->
+                        @if($isProcessing)
+                            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.9); z-index: 1050;">
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                                        <span class="visually-hidden">Processing...</span>
+                                    </div>
+                                    <h5 class="text-primary">{{ $editMode ? 'Updating' : 'Creating' }} Room...</h5>
+                                    <p class="text-muted">Please wait</p>
+                                </div>
+                            </div>
+                        @endif
+
                         <form wire:submit.prevent="save">
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -289,12 +321,18 @@
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" wire:click="closeModal">
+                        <button type="button" class="btn btn-secondary" wire:click="closeModal" {{ $isProcessing ? 'disabled' : '' }}>
                             <i class="ti ti-x me-1"></i> Cancel
                         </button>
-                        <button type="button" class="btn btn-primary" wire:click="save">
-                            <i class="ti ti-device-floppy me-1"></i>
-                            {{ $editMode ? 'Update Room' : 'Save Room' }}
+                        <button type="button" class="btn btn-primary" wire:click="save" wire:loading.attr="disabled" {{ $isProcessing ? 'disabled' : '' }}>
+                            <span wire:loading.remove wire:target="save">
+                                <i class="ti ti-device-floppy me-1"></i>
+                                {{ $editMode ? 'Update Room' : 'Save Room' }}
+                            </span>
+                            <span wire:loading wire:target="save">
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Processing...
+                            </span>
                         </button>
                     </div>
                 </div>
