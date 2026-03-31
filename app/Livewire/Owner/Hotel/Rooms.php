@@ -101,6 +101,33 @@ class Rooms extends Component
             ->orderBy('is_main', 'desc')
             ->orderBy('name')
             ->get();
+
+        // Auto-create main branch if business has no branches
+        if ($this->branches->isEmpty()) {
+            $business = Business::find($this->selectedHotel);
+            if ($business) {
+                $mainBranch = HotelBranch::create([
+                    'business_id' => $this->selectedHotel,
+                    'name' => $business->name . ' - Main Branch',
+                    'code' => 'MAIN',
+                    'is_main' => true,
+                    'phone' => $business->phone ?? null,
+                    'address' => $business->address ?? null,
+                    'status' => 'active',
+                ]);
+
+                // Reload branches
+                $this->branches = HotelBranch::where('business_id', $this->selectedHotel)
+                    ->where('status', 'active')
+                    ->orderBy('is_main', 'desc')
+                    ->orderBy('name')
+                    ->get();
+
+                $this->selectedBranch = $mainBranch->id;
+
+                session()->flash('message', 'Main branch automatically created for ' . $business->name);
+            }
+        }
     }
 
     public function openModal()
@@ -133,17 +160,23 @@ class Rooms extends Component
     {
         $this->validate();
 
-        // Check if business has branches - if not, branch_id should be null
-        if ($this->branches->isEmpty()) {
-            $this->selectedBranch = null;
-        } elseif (!$this->selectedBranch) {
-            session()->flash('error', 'Please select a branch for this room.');
-            return;
+        // Ensure branch_id is properly set
+        if (!$this->selectedBranch || $this->selectedBranch === '' || $this->selectedBranch === 'null') {
+            // If no branch selected, reload data to check/create branch
+            $this->loadDropdownData();
+
+            // After loading, if still no branch, set to null
+            if ($this->branches->isEmpty()) {
+                $this->selectedBranch = null;
+            } elseif (!$this->selectedBranch) {
+                session()->flash('error', 'Please select a branch for this room.');
+                return;
+            }
         }
 
         $data = [
             'business_id' => $this->selectedHotel,
-            'branch_id' => $this->selectedBranch,
+            'branch_id' => $this->selectedBranch ?: null,
             'room_type_id' => $this->room_type_id,
             'number' => $this->number,
             'floor' => $this->floor ?: null,
@@ -164,7 +197,7 @@ class Rooms extends Component
             }
             $this->closeModal();
         } catch (\Exception $e) {
-            session()->flash('error', 'Unable to save room. Please ensure all required fields are filled correctly.');
+            session()->flash('error', 'Unable to save room: ' . $e->getMessage());
         }
     }
 
