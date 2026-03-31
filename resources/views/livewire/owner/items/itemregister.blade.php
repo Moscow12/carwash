@@ -101,8 +101,8 @@
                             </div>
 
                             <div class="col-12">
-                                <label class="form-label">Description <span class="text-danger">*</span></label>
-                                <textarea wire:model="description" class="form-control @error('description') is-invalid @enderror" rows="3" placeholder="Brief description of the item/service"></textarea>
+                                <label class="form-label">Description</label>
+                                <textarea wire:model="description" class="form-control @error('description') is-invalid @enderror" rows="3" placeholder="Brief description of the item/service (optional)"></textarea>
                                 @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
