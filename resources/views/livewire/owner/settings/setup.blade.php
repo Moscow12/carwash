@@ -81,6 +81,15 @@
                             <div class="col-md-6">
                                 <label class="form-label">Business Logo</label>
                                 <input type="file" wire:model="business_logo" class="form-control" accept="image/*">
+                                @if ($business_logo && is_object($business_logo))
+                                    <div class="mt-2">
+                                        <img src="{{ $business_logo->temporaryUrl() }}" alt="Logo Preview" class="img-thumbnail" style="max-height: 100px;">
+                                    </div>
+                                @elseif(isset($savedLogo) && $savedLogo)
+                                    <div class="mt-2">
+                                        <img src="{{ asset('storage/' . $savedLogo) }}" alt="Current Logo" class="img-thumbnail" style="max-height: 100px;">
+                                    </div>
+                                @endif
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Business Phone</label>

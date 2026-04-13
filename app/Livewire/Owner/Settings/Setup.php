@@ -24,6 +24,7 @@ class Setup extends Component
     // Business Settings
     public $business_name = '';
     public $business_logo;
+    public $savedLogo = '';
     public $business_phone = '';
     public $business_email = '';
     public $business_address = '';
@@ -215,6 +216,7 @@ class Setup extends Component
 
         // Business Settings
         $this->business_name = $settings->business_name ?? '';
+        $this->savedLogo = $settings->business_logo ?? '';
         $this->business_phone = $settings->business_phone ?? '';
         $this->business_email = $settings->business_email ?? '';
         $this->business_address = $settings->business_address ?? '';
