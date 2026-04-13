@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class items extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $table = 'items';
 
@@ -30,7 +31,8 @@ class items extends Model
         'unit_id',
         'status',
         'category_id',
-        'carwash_id',
+        'business_id',
+        'outlet_id',
     ];
 
     protected $casts = [
@@ -41,9 +43,9 @@ class items extends Model
     ];
 
     // Relationships
-    public function carwash(): BelongsTo
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function category(): BelongsTo
@@ -81,6 +83,31 @@ class items extends Model
         return $this->hasMany(item_balance::class, 'item_id');
     }
 
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(PosOutlet::class);
+    }
+
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ItemVariant::class);
+    }
+
+    public function purchaseItems(): HasMany
+    {
+        return $this->hasMany(PurchaseItem::class);
+    }
+
+    public function stockTransferItems(): HasMany
+    {
+        return $this->hasMany(StockTransferItem::class);
+    }
+
+    public function menuItemRecipes(): HasMany
+    {
+        return $this->hasMany(MenuItemRecipe::class);
+    }
+
     // Scopes
     public function scopeActive(Builder $query): Builder
     {
@@ -102,9 +129,9 @@ class items extends Model
         return $query->where('type', 'product');
     }
 
-    public function scopeByCarwash(Builder $query, string $carwashId): Builder
+    public function scopeByBusiness(Builder $query, string $businessId): Builder
     {
-        return $query->where('carwash_id', $carwashId);
+        return $query->where('business_id', $businessId);
     }
 
     public function scopeByCategory(Builder $query, string $categoryId): Builder
@@ -112,9 +139,9 @@ class items extends Model
         return $query->where('category_id', $categoryId);
     }
 
-    public function scopeByBarcode(Builder $query, string $barcode, string $carwashId): Builder
+    public function scopeByBarcode(Builder $query, string $barcode, string $businessId): Builder
     {
-        return $query->where('barcode', $barcode)->where('carwash_id', $carwashId);
+        return $query->where('barcode', $barcode)->where('business_id', $businessId);
     }
 
     // Accessors

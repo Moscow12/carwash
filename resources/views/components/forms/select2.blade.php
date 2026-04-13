@@ -15,6 +15,7 @@
     'colLg' => null,
     'wrapper' => true,
     'helperText' => null,
+    'inputGroup' => false,
 ])
 
 @php
@@ -38,7 +39,7 @@
 <div class="{{ $colClasses }}">
 @endif
 
-    <div class="mb-3">
+    <div class="{{ $inputGroup ? '' : 'mb-3' }}">
         @if($label)
             <label for="{{ $uniqueId }}" class="form-label">
                 {{ $label }}

@@ -18,7 +18,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="mb-1">Categories</h3>
-            <p class="text-muted mb-0">Manage service categories for your carwashes</p>
+            <p class="text-muted mb-0">Manage service categories for your businesses</p>
         </div>
         <button wire:click="openModal" class="btn btn-primary">
             <i class="ti ti-plus me-1"></i> Add Category
@@ -39,13 +39,13 @@
                                placeholder="Search categories...">
                     </div>
                 </div>
-                @if($ownerCarwashes->count() > 1)
+                @if($ownerBusinesses->count() > 1)
                 <div class="col-md-4">
                     <x-forms.select2
-                        name="filterCarwash"
-                        placeholder="All Carwashes"
-                        :options="$ownerCarwashes->pluck('name', 'id')"
-                        wire:model.live="filterCarwash"
+                        name="filterBusiness"
+                        placeholder="All Businesses"
+                        :options="collect($ownerBusinesses)->pluck('name', 'id')"
+                        wire:model.live="filterBusiness"
                         wrapper="false"
                     />
                 </div>
@@ -62,7 +62,7 @@
                     <thead>
                         <tr class="bg-light">
                             <th class="border-0 ps-4">Category</th>
-                            <th class="border-0">Carwash</th>
+                            <th class="border-0">Business</th>
                             <th class="border-0 text-center">Status</th>
                             <th class="border-0 text-end pe-4">Actions</th>
                         </tr>
@@ -90,7 +90,7 @@
                                     <div class="avatar avatar-sm bg-secondary-subtle text-secondary rounded me-2 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
                                         <i class="ti ti-car-wash"></i>
                                     </div>
-                                    <span>{{ $category->carwash->name ?? '-' }}</span>
+                                    <span>{{ $category->business->name ?? '-' }}</span>
                                 </div>
                             </td>
                             <td class="text-center">
@@ -154,28 +154,28 @@
                 <form wire:submit="save">
                     <div class="modal-body" style="overflow-y: auto;">
                         <div class="row g-3">
-                            @if(!$hasCarwashes)
+                            @if(!$hasBusinesses)
                             <div class="col-12">
                                 <div class="alert alert-warning mb-0">
                                     <i class="ti ti-alert-triangle me-2"></i>
-                                    You need to register a carwash first before adding categories.
-                                    <a href="{{ route('owner.mycarwash') }}" class="alert-link">Register Carwash</a>
+                                    You need to register a business first before adding categories.
+                                    <a href="{{ route('owner.mybusiness') }}" class="alert-link">Register Business</a>
                                 </div>
                             </div>
-                            @elseif($ownerCarwashes->count() > 1)
+                            @elseif($ownerBusinesses->count() > 1)
                             <div class="col-12">
                                 <x-forms.select2
-                                    name="carwash_id"
-                                    label="Carwash"
-                                    :options="$ownerCarwashes->pluck('name', 'id')"
-                                    wire:model="carwash_id"
+                                    name="business_id"
+                                    label="Business"
+                                    :options="collect($ownerBusinesses)->pluck('name', 'id')"
+                                    wire:model="business_id"
                                     required
                                     wrapper="false"
                                 />
                             </div>
                             @endif
-                            @error('carwash_id')
-                                @if($ownerCarwashes->count() <= 1)
+                            @error('business_id')
+                                @if($ownerBusinesses->count() <= 1)
                                 <div class="col-12">
                                     <div class="alert alert-danger mb-0">{{ $message }}</div>
                                 </div>
@@ -219,7 +219,7 @@
                         <button type="button" wire:click="closeModal" class="btn btn-outline-secondary">
                             <i class="ti ti-x me-1"></i> Cancel
                         </button>
-                        <button type="submit" class="btn btn-primary" @if(!$hasCarwashes) disabled @endif>
+                        <button type="submit" class="btn btn-primary" @if(!$hasBusinesses) disabled @endif>
                             <span wire:loading.remove wire:target="save">
                                 <i class="ti ti-{{ $editMode ? 'check' : 'plus' }} me-1"></i>
                                 {{ $editMode ? 'Update Category' : 'Create Category' }}

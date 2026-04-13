@@ -56,8 +56,8 @@ class Edititems extends Component
     #[Rule('required|in:active,inactive')]
     public $status = 'active';
 
-    #[Rule('required|exists:carwashes,id')]
-    public $carwash_id = '';
+    #[Rule('required|exists:businesses,id')]
+    public $business_id = '';
 
     #[Rule('required|exists:categories,id')]
     public $category_id = '';
@@ -70,7 +70,7 @@ class Edititems extends Component
 
     public $existingImage = null;
 
-    public $ownerCarwashes = [];
+    public $ownerBusinesses = [];
     public $availableCategories = [];
     public $availableUnits = [];
 
@@ -79,7 +79,7 @@ class Edititems extends Component
     public function mount($itemId)
     {
         $this->itemId = $itemId;
-        $this->ownerCarwashes = Auth::user()->ownedCarwashes()->orderBy('name')->get();
+        $this->ownerBusinesses = Auth::user()->assignedBusinesses()->orderBy('name')->get();
         $this->availableUnits = unit::where('status', 'active')->orderBy('name')->get();
 
         $this->loadItem();
@@ -87,7 +87,7 @@ class Edititems extends Component
 
     public function loadItem()
     {
-        $this->item = items::with(['category', 'unit', 'carwash'])->find($this->itemId);
+        $this->item = items::with(['category', 'unit', 'business'])->find($this->itemId);
 
         if (!$this->item) {
             session()->flash('error', 'Item not found.');
@@ -95,8 +95,8 @@ class Edititems extends Component
         }
 
         // Verify ownership
-        $carwashIds = Auth::user()->ownedCarwashes()->pluck('id');
-        if (!$carwashIds->contains($this->item->carwash_id)) {
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
+        if (!$businessIds->contains($this->item->business_id)) {
             session()->flash('error', 'Unauthorized access.');
             return redirect()->route('owner.list-items');
         }
@@ -114,7 +114,7 @@ class Edititems extends Component
         $this->commission = $this->item->commission ?? '';
         $this->commission_type = $this->item->commission_type ?? '';
         $this->status = $this->item->status;
-        $this->carwash_id = $this->item->carwash_id;
+        $this->business_id = $this->item->business_id;
         $this->category_id = $this->item->category_id;
         $this->unit_id = $this->item->unit_id;
         $this->existingImage = $this->item->image;
@@ -122,7 +122,7 @@ class Edititems extends Component
         $this->loadCategories();
     }
 
-    public function updatedCarwashId($value)
+    public function updatedBusinessId($value)
     {
         $this->loadCategories();
         $this->category_id = '';
@@ -130,8 +130,8 @@ class Edititems extends Component
 
     public function loadCategories()
     {
-        if ($this->carwash_id) {
-            $this->availableCategories = category::where('carwash_id', $this->carwash_id)
+        if ($this->business_id) {
+            $this->availableCategories = category::where('business_id', $this->business_id)
                 ->where('status', 'active')
                 ->orderBy('name')
                 ->get();
@@ -170,23 +170,23 @@ class Edititems extends Component
     {
         $this->validate();
 
-        // Custom barcode uniqueness validation per carwash
+        // Custom barcode uniqueness validation per business
         if ($this->barcode) {
             $exists = items::where('barcode', $this->barcode)
-                ->where('carwash_id', $this->carwash_id)
+                ->where('business_id', $this->business_id)
                 ->where('id', '!=', $this->itemId)
                 ->exists();
 
             if ($exists) {
-                $this->addError('barcode', 'This barcode is already used by another item in this carwash.');
+                $this->addError('barcode', 'This barcode is already used by another item in this business.');
                 return;
             }
         }
 
-        // Verify carwash ownership
-        $carwashIds = Auth::user()->ownedCarwashes()->pluck('id');
-        if (!$carwashIds->contains($this->carwash_id)) {
-            session()->flash('error', 'Invalid carwash selected.');
+        // Verify business ownership
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
+        if (!$businessIds->contains($this->business_id)) {
+            session()->flash('error', 'Invalid business selected.');
             return;
         }
 
@@ -203,7 +203,7 @@ class Edititems extends Component
             'commission' => $this->commission ?: null,
             'commission_type' => $this->commission ? $this->commission_type : null,
             'status' => $this->status,
-            'carwash_id' => $this->carwash_id,
+            'business_id' => $this->business_id,
             'category_id' => $this->category_id,
             'unit_id' => $this->unit_id,
         ];

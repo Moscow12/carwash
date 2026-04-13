@@ -33,7 +33,7 @@
         <div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-0">
           <div>
             <div class="d-flex gap-3 align-items-center border-dashed border-bottom px-4 py-4">
-              <img src="{{ asset('images/avatar/avatar-1.jpg') }}" alt="" class="avatar avatar-md rounded-circle" />
+              <img src="{{ asset('images/avatar/avatar-15.jpg') }}" alt="" class="avatar avatar-md rounded-circle" />
               <div>
                 @auth
                   <h4 class="mb-0 fs-5">{{ Auth::user()->name }}</h4>
@@ -49,9 +49,9 @@
                 <span><i class="ti ti-home-2 fs-5"></i></span>
                 <span>Dashboard</span>
               </a>
-              <a href="{{ route('owner.carwashes') }}" class="dropdown-item d-flex align-items-center gap-2">
+              <a href="{{ route('owner.businesses') }}" class="dropdown-item d-flex align-items-center gap-2">
                 <span><i class="ti ti-car-garage fs-5"></i></span>
-                <span>My Carwashes</span>
+                <span>My Businesses</span>
               </a>
             </div>
             <div class="border-top p-3">

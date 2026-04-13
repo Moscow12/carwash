@@ -165,9 +165,9 @@
         }
 
         @media (max-width: 575px) {
-            .product-icon { width: 40px; height: 40px; }
-            .product-card { padding: 8px 6px; }
-            .product-card .small { font-size: 11px; }
+            .product-icon { width: 50px; height: 50px; }
+            .product-card { padding: 12px 8px; min-height: 140px; }
+            .product-card .small { font-size: 12px; }
         }
 
         /* Cart Table */
@@ -183,8 +183,21 @@
 
         @media (max-width: 575px) {
             .cart-table table { font-size: 13px; }
-            .cart-table .btn-sm { padding: 4px 6px; }
-            .cart-table input.form-control { width: 40px !important; padding: 4px; }
+            .cart-table .qty-btn {
+                padding: 8px 10px;
+                min-width: 36px;
+                min-height: 36px;
+            }
+            .cart-table input.form-control {
+                width: 48px !important;
+                padding: 6px 4px;
+                font-size: 14px;
+                min-height: 36px;
+            }
+        }
+
+        .qty-btn {
+            padding: 4px 8px;
         }
 
         /* Cart Summary */
@@ -204,17 +217,29 @@
             z-index: 100;
         }
 
+        .btn-action {
+            min-height: 42px;
+        }
+
         @media (max-width: 767px) {
             .pos-footer {
-                padding: 8px 10px;
+                padding: 10px;
             }
             .pos-footer .btn-action {
-                padding: 8px 12px;
-                font-size: 13px;
+                padding: 10px 14px;
+                font-size: 14px;
+                min-height: 48px;
+                flex: 1;
+                min-width: 70px;
             }
             .pos-footer .total-display {
-                padding: 8px 12px;
-                font-size: 14px;
+                padding: 10px 15px;
+                font-size: 16px;
+                width: 100%;
+                text-align: center;
+                background: #fff;
+                border-radius: 8px;
+                margin-bottom: 8px;
             }
             .pos-footer .total-display .fs-4 {
                 font-size: 16px !important;
@@ -311,6 +336,18 @@
             background: #ccc;
             border-radius: 2px;
         }
+
+        /* Mobile adjustments */
+        @media (max-width: 767px) {
+            .input-group .select2-container .select2-selection {
+                min-height: 40px;
+            }
+
+            .input-group .btn {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+        }
     </style>
 
     {{-- Header --}}
@@ -319,9 +356,9 @@
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <span class="fw-bold text-primary">
                     <i class="ti ti-map-pin me-1"></i>
-                    @php $carwash = collect($ownerCarwashes)->firstWhere('id', $selectedCarwash); @endphp
-                    <span class="d-none d-sm-inline">{{ $carwash['name'] ?? 'Select Location' }}</span>
-                    <span class="d-sm-none">{{ Str::limit($carwash['name'] ?? 'Select', 10) }}</span>
+                    @php $businessName = $ownerBusinesses[$selectedBusiness] ?? 'Select Location'; @endphp
+                    <span class="d-none d-sm-inline">{{ $businessName }}</span>
+                    <span class="d-sm-none">{{ Str::limit($businessName, 10) }}</span>
                 </span>
                 <span class="text-muted small d-none d-md-inline">
                     <i class="ti ti-calendar me-1"></i>
@@ -329,11 +366,11 @@
                 </span>
             </div>
             <div class="d-flex gap-2 align-items-center">
-                @if(count($ownerCarwashes) > 1)
+                @if(count($ownerBusinesses) > 1)
                 <x-forms.select2
-                    name="selectedCarwash"
-                    :options="collect($ownerCarwashes)"
-                    wire:model.live="selectedCarwash"
+                    name="selectedBusiness"
+                    :options="$ownerBusinesses"
+                    wire:model.live="selectedBusiness"
                     wrapper="false"
                     class="form-select form-select-sm"
                     style="width: auto; max-width: 150px;"
@@ -380,7 +417,7 @@
             {{-- Customer & Staff Selection --}}
             <div class="p-2 p-md-3 border-bottom">
                 <div class="row g-2">
-                    <div class="col-12 col-md-8">
+                    <div class="col-12 col-md-7">
                         <div class="input-group">
                             <span class="input-group-text"><i class="ti ti-user"></i></span>
                             <x-forms.select2
@@ -389,6 +426,7 @@
                                 wire:model="customer_id"
                                 placeholder="Walk-In Customer"
                                 wrapper="false"
+                                inputGroup="true"
                                 class="form-select"
                             />
                             <button wire:click="openCustomerModal" class="btn btn-primary" title="Add Customer">
@@ -396,14 +434,25 @@
                             </button>
                         </div>
                     </div>
-                    <div class="col-12 col-md-4">
-                        <x-forms.select2
-                            name="selectedStaff"
-                            :options="$availableStaffs"
-                            wire:model="selectedStaff"
-                            placeholder="Select Staff"
-                            wrapper="false"
-                        />
+                    <div class="col-12 col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="ti ti-user-check"></i></span>
+                            <x-forms.select2
+                                name="selectedStaff"
+                                :options="$availableStaffs"
+                                wire:model="selectedStaff"
+                                placeholder="Select Staff"
+                                wrapper="false"
+                                inputGroup="true"
+                                class="form-select"
+                            />
+                        </div>
+                        @if($selectedStaff && count($availableStaffs) > 0)
+                            <small class="text-muted d-block mt-1">
+                                <i class="ti ti-info-circle"></i>
+                                Staff: {{ $availableStaffs[$selectedStaff] ?? 'Selected' }}
+                            </small>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -492,13 +541,16 @@
             {{-- Search & Filters --}}
             <div class="p-2 p-md-3 bg-white border-bottom">
                 <div class="row g-2">
-                    <div class="col-7 col-md-6">
+                    <div class="col-7 col-md-7">
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="ti ti-search"></i></span>
                             <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Search...">
+                            <button wire:click="openScanner" class="btn btn-primary" type="button" title="Scan Barcode">
+                                <i class="ti ti-scan"></i>
+                            </button>
                         </div>
                     </div>
-                    <div class="col-5 col-md-6">
+                    <div class="col-5 col-md-5">
                         <x-forms.select2
                             name="selectedCategory"
                             :options="$availableCategories"
@@ -515,10 +567,25 @@
                 @forelse($availableItems as $item)
                 <div wire:click="addToCart('{{ $item['id'] }}')" class="product-card">
                     <div class="product-icon">
-                        @if($item['type'] === 'Service')
-                            <i class="ti ti-car-garage text-primary fs-4"></i>
+                        @if(!empty($item['image']))
+                            <img src="{{ asset('storage/' . $item['image']) }}"
+                                 alt="{{ $item['name'] }}"
+                                 class="img-fluid rounded"
+                                 style="width: 100%; height: 60px; object-fit: cover;"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div style="display: none; align-items: center; justify-content: center; height: 60px;">
+                                @if($item['type'] === 'Service')
+                                    <i class="ti ti-car-garage text-primary fs-4"></i>
+                                @else
+                                    <i class="ti ti-package text-info fs-4"></i>
+                                @endif
+                            </div>
                         @else
-                            <i class="ti ti-package text-info fs-4"></i>
+                            @if($item['type'] === 'Service')
+                                <i class="ti ti-car-garage text-primary fs-4"></i>
+                            @else
+                                <i class="ti ti-package text-info fs-4"></i>
+                            @endif
                         @endif
                     </div>
                     <div class="small fw-medium text-truncate" title="{{ $item['name'] }}">{{ Str::limit($item['name'], 12) }}</div>
@@ -539,43 +606,49 @@
 
     {{-- Footer Actions --}}
     <div class="pos-footer">
+        {{-- Total Display - First on mobile --}}
+        <div class="total-display d-md-none mb-2">
+            <span class="small">Total:</span>
+            <span class="fs-4 fw-bold ms-2">TZS {{ number_format($cartTotal, 0) }}</span>
+        </div>
+
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            {{-- Total Display - First on mobile --}}
-            <div class="total-display order-first order-md-last">
-                <span class="small d-none d-sm-inline">Total:</span>
+            {{-- Total Display - Desktop --}}
+            <div class="total-display d-none d-md-block">
+                <span class="small">Total:</span>
                 <span class="fs-4 fw-bold">TZS {{ number_format($cartTotal, 0) }}</span>
             </div>
 
             {{-- Action Buttons --}}
-            <div class="d-flex gap-2 flex-wrap">
-                <button wire:click="openPaymentModal('credit')" class="btn btn-info btn-action" {{ empty($cart) ? 'disabled' : '' }}>
-                    <i class="ti ti-file-invoice"></i>
-                    <span class="btn-text ms-1 d-none d-sm-inline">Credit</span>
-                </button>
-                <button wire:click="openPaymentModal('card')" class="btn btn-warning btn-action" {{ empty($cart) ? 'disabled' : '' }}>
-                    <i class="ti ti-credit-card"></i>
-                    <span class="btn-text ms-1 d-none d-sm-inline">Card</span>
-                </button>
-                <button wire:click="openPaymentModal('multiple')" class="btn btn-secondary btn-action" {{ empty($cart) ? 'disabled' : '' }}>
-                    <i class="ti ti-wallet"></i>
-                    <span class="btn-text ms-1 d-none d-sm-inline">Multiple</span>
-                </button>
+            <div class="d-flex gap-2 flex-wrap w-md-auto w-100">
                 <button wire:click="quickCashOut" class="btn btn-success btn-action" {{ empty($cart) ? 'disabled' : '' }}>
                     <span wire:loading.remove wire:target="quickCashOut">
                         <i class="ti ti-cash"></i>
-                        <span class="btn-text ms-1 d-none d-sm-inline">Cash</span>
+                        <span class="btn-text ms-1">Cash</span>
                     </span>
                     <span wire:loading wire:target="quickCashOut">
                         <span class="spinner-border spinner-border-sm"></span>
                     </span>
                 </button>
+                <button wire:click="openPaymentModal('card')" class="btn btn-warning btn-action" {{ empty($cart) ? 'disabled' : '' }}>
+                    <i class="ti ti-credit-card"></i>
+                    <span class="btn-text ms-1 d-none d-md-inline">Card</span>
+                </button>
+                <button wire:click="openPaymentModal('credit')" class="btn btn-info btn-action" {{ empty($cart) ? 'disabled' : '' }}>
+                    <i class="ti ti-file-invoice"></i>
+                    <span class="btn-text ms-1 d-none d-md-inline">Credit</span>
+                </button>
+                <button wire:click="openPaymentModal('multiple')" class="btn btn-secondary btn-action d-none d-md-inline-flex" {{ empty($cart) ? 'disabled' : '' }}>
+                    <i class="ti ti-wallet"></i>
+                    <span class="btn-text ms-1">Multiple</span>
+                </button>
                 <button wire:click="clearCart" class="btn btn-outline-danger btn-action" {{ empty($cart) ? 'disabled' : '' }}>
                     <i class="ti ti-x"></i>
                     <span class="btn-text ms-1 d-none d-sm-inline">Clear</span>
                 </button>
-                <button wire:click="openRecentModal" class="btn btn-outline-secondary btn-action">
+                <button wire:click="openRecentModal" class="btn btn-outline-secondary btn-action d-none d-md-inline-flex">
                     <i class="ti ti-history"></i>
-                    <span class="btn-text ms-1 d-none d-md-inline">Recent</span>
+                    <span class="btn-text ms-1">Recent</span>
                 </button>
             </div>
         </div>
@@ -904,25 +977,25 @@
                         {{-- Header with Logo --}}
                         <div class="receipt-header">
                             @php
-                                $showLogo = ($carwashSettings['show_logo_on_receipt'] ?? false) && ($carwashInfo['logo'] ?? false);
-                                $logoUrl = $carwashInfo['logo'] ?? null;
+                                $showLogo = ($businessSettings['show_logo_on_receipt'] ?? false) && ($businessInfo['logo'] ?? false);
+                                $logoUrl = $businessInfo['logo'] ?? null;
                             @endphp
                             @if($showLogo && $logoUrl)
                                 <img src="{{ asset('storage/' . $logoUrl) }}" alt="Logo" class="receipt-logo" style="max-width: 120px; max-height: 60px; margin-bottom: 5px;">
                             @endif
-                            <div class="shop-name">{{ $carwashSettings['business_name'] ?? $carwashInfo['name'] ?? 'SHOP NAME' }}</div>
-                            <div class="shop-address">{{ $carwashSettings['business_address'] ?? $carwashInfo['address'] ?? '' }}</div>
+                            <div class="shop-name">{{ $businessSettings['business_name'] ?? $businessInfo['name'] ?? 'SHOP NAME' }}</div>
+                            <div class="shop-address">{{ $businessSettings['business_address'] ?? $businessInfo['address'] ?? '' }}</div>
                             <div class="shop-contact">
-                                @if($carwashSettings['business_phone'] ?? $carwashInfo['phone'] ?? false)
-                                    Mobile: {{ $carwashSettings['business_phone'] ?? $carwashInfo['phone'] }}
+                                @if($businessSettings['business_phone'] ?? $businessInfo['phone'] ?? false)
+                                    Mobile: {{ $businessSettings['business_phone'] ?? $businessInfo['phone'] }}
                                 @endif
                             </div>
                         </div>
 
                         {{-- Custom Receipt Header --}}
-                        @if($carwashSettings['receipt_header'] ?? false)
+                        @if($businessSettings['receipt_header'] ?? false)
                         <div class="receipt-custom-header">
-                            {!! nl2br(e($carwashSettings['receipt_header'])) !!}
+                            {!! nl2br(e($businessSettings['receipt_header'])) !!}
                         </div>
                         @endif
 
@@ -1034,8 +1107,8 @@
 
                         {{-- Footer --}}
                         <div class="receipt-footer">
-                            @if($carwashSettings['receipt_footer'] ?? false)
-                                <div class="custom-footer">{!! nl2br(e($carwashSettings['receipt_footer'])) !!}</div>
+                            @if($businessSettings['receipt_footer'] ?? false)
+                                <div class="custom-footer">{!! nl2br(e($businessSettings['receipt_footer'])) !!}</div>
                             @else
                                 <div class="thank-you">Thank you for your business!</div>
                                 <div class="visit-again">Please visit again</div>
@@ -1049,6 +1122,51 @@
                     </button>
                     <button onclick="printThermalReceipt()" class="btn btn-sm btn-primary">
                         <i class="ti ti-printer me-1"></i> Print
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Barcode Scanner Modal --}}
+    @if($showScannerModal)
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.9); z-index: 1100;">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow bg-dark">
+                <div class="modal-header border-0 pb-2 bg-dark text-white">
+                    <h5 class="modal-title"><i class="ti ti-scan me-2"></i> Scan Barcode</h5>
+                    <button type="button" class="btn-close btn-close-white" wire:click="closeScanner"></button>
+                </div>
+                <div class="modal-body p-2 bg-dark">
+                    {{-- Camera preview --}}
+                    <div class="scanner-container position-relative">
+                        <video id="scanner-preview" class="w-100 rounded" style="max-height: 400px; background: #000;" autoplay playsinline></video>
+
+                        {{-- Scanning overlay --}}
+                        <div class="scanner-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
+                            <div class="scanner-frame" style="width: 80%; height: 200px; border: 3px solid #0d6efd; border-radius: 10px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);"></div>
+                        </div>
+
+                        {{-- Loading indicator --}}
+                        <div id="scanner-loading" class="position-absolute top-50 start-50 translate-middle text-center text-white">
+                            <div class="spinner-border text-primary mb-2" role="status"></div>
+                            <div>Starting camera...</div>
+                        </div>
+
+                        {{-- Status Messages --}}
+                        <div id="scanner-status" class="position-absolute bottom-0 start-0 end-0 text-center py-2 bg-dark bg-opacity-75 text-white" style="display: none;"></div>
+                    </div>
+
+                    {{-- Instructions --}}
+                    <div class="text-center text-white mt-3">
+                        <i class="ti ti-info-circle me-1"></i>
+                        <small>Position the barcode within the frame</small>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-dark">
+                    <button wire:click="closeScanner" class="btn btn-light w-100">
+                        <i class="ti ti-x me-1"></i> Close Scanner
                     </button>
                 </div>
             </div>
@@ -1408,6 +1526,156 @@
                 }, 500);
             };
         }
+    </script>
 
+    {{-- ZXing Barcode Scanner Library --}}
+    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
+
+    <script>
+        let codeReader = null;
+        let scannerStream = null;
+
+        // Initialize scanner when Livewire is loaded
+        document.addEventListener('livewire:initialized', () => {
+            // Listen for start-scanner event
+            Livewire.on('start-scanner', () => {
+                startBarcodeScanner();
+            });
+
+            // Listen for stop-scanner event
+            Livewire.on('stop-scanner', () => {
+                stopBarcodeScanner();
+            });
+        });
+
+        async function startBarcodeScanner() {
+            const preview = document.getElementById('scanner-preview');
+            const loading = document.getElementById('scanner-loading');
+            const statusEl = document.getElementById('scanner-status');
+
+            if (!preview) return;
+
+            try {
+                // Show loading
+                if (loading) loading.style.display = 'block';
+                if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.className = 'position-absolute bottom-0 start-0 end-0 text-center py-2 bg-dark bg-opacity-75 text-info';
+                    statusEl.innerHTML = '<i class="ti ti-camera me-1"></i> Initializing camera...';
+                }
+
+                // Initialize code reader
+                codeReader = new ZXing.BrowserMultiFormatReader();
+
+                // Get video devices
+                const videoInputDevices = await codeReader.listVideoInputDevices();
+
+                if (videoInputDevices.length === 0) {
+                    throw new Error('No camera found');
+                }
+
+                // Prefer back camera on mobile
+                let selectedDeviceId = videoInputDevices[0]?.deviceId;
+                const backCamera = videoInputDevices.find(device =>
+                    device.label.toLowerCase().includes('back') ||
+                    device.label.toLowerCase().includes('rear') ||
+                    device.label.toLowerCase().includes('environment')
+                );
+                if (backCamera) {
+                    selectedDeviceId = backCamera.deviceId;
+                }
+
+                // Hide loading, show ready status
+                if (loading) loading.style.display = 'none';
+                if (statusEl) {
+                    statusEl.className = 'position-absolute bottom-0 start-0 end-0 text-center py-2 bg-dark bg-opacity-75 text-success';
+                    statusEl.innerHTML = '<i class="ti ti-camera-check me-1"></i> Camera ready - Point at barcode';
+                }
+
+                // Start decoding
+                codeReader.decodeFromVideoDevice(selectedDeviceId, 'scanner-preview', (result, err) => {
+                    if (result) {
+                        // Barcode detected
+                        const code = result.getText();
+                        console.log('Barcode scanned:', code);
+
+                        // Show success message
+                        if (statusEl) {
+                            statusEl.className = 'position-absolute bottom-0 start-0 end-0 text-center py-2 bg-success text-white';
+                            statusEl.innerHTML = '<i class="ti ti-check me-1"></i> Barcode captured: ' + code;
+                        }
+
+                        // Vibration feedback if supported
+                        if (navigator.vibrate) {
+                            navigator.vibrate(200);
+                        }
+
+                        // Play beep sound
+                        playBeep();
+
+                        // Dispatch to Livewire after short delay to show success message
+                        setTimeout(() => {
+                            Livewire.dispatch('barcode-scanned', { code: code });
+                        }, 800);
+                    }
+
+                    if (err && err.name !== 'NotFoundException') {
+                        console.error('Scanner error:', err);
+                    }
+                });
+
+            } catch (err) {
+                console.error('Failed to start scanner:', err);
+                if (loading) loading.style.display = 'none';
+                if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.className = 'position-absolute bottom-0 start-0 end-0 text-center py-2 bg-danger text-white';
+                    statusEl.innerHTML = '<i class="ti ti-camera-off me-1"></i> Camera not available. Please grant camera permissions.';
+                }
+
+                // Show alert as well for critical error
+                setTimeout(() => {
+                    alert('Failed to access camera. Please grant camera permissions and try again.');
+                    Livewire.dispatch('stop-scanner');
+                }, 2000);
+            }
+        }
+
+        function stopBarcodeScanner() {
+            if (codeReader) {
+                codeReader.reset();
+                codeReader = null;
+            }
+
+            // Stop all video streams
+            const preview = document.getElementById('scanner-preview');
+            if (preview && preview.srcObject) {
+                const tracks = preview.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                preview.srcObject = null;
+            }
+        }
+
+        // Play beep sound on successful scan
+        function playBeep() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            gainNode.gain.value = 0.3;
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            stopBarcodeScanner();
+        });
     </script>
 </div>

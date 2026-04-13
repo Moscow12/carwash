@@ -8,16 +8,16 @@
                 <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                     <i class="fas fa-map-marker-alt me-1"></i>
                     @php
-                        $selectedCarwash = collect($carwashes)->firstWhere('id', $carwash_id);
+                        $selectedBusiness = collect($businesses)->firstWhere('id', $business_id);
                     @endphp
-                    {{ $selectedCarwash['name'] ?? 'Select Location' }}
+                    {{ $selectedBusiness['name'] ?? 'Select Location' }}
                 </button>
                 <ul class="dropdown-menu">
-                    @foreach($carwashes as $carwash)
+                    @foreach($businesses as $business)
                         <li>
-                            <a class="dropdown-item {{ $carwash_id == $carwash['id'] ? 'active' : '' }}"
-                               href="#" wire:click.prevent="$set('carwash_id', '{{ $carwash['id'] }}')" wire:loading.attr="disabled">
-                                {{ $carwash['name'] }}
+                            <a class="dropdown-item {{ $business_id == $business['id'] ? 'active' : '' }}"
+                               href="#" wire:click.prevent="$set('business_id', '{{ $business['id'] }}')" wire:loading.attr="disabled">
+                                {{ $business['name'] }}
                             </a>
                         </li>
                     @endforeach

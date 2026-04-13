@@ -13,9 +13,18 @@
       <!-- Offcanvas Sidebar -->
       <div class="offcanvasNav offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
         <div class="offcanvas-header">
+            @php
+                $settings = Auth::user()->getCurrentBusinessSettings();
+                $logoUrl = $settings && $settings->business_logo
+                    ? asset('storage/' . $settings->business_logo)
+                    : asset('images/brand/logo/logo-icon.svg');
+                $businessName = $settings && $settings->business_name
+                    ? $settings->business_name
+                    : 'CAMS Owner';
+            @endphp
             <a class='d-flex align-items-center gap-2' href="{{ route('owner.dashboard') }}">
-              <img src="{{ asset('images/brand/logo/logo-icon.svg') }}" alt="" />
-              <span class="fw-bold fs-4 site-logo-text">CAMS Owner</span>
+              <img src="{{ $logoUrl }}" alt="{{ $businessName }}" style="max-height: 40px; max-width: 40px; object-fit: contain;" />
+              <span class="fw-bold fs-4 site-logo-text">{{ $businessName }}</span>
             </a>
           <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>

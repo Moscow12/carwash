@@ -4,16 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
 
 class sales extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $table = 'sales';
 
     protected $fillable = [
-        'carwash_id',
+        'business_id',
+        'outlet_id',
         'sale_status',
         'sale_type',
         'sale_date',
@@ -24,19 +29,25 @@ class sales extends Model
         'customer_id',
         'user_id',
         'total_amount',
+        'subtotal',
+        'discount_amount',
+        'tax_amount',
         'payment_status',
     ];
 
     protected $casts = [
         'total_amount' => 'decimal:2',
+        'subtotal' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
         'sale_date' => 'datetime',
         'payment_date' => 'date',
     ];
 
     // Relationships
-    public function carwash()
+    public function business()
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function customer()
@@ -57,6 +68,26 @@ class sales extends Model
     public function payments()
     {
         return $this->hasMany(sales_payments::class, 'sale_id');
+    }
+
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(PosOutlet::class);
+    }
+
+    public function newPayments(): MorphMany
+    {
+        return $this->morphMany(Payment::class, 'payable');
+    }
+
+    public function discounts(): MorphMany
+    {
+        return $this->morphMany(OrderDiscount::class, 'discountable');
+    }
+
+    public function voidLogs(): MorphMany
+    {
+        return $this->morphMany(VoidLog::class, 'voidable');
     }
 
     // Scopes
@@ -85,9 +116,9 @@ class sales extends Model
         return $query->where('payment_status', 'unpaid');
     }
 
-    public function scopeForCarwash($query, $carwashId)
+    public function scopeForBusiness($query, $businessId)
     {
-        return $query->where('carwash_id', $carwashId);
+        return $query->where('business_id', $businessId);
     }
 
     public function scopeToday($query)

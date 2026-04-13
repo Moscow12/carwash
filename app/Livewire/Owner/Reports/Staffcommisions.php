@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\staffs;
 use App\Models\sales_item;
-use App\Models\carwashes;
+use App\Models\Business;
 use Carbon\Carbon;
 
 #[Layout('components.layouts.app-owner')]
@@ -22,7 +22,7 @@ class Staffcommisions extends Component
 
     // Filters
     #[Url]
-    public $carwash_id = '';
+    public $business_id = '';
 
     #[Url]
     public $staff_id = '';
@@ -40,30 +40,30 @@ class Staffcommisions extends Component
     public $showFilters = true;
 
     // Data
-    public $carwashes = [];
+    public $businesses = [];
     public $staffList = [];
 
     public function mount()
     {
         $owner = Auth::user();
-        $carwashCollection = $owner->ownedCarwashes()->get();
+        $businessCollection = $owner->assignedBusinesses()->get();
 
-        $this->carwashes = $carwashCollection->map(function ($carwash) {
+        $this->businesses = $businessCollection->map(function ($business) {
             return [
-                'id' => $carwash->id,
-                'name' => $carwash->name,
+                'id' => $business->id,
+                'name' => $business->name,
             ];
         })->toArray();
 
-        if (count($this->carwashes) > 0 && empty($this->carwash_id)) {
-            $this->carwash_id = $this->carwashes[0]['id'];
+        if (count($this->businesses) > 0 && empty($this->business_id)) {
+            $this->business_id = $this->businesses[0]['id'];
         }
 
         $this->setDateRange();
         $this->loadStaffList();
     }
 
-    public function updatedCarwashId()
+    public function updatedBusinessId()
     {
         $this->loadStaffList();
         $this->staff_id = '';
@@ -139,12 +139,12 @@ class Staffcommisions extends Component
 
     protected function loadStaffList()
     {
-        if (empty($this->carwash_id)) {
+        if (empty($this->business_id)) {
             $this->staffList = [];
             return;
         }
 
-        $this->staffList = staffs::where('carwash_id', $this->carwash_id)
+        $this->staffList = staffs::where('business_id', $this->business_id)
             ->orderBy('name')
             ->get()
             ->map(fn($s) => [
@@ -168,13 +168,13 @@ class Staffcommisions extends Component
 
     public function getStaffPerformanceProperty()
     {
-        if (empty($this->carwash_id)) {
+        if (empty($this->business_id)) {
             return collect([]);
         }
 
         [$startDateTime, $endDateTime] = $this->getDateTimeRange();
 
-        $query = staffs::where('carwash_id', $this->carwash_id)
+        $query = staffs::where('business_id', $this->business_id)
             ->when($this->staff_id, fn($q) => $q->where('id', $this->staff_id))
             ->with(['salesItems' => function ($query) use ($startDateTime, $endDateTime) {
                 $query->whereBetween('date', [$startDateTime, $endDateTime])
@@ -218,7 +218,7 @@ class Staffcommisions extends Component
 
     public function getDetailedDataProperty()
     {
-        if (empty($this->carwash_id)) {
+        if (empty($this->business_id)) {
             return null;
         }
 
@@ -237,7 +237,7 @@ class Staffcommisions extends Component
             ->join('staffs', 'sales_items.staff_id', '=', 'staffs.id')
             ->join('items', 'sales_items.item_id', '=', 'items.id')
             ->join('sales', 'sales_items.sale_id', '=', 'sales.id')
-            ->where('staffs.carwash_id', $this->carwash_id)
+            ->where('staffs.business_id', $this->business_id)
             ->whereBetween('sales_items.date', [$startDateTime, $endDateTime]);
 
         if (!empty($this->staff_id)) {

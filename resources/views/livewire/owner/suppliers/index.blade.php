@@ -25,6 +25,33 @@
         </button>
     </div>
 
+    {{-- Business Selector --}}
+    @if(count($businesses) > 0)
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body py-3">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <label class="form-label mb-1 small text-muted">Select Business</label>
+                    <select wire:model.live="selectedBusiness" class="form-select">
+                        <option value="">Choose business...</option>
+                        @foreach($businesses as $business)
+                            <option value="{{ $business->id }}">{{ $business->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    @if($selectedBusiness)
+                    <div class="alert alert-info mb-0 py-2">
+                        <i class="ti ti-info-circle me-2"></i>
+                        <small>Viewing suppliers for <strong>{{ $businesses->firstWhere('id', $selectedBusiness)?->name }}</strong></small>
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Stats Cards --}}
     <div class="row g-3 mb-4">
         <div class="col-md-4">
@@ -87,13 +114,11 @@
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <x-forms.select2
-                        name="statusFilter"
-                        :options="[['id' => '', 'name' => 'All Status'], ['id' => 'active', 'name' => 'Active'], ['id' => 'inactive', 'name' => 'Inactive']]"
-                        wire:model.live="statusFilter"
-                        placeholder="All Status"
-                        wrapper="false"
-                    />
+                    <select wire:model.live="statusFilter" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
                 </div>
                 <div class="col-md-4 text-end">
                     <span class="text-muted small">{{ $suppliers->total() }} supplier(s)</span>
@@ -250,16 +275,38 @@
                             @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
+                        {{-- TIN --}}
+                        <div class="mb-3">
+                            <label class="form-label">TIN (Tax Identification Number)</label>
+                            <input type="text" wire:model="tin_number" class="form-control @error('tin_number') is-invalid @enderror" placeholder="Enter TIN">
+                            @error('tin_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        {{-- VRN --}}
+                        <div class="mb-3">
+                            <label class="form-label">VRN (VAT Registration Number)</label>
+                            <input type="text" wire:model="vrn_number" class="form-control @error('vrn_number') is-invalid @enderror" placeholder="Enter VRN">
+                            @error('vrn_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        {{-- Contact Person --}}
+                        <div class="mb-3">
+                            <label class="form-label">Contact Person</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="ti ti-user"></i></span>
+                                <input type="text" wire:model="contact_person" class="form-control @error('contact_person') is-invalid @enderror" placeholder="Contact person name">
+                            </div>
+                            @error('contact_person') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        </div>
+
                         {{-- Status --}}
                         <div class="mb-3">
                             <label class="form-label">Status <span class="text-danger">*</span></label>
-                            <x-forms.select2
-                                name="status"
-                                :options="[['id' => 'active', 'name' => 'Active'], ['id' => 'inactive', 'name' => 'Inactive']]"
-                                wire:model="status"
-                                wrapper="false"
-                            />
-                            @error('status') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            <select wire:model="status" class="form-select @error('status') is-invalid @enderror">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="d-flex gap-2 pt-3">
@@ -317,6 +364,24 @@
                         <div class="list-group-item px-0">
                             <span class="text-muted d-block mb-1"><i class="ti ti-map-pin me-2"></i> Address</span>
                             <span>{{ $viewSupplier->address }}</span>
+                        </div>
+                        @endif
+                        @if($viewSupplier->tin_number)
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted"><i class="ti ti-file-text me-2"></i> TIN</span>
+                            <span class="fw-medium">{{ $viewSupplier->tin_number }}</span>
+                        </div>
+                        @endif
+                        @if($viewSupplier->vrn_number)
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted"><i class="ti ti-file-invoice me-2"></i> VRN</span>
+                            <span class="fw-medium">{{ $viewSupplier->vrn_number }}</span>
+                        </div>
+                        @endif
+                        @if($viewSupplier->contact_person)
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted"><i class="ti ti-user me-2"></i> Contact Person</span>
+                            <span class="fw-medium">{{ $viewSupplier->contact_person }}</span>
                         </div>
                         @endif
                         <div class="list-group-item d-flex justify-content-between align-items-center px-0">

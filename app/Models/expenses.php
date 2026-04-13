@@ -4,17 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class expenses extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $table = 'expenses';
 
     protected $fillable = [
         'reference_no',
         'expense_date',
-        'carwash_id',
+        'business_id',
+        'outlet_id',
         'category_id',
         'subcategory_id',
         'total_amount',
@@ -46,32 +49,37 @@ class expenses extends Model
     ];
 
     // Relationships
-    public function carwash()
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
-    public function category()
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(PosOutlet::class, 'outlet_id');
+    }
+
+    public function category(): BelongsTo
     {
         return $this->belongsTo(expense_category::class, 'category_id');
     }
 
-    public function subcategory()
+    public function subcategory(): BelongsTo
     {
         return $this->belongsTo(expense_category::class, 'subcategory_id');
     }
 
-    public function addedByUser()
+    public function addedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'added_by');
     }
 
-    public function expenseForStaff()
+    public function expenseForStaff(): BelongsTo
     {
         return $this->belongsTo(staffs::class, 'expense_for_id');
     }
 
-    public function contactSupplier()
+    public function contactSupplier(): BelongsTo
     {
         return $this->belongsTo(suplier::class, 'contact_id');
     }
@@ -97,9 +105,9 @@ class expenses extends Model
         return $query->where('payment_status', 'partial');
     }
 
-    public function scopeForCarwash($query, $carwashId)
+    public function scopeForBusiness($query, $businessId)
     {
-        return $query->where('carwash_id', $carwashId);
+        return $query->where('business_id', $businessId);
     }
 
     public function scopeInDateRange($query, $startDate, $endDate)
@@ -179,10 +187,10 @@ class expenses extends Model
     }
 
     // Generate reference number
-    public static function generateReferenceNo($carwashId)
+    public static function generateReferenceNo($businessId)
     {
         $year = date('Y');
-        $count = self::where('carwash_id', $carwashId)
+        $count = self::where('business_id', $businessId)
             ->whereYear('created_at', $year)
             ->count() + 1;
 

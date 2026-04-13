@@ -12,7 +12,7 @@ class CarwashSetting extends Model
     protected $table = 'carwash_settings';
 
     protected $fillable = [
-        'carwash_id',
+        'business_id',
         // Business Settings
         'business_name',
         'business_logo',
@@ -196,16 +196,16 @@ class CarwashSetting extends Model
     ];
 
     // Relationships
-    public function carwash()
+    public function business()
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
-    // Get or create settings for a carwash
-    public static function getForCarwash($carwashId)
+    // Get or create settings for a business
+    public static function getForBusiness($businessId)
     {
         return self::firstOrCreate(
-            ['carwash_id' => $carwashId],
+            ['business_id' => $businessId],
             self::getDefaults()
         );
     }

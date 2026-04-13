@@ -7,15 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Reservation extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $fillable = [
         'reservation_no',
-        'carwash_id',
+        'business_id',
         'branch_id',
         'guest_id',
         'room_type_id',
@@ -25,6 +28,7 @@ class Reservation extends Model
         'check_out_date',
         'adults',
         'children',
+        'number_of_rooms',
         'total_nights',
         'room_rate',
         'total_amount',
@@ -45,9 +49,9 @@ class Reservation extends Model
     ];
 
     // Relationships
-    public function carwash(): BelongsTo
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function branch(): BelongsTo
@@ -85,6 +89,18 @@ class Reservation extends Model
         return $this->hasOne(RoomAllocation::class, 'reservation_id');
     }
 
+    public function room(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Room::class,
+            RoomAllocation::class,
+            'reservation_id',  // Foreign key on room_allocations table
+            'id',              // Foreign key on rooms table
+            'id',              // Local key on reservations table
+            'room_id'          // Local key on room_allocations table
+        );
+    }
+
     public function folios(): HasMany
     {
         return $this->hasMany(Folio::class, 'reservation_id');
@@ -93,6 +109,23 @@ class Reservation extends Model
     public function posOrders(): HasMany
     {
         return $this->hasMany(PosOrder::class, 'reservation_id');
+    }
+
+    public function reservationGuests(): HasMany
+    {
+        return $this->hasMany(ReservationGuest::class);
+    }
+
+    public function allGuests(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Guest::class,
+            ReservationGuest::class,
+            'reservation_id',
+            'id',
+            'id',
+            'guest_id'
+        );
     }
 
     // Scopes

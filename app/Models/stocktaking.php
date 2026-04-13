@@ -4,42 +4,60 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class stocktaking extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $table = 'stocktakings';
 
     protected $fillable = [
         'item_id',
         'user_id',
-        'carwash_id',
+        'business_id',
+        'outlet_id',
+        'reference_no',
+        'stocktake_date',
+        'expected_quantity',
+        'actual_quantity',
+        'variance',
         'quantity',
         'price',
         'stocktaking_status',
+        'adjustment_reason',
         'notes',
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:2',
+        'stocktake_date' => 'date',
+        'expected_quantity' => 'decimal:3',
+        'actual_quantity' => 'decimal:3',
+        'variance' => 'decimal:3',
+        'quantity' => 'decimal:3',
         'price' => 'decimal:2',
     ];
 
     // Relationships
-    public function item()
+    public function item(): BelongsTo
     {
         return $this->belongsTo(items::class, 'item_id');
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function carwash()
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
+    }
+
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(PosOutlet::class, 'outlet_id');
     }
 
     // Scopes
@@ -58,9 +76,9 @@ class stocktaking extends Model
         return $query->where('stocktaking_status', 'canceled');
     }
 
-    public function scopeForCarwash($query, $carwashId)
+    public function scopeForBusiness($query, $businessId)
     {
-        return $query->where('carwash_id', $carwashId);
+        return $query->where('business_id', $businessId);
     }
 
     // Helpers

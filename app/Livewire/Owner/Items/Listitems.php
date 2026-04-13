@@ -17,7 +17,7 @@ class Listitems extends Component
     use WithPagination;
 
     // Filters
-    public $selectedCarwash = '';
+    public $selectedBusiness = '';
     public $typeFilter = '';
     public $categoryFilter = '';
     public $unitFilter = '';
@@ -45,9 +45,9 @@ class Listitems extends Component
 
     public function mount()
     {
-        $firstCarwash = Auth::user()->ownedCarwashes()->first();
-        if ($firstCarwash) {
-            $this->selectedCarwash = $firstCarwash->id;
+        $firstBusiness = Auth::user()->assignedBusinesses()->first();
+        if ($firstBusiness) {
+            $this->selectedBusiness = $firstBusiness->id;
         }
     }
 
@@ -56,7 +56,7 @@ class Listitems extends Component
         $this->resetPage();
     }
 
-    public function updatedSelectedCarwash()
+    public function updatedSelectedBusiness()
     {
         $this->resetPage();
         $this->categoryFilter = '';
@@ -71,7 +71,7 @@ class Listitems extends Component
 
     public function loadStats()
     {
-        if (!$this->selectedCarwash) {
+        if (!$this->selectedBusiness) {
             $this->totalItems = 0;
             $this->totalServices = 0;
             $this->totalProducts = 0;
@@ -79,7 +79,7 @@ class Listitems extends Component
             return;
         }
 
-        $baseQuery = items::where('carwash_id', $this->selectedCarwash);
+        $baseQuery = items::where('business_id', $this->selectedBusiness);
         $this->totalItems = (clone $baseQuery)->count();
         $this->totalServices = (clone $baseQuery)->services()->count();
         $this->totalProducts = (clone $baseQuery)->products()->count();
@@ -87,7 +87,7 @@ class Listitems extends Component
 
     public function viewItem($id)
     {
-        $this->viewingItem = items::with(['category', 'unit', 'carwash'])->find($id);
+        $this->viewingItem = items::with(['category', 'unit', 'business'])->find($id);
         $this->showViewModal = true;
     }
 
@@ -130,7 +130,7 @@ class Listitems extends Component
         try {
             // Get current balance
             $lastBalance = item_balance::where('item_id', $this->stockItem->id)
-                ->where('carwash_id', $this->selectedCarwash)
+                ->where('business_id', $this->selectedBusiness)
                 ->latest()
                 ->first();
 
@@ -152,7 +152,7 @@ class Listitems extends Component
             item_balance::create([
                 'item_id' => $this->stockItem->id,
                 'user_id' => Auth::id(),
-                'carwash_id' => $this->selectedCarwash,
+                'business_id' => $this->selectedBusiness,
                 'previous_balance' => $previousBalance,
                 'current_balance' => $newBalance,
                 'quantity_changed' => $quantityChanged,
@@ -200,11 +200,11 @@ class Listitems extends Component
 
     public function getCategories()
     {
-        if (!$this->selectedCarwash) {
+        if (!$this->selectedBusiness) {
             return collect();
         }
 
-        return category::where('carwash_id', $this->selectedCarwash)
+        return category::where('business_id', $this->selectedBusiness)
             ->active()
             ->orderBy('name')
             ->get();
@@ -218,7 +218,7 @@ class Listitems extends Component
     public function getCurrentStock($itemId)
     {
         $lastBalance = item_balance::where('item_id', $itemId)
-            ->where('carwash_id', $this->selectedCarwash)
+            ->where('business_id', $this->selectedBusiness)
             ->latest()
             ->first();
 
@@ -229,12 +229,12 @@ class Listitems extends Component
     {
         $this->loadStats();
 
-        $carwashes = Auth::user()->ownedCarwashes()->orderBy('name')->get();
+        $businesses = Auth::user()->assignedBusinesses()->orderBy('name')->get();
 
         $items = collect();
 
-        if ($this->selectedCarwash) {
-            $query = items::where('carwash_id', $this->selectedCarwash)
+        if ($this->selectedBusiness) {
+            $query = items::where('business_id', $this->selectedBusiness)
                 ->when($this->typeFilter, fn($q) => $q->where('type', $this->typeFilter))
                 ->when($this->categoryFilter, fn($q) => $q->where('category_id', $this->categoryFilter))
                 ->when($this->unitFilter, fn($q) => $q->where('unit_id', $this->unitFilter))
@@ -245,7 +245,7 @@ class Listitems extends Component
                             ->orWhere('description', 'like', "%{$this->search}%");
                     });
                 })
-                ->with(['category', 'unit', 'carwash'])
+                ->with(['category', 'unit', 'business'])
                 ->orderBy('name');
 
             $items = $query->paginate($this->perPage);
@@ -256,7 +256,7 @@ class Listitems extends Component
         if ($items->count() > 0) {
             $itemIds = $items->pluck('id')->toArray();
             $latestBalances = item_balance::whereIn('item_id', $itemIds)
-                ->where('carwash_id', $this->selectedCarwash)
+                ->where('business_id', $this->selectedBusiness)
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->unique('item_id')
@@ -269,7 +269,7 @@ class Listitems extends Component
 
         return view('livewire.owner.items.listitems', [
             'items' => $items,
-            'carwashes' => $carwashes,
+            'businesses' => $businesses,
             'categories' => $this->getCategories(),
             'units' => $this->getUnits(),
             'stockData' => $stockData,

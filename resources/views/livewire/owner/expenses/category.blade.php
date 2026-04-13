@@ -84,11 +84,11 @@
             <div class="row g-3 mb-4">
                 <div class="col-md-3">
                     <x-forms.select2
-                        name="selectedCarwash"
-                        label="Carwash"
-                        :options="$carwashes"
-                        wire:model.live="selectedCarwash"
-                        placeholder="Select Carwash"
+                        name="selectedBusiness"
+                        label="Business"
+                        :options="$businesses"
+                        wire:model.live="selectedBusiness"
+                        placeholder="Select Business"
                         wrapper="false"
                     />
                 </div>

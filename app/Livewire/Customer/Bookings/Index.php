@@ -39,7 +39,7 @@ class Index extends Component
             ->when($this->statusFilter, function ($query) {
                 $query->where('status', $this->statusFilter);
             })
-            ->with(['carwash', 'item'])
+            ->with(['business', 'item'])
             ->latest()
             ->paginate(10);
 

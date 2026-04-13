@@ -158,10 +158,10 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <x-forms.select2
-                                name="carwash_id"
-                                label="Carwash"
-                                :options="$ownerCarwashes->pluck('name', 'id')"
-                                wire:model.live="carwash_id"
+                                name="business_id"
+                                label="Business"
+                                :options="collect($ownerBusinesses)->pluck('name', 'id')"
+                                wire:model.live="business_id"
                                 required
                                 wrapper="false"
                             />

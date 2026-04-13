@@ -15,7 +15,7 @@ class Category extends Component
 
     public $search = '';
     public $perPage = 25;
-    public $selectedCarwash = '';
+    public $selectedBusiness = '';
 
     // Modal state
     public $showModal = false;
@@ -35,9 +35,9 @@ class Category extends Component
 
     public function mount()
     {
-        $firstCarwash = Auth::user()->ownedCarwashes()->first();
-        if ($firstCarwash) {
-            $this->selectedCarwash = $firstCarwash->id;
+        $firstBusiness = Auth::user()->assignedBusinesses()->first();
+        if ($firstBusiness) {
+            $this->selectedBusiness = $firstBusiness->id;
         }
     }
 
@@ -46,7 +46,7 @@ class Category extends Component
         $this->resetPage();
     }
 
-    public function updatedSelectedCarwash()
+    public function updatedSelectedBusiness()
     {
         $this->resetPage();
         $this->loadStats();
@@ -61,14 +61,14 @@ class Category extends Component
 
     public function loadStats()
     {
-        if (!$this->selectedCarwash) {
+        if (!$this->selectedBusiness) {
             $this->totalCategories = 0;
             $this->parentCount = 0;
             $this->subcategoryCount = 0;
             return;
         }
 
-        $baseQuery = expense_category::where('carwash_id', $this->selectedCarwash);
+        $baseQuery = expense_category::where('business_id', $this->selectedBusiness);
         $this->totalCategories = (clone $baseQuery)->count();
         $this->parentCount = (clone $baseQuery)->parentCategories()->count();
         $this->subcategoryCount = (clone $baseQuery)->subCategories()->count();
@@ -118,8 +118,8 @@ class Category extends Component
             'code' => 'nullable|string|max:50',
         ]);
 
-        if (!$this->selectedCarwash) {
-            session()->flash('error', 'Please select a carwash first.');
+        if (!$this->selectedBusiness) {
+            session()->flash('error', 'Please select a business first.');
             return;
         }
 
@@ -128,7 +128,7 @@ class Category extends Component
                 'name' => $this->name,
                 'code' => $this->code ?: null,
                 'parent_id' => $this->isSubcategory && $this->parent_id ? $this->parent_id : null,
-                'carwash_id' => $this->selectedCarwash,
+                'business_id' => $this->selectedBusiness,
                 'status' => $this->status,
             ];
 
@@ -181,11 +181,11 @@ class Category extends Component
 
     public function getParentCategories()
     {
-        if (!$this->selectedCarwash) {
+        if (!$this->selectedBusiness) {
             return collect();
         }
 
-        $query = expense_category::where('carwash_id', $this->selectedCarwash)
+        $query = expense_category::where('business_id', $this->selectedBusiness)
             ->parentCategories()
             ->orderBy('name');
 
@@ -201,13 +201,13 @@ class Category extends Component
     {
         $this->loadStats();
 
-        $carwashes = Auth::user()->ownedCarwashes()->orderBy('name')->get();
+        $businesses = Auth::user()->assignedBusinesses()->orderBy('name')->get();
 
         // Get parent categories with their children
         $categories = collect();
 
-        if ($this->selectedCarwash) {
-            $parentCategories = expense_category::where('carwash_id', $this->selectedCarwash)
+        if ($this->selectedBusiness) {
+            $parentCategories = expense_category::where('business_id', $this->selectedBusiness)
                 ->parentCategories()
                 ->when($this->search, function ($q) {
                     $q->where('name', 'like', "%{$this->search}%")
@@ -227,7 +227,7 @@ class Category extends Component
 
             // Also get orphan subcategories that match search
             if ($this->search) {
-                $orphanMatches = expense_category::where('carwash_id', $this->selectedCarwash)
+                $orphanMatches = expense_category::where('business_id', $this->selectedBusiness)
                     ->subCategories()
                     ->where(function ($q) {
                         $q->where('name', 'like', "%{$this->search}%")
@@ -249,7 +249,7 @@ class Category extends Component
 
         return view('livewire.owner.expenses.category', [
             'categories' => $paginatedCategories,
-            'carwashes' => $carwashes,
+            'businesses' => $businesses,
             'parentCategoriesList' => $this->getParentCategories(),
             'total' => $total,
             'from' => $total > 0 ? (($page - 1) * $this->perPage) + 1 : 0,

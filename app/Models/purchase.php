@@ -2,115 +2,136 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class purchase extends Model
 {
     use HasUuids;
 
-    protected $table = 'purchases';
-
     protected $fillable = [
         'item_id',
         'user_id',
         'supplier_id',
-        'carwash_id',
+        'business_id',
         'quantity',
         'price',
         'discount',
         'payment_status',
         'purchase_status',
         'notes',
+        'paid_amount',
+        'balance',
     ];
 
     protected $casts = [
         'quantity' => 'decimal:2',
         'price' => 'decimal:2',
         'discount' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
+        'balance' => 'decimal:2',
     ];
 
-    // Relationships
-    public function item()
+    /**
+     * Get the item for this purchase
+     */
+    public function item(): BelongsTo
     {
         return $this->belongsTo(items::class, 'item_id');
     }
 
-    public function user()
+    /**
+     * Get the user who made the purchase
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function supplier()
+    /**
+     * Get the supplier
+     */
+    public function supplier(): BelongsTo
     {
         return $this->belongsTo(suplier::class, 'supplier_id');
     }
 
-    public function carwash()
+    /**
+     * Get the business
+     */
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
-    // Scopes - Purchase Status
+    /**
+     * Scope: Get only received purchases
+     */
     public function scopeReceived($query)
     {
         return $query->where('purchase_status', 'received');
     }
 
-    public function scopePending($query)
-    {
-        return $query->where('purchase_status', 'pending');
-    }
-
-    public function scopeCanceled($query)
-    {
-        return $query->where('purchase_status', 'canceled');
-    }
-
-    // Scopes - Payment Status
-    public function scopePaid($query)
-    {
-        return $query->where('payment_status', 'paid');
-    }
-
+    /**
+     * Scope: Get only unpaid purchases
+     */
     public function scopeUnpaid($query)
     {
         return $query->where('payment_status', 'unpaid');
     }
 
-    public function scopePaymentPending($query)
+    /**
+     * Scope: Get only paid purchases
+     */
+    public function scopePaid($query)
     {
-        return $query->where('payment_status', 'pending');
+        return $query->where('payment_status', 'paid');
     }
 
-    public function scopeForCarwash($query, $carwashId)
+    /**
+     * Scope: Get only pending purchases
+     */
+    public function scopePending($query)
     {
-        return $query->where('carwash_id', $carwashId);
+        return $query->where('purchase_status', 'pending');
     }
 
-    // Computed Attributes
-    public function getTotalAttribute()
+    /**
+     * Scope: Get only canceled purchases
+     */
+    public function scopeCanceled($query)
+    {
+        return $query->where('purchase_status', 'canceled');
+    }
+
+    /**
+     * Calculate total amount
+     */
+    public function getTotalAttribute(): float
     {
         $subtotal = $this->quantity * $this->price;
-        return $subtotal - ($this->discount ?? 0);
+        $discount = $this->discount ?? 0;
+        return $subtotal - $discount;
     }
 
-    public function getSubtotalAttribute()
-    {
-        return $this->quantity * $this->price;
-    }
-
-    public function getPurchaseStatusBadgeClassAttribute()
+    /**
+     * Get status badge class
+     */
+    public function getStatusBadgeClassAttribute(): string
     {
         return match($this->purchase_status) {
             'received' => 'success',
             'pending' => 'warning',
             'canceled' => 'danger',
-            default => 'secondary',
+            default => 'secondary'
         };
     }
 
-    public function getPaymentStatusBadgeClassAttribute()
+    /**
+     * Get payment status badge class
+     */
+    public function getPaymentStatusBadgeClassAttribute(): string
     {
         return match($this->payment_status) {
             'paid' => 'success',
@@ -118,29 +139,7 @@ class purchase extends Model
             'pending' => 'warning',
             'refunded' => 'info',
             'canceled' => 'secondary',
-            default => 'secondary',
-        };
-    }
-
-    public function getPaymentStatusLabelAttribute()
-    {
-        return match($this->payment_status) {
-            'paid' => 'Paid',
-            'unpaid' => 'Unpaid',
-            'pending' => 'Pending',
-            'refunded' => 'Refunded',
-            'canceled' => 'Canceled',
-            default => ucfirst($this->payment_status),
-        };
-    }
-
-    public function getPurchaseStatusLabelAttribute()
-    {
-        return match($this->purchase_status) {
-            'received' => 'Received',
-            'pending' => 'Pending',
-            'canceled' => 'Canceled',
-            default => ucfirst($this->purchase_status),
+            default => 'secondary'
         };
     }
 }

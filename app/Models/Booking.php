@@ -22,9 +22,9 @@ class Booking extends Model
         return $this->belongsTo(User::class, 'customer_id');
     }
 
-    public function carwash(): BelongsTo
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function item(): BelongsTo

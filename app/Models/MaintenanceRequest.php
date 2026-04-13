@@ -12,7 +12,7 @@ class MaintenanceRequest extends Model
     use HasUuids;
 
     protected $fillable = [
-        'carwash_id',
+        'business_id',
         'branch_id',
         'room_id',
         'category',
@@ -32,9 +32,9 @@ class MaintenanceRequest extends Model
     ];
 
     // Relationships
-    public function carwash(): BelongsTo
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function branch(): BelongsTo
@@ -49,7 +49,7 @@ class MaintenanceRequest extends Model
 
     public function assignedTo(): BelongsTo
     {
-        return $this->belongsTo(staff::class, 'assigned_to');
+        return $this->belongsTo(staffs::class, 'assigned_to');
     }
 
     // Scopes

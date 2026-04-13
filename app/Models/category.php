@@ -19,16 +19,16 @@ class category extends Model
         'slug',
         'description',
         'status',
-        'carwash_id',
+        'business_id',
     ];
 
     protected $casts = [
         'status' => 'string',
     ];
 
-    public function carwash(): BelongsTo
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(carwashes::class, 'carwash_id');
+        return $this->belongsTo(Business::class, 'business_id');
     }
 
     public function items(): HasMany
@@ -47,9 +47,9 @@ class category extends Model
         return $query->where('status', 'inactive');
     }
 
-    public function scopeByCarwash(Builder $query, string $carwashId): Builder
+    public function scopeByBusiness(Builder $query, string $businessId): Builder
     {
-        return $query->where('carwash_id', $carwashId);
+        return $query->where('business_id', $businessId);
     }
 
     // Accessors

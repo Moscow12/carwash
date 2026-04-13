@@ -29,7 +29,7 @@
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Carwash</th>
+                            <th>Business</th>
                             <th>Service</th>
                             <th>Booking Date</th>
                             <th>Plate Number</th>
@@ -40,7 +40,7 @@
                     <tbody>
                         @forelse($bookings as $booking)
                         <tr>
-                            <td>{{ $booking->carwash->name ?? '-' }}</td>
+                            <td>{{ $booking->business->name ?? '-' }}</td>
                             <td>{{ $booking->item->name ?? '-' }}</td>
                             <td>{{ $booking->booking_date->format('M d, Y H:i') }}</td>
                             <td>{{ $booking->plate_number ?? '-' }}</td>
@@ -62,7 +62,7 @@
                         @empty
                         <tr>
                             <td colspan="6" class="text-center py-4">
-                                No bookings found. <a href="{{ route('customer.carwashes') }}">Browse carwashes</a> to make a booking.
+                                No bookings found. <a href="{{ route('customer.businesses') }}">Browse carwashes</a> to make a booking.
                             </td>
                         </tr>
                         @endforelse

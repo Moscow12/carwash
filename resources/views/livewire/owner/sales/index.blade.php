@@ -100,11 +100,11 @@
             <div class="row g-3 align-items-end">
                 <div class="col-md-2">
                     <x-forms.select2
-                        name="selectedCarwash"
-                        label="Carwash"
-                        :options="$carwashes"
-                        wire:model.live="selectedCarwash"
-                        placeholder="All Carwashes"
+                        name="selectedBusiness"
+                        label="Business"
+                        :options="$businesses"
+                        wire:model.live="selectedBusiness"
+                        placeholder="All Businesses"
                         wrapper="false"
                     />
                 </div>
@@ -551,25 +551,25 @@
                         <!-- Header with Logo -->
                         <div class="receipt-header">
                             @php
-                                $showLogo = ($receiptCarwashSettings['show_logo_on_receipt'] ?? false) && ($receiptCarwashInfo['logo'] ?? false);
-                                $logoUrl = $receiptCarwashInfo['logo'] ?? null;
+                                $showLogo = ($receiptBusinessSettings['show_logo_on_receipt'] ?? false) && ($receiptBusinessInfo['logo'] ?? false);
+                                $logoUrl = $receiptBusinessInfo['logo'] ?? null;
                             @endphp
                             @if($showLogo && $logoUrl)
                                 <img src="{{ asset('storage/' . $logoUrl) }}" alt="Logo" class="receipt-logo" style="max-width: 120px; max-height: 60px; margin-bottom: 5px;">
                             @endif
-                            <div class="shop-name">{{ $receiptCarwashSettings['business_name'] ?? $receiptCarwashInfo['name'] ?? 'SHOP NAME' }}</div>
-                            <div class="shop-address">{{ $receiptCarwashSettings['business_address'] ?? $receiptCarwashInfo['address'] ?? '' }}</div>
+                            <div class="shop-name">{{ $receiptBusinessSettings['business_name'] ?? $receiptBusinessInfo['name'] ?? 'SHOP NAME' }}</div>
+                            <div class="shop-address">{{ $receiptBusinessSettings['business_address'] ?? $receiptBusinessInfo['address'] ?? '' }}</div>
                             <div class="shop-contact">
-                                @if($receiptCarwashSettings['business_phone'] ?? $receiptCarwashInfo['phone'] ?? false)
-                                    Mobile: {{ $receiptCarwashSettings['business_phone'] ?? $receiptCarwashInfo['phone'] }}
+                                @if($receiptBusinessSettings['business_phone'] ?? $receiptBusinessInfo['phone'] ?? false)
+                                    Mobile: {{ $receiptBusinessSettings['business_phone'] ?? $receiptBusinessInfo['phone'] }}
                                 @endif
                             </div>
                         </div>
 
                         <!-- Custom Receipt Header -->
-                        @if($receiptCarwashSettings['receipt_header'] ?? false)
+                        @if($receiptBusinessSettings['receipt_header'] ?? false)
                         <div class="receipt-custom-header">
-                            {!! nl2br(e($receiptCarwashSettings['receipt_header'])) !!}
+                            {!! nl2br(e($receiptBusinessSettings['receipt_header'])) !!}
                         </div>
                         @endif
 
@@ -686,8 +686,8 @@
 
                         <!-- Footer -->
                         <div class="receipt-footer">
-                            @if($receiptCarwashSettings['receipt_footer'] ?? false)
-                                <div class="custom-footer">{!! nl2br(e($receiptCarwashSettings['receipt_footer'])) !!}</div>
+                            @if($receiptBusinessSettings['receipt_footer'] ?? false)
+                                <div class="custom-footer">{!! nl2br(e($receiptBusinessSettings['receipt_footer'])) !!}</div>
                             @else
                                 <div>Thank you for your business!</div>
                                 <div class="small">Please visit again</div>
