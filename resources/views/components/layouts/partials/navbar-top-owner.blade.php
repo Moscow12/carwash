@@ -33,7 +33,7 @@
         <div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-0">
           <div>
             <div class="d-flex gap-3 align-items-center border-dashed border-bottom px-4 py-4">
-              <img src="{{ asset('images/avatar/avatar-1.jpg') }}" alt="" class="avatar avatar-md rounded-circle" />
+              <img src="{{ asset('images/avatar/avatar-15.jpg') }}" alt="" class="avatar avatar-md rounded-circle" />
               <div>
                 @auth
                   <h4 class="mb-0 fs-5">{{ Auth::user()->name }}</h4>

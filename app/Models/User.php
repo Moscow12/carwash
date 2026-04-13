@@ -161,6 +161,20 @@ class User extends Authenticatable
     }
 
     /**
+     * Get current business settings for the user
+     */
+    public function getCurrentBusinessSettings()
+    {
+        $business = $this->assignedBusinesses()->first();
+
+        if (!$business) {
+            return null;
+        }
+
+        return CarwashSetting::getForBusiness($business->id);
+    }
+
+    /**
      * Check if user has a specific permission
      */
     public function hasPermission(string $permissionName): bool
