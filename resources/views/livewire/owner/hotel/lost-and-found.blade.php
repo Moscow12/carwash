@@ -160,9 +160,104 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Items will be displayed here -->
+                                @forelse($items as $item)
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-start">
+                                                @if($item->photo_path)
+                                                    <img src="{{ Storage::url($item->photo_path) }}" alt="{{ $item->item_name }}"
+                                                         class="rounded me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                                @else
+                                                    <div class="avatar bg-light text-primary me-2">
+                                                        <i class="ti ti-inbox"></i>
+                                                    </div>
+                                                @endif
+                                                <div>
+                                                    <div class="fw-bold">{{ $item->item_name }}</div>
+                                                    <small class="text-muted">{{ Str::limit($item->item_description, 50) }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @php
+                                                $categoryIcons = [
+                                                    'electronics' => 'device-mobile',
+                                                    'clothing' => 'shirt',
+                                                    'jewelry' => 'diamond',
+                                                    'documents' => 'file-text',
+                                                    'personal_items' => 'briefcase',
+                                                    'luggage' => 'luggage',
+                                                    'other' => 'box',
+                                                ];
+                                            @endphp
+                                            <span class="badge bg-light text-dark">
+                                                <i class="ti ti-{{ $categoryIcons[$item->category] ?? 'box' }} me-1"></i>
+                                                {{ ucfirst(str_replace('_', ' ', $item->category)) }}
+                                            </span>
+                                        </td>
+                                        <td>{{ $item->found_date->format('M d, Y') }}</td>
+                                        <td>
+                                            <div>{{ $item->found_location }}</div>
+                                            @if($item->room)
+                                                <small class="text-muted">Room: {{ $item->room->number }}</small>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($item->claimedByGuest)
+                                                <div>{{ $item->claimedByGuest->full_name }}</div>
+                                                <small class="text-muted">{{ $item->claimedByGuest->phone }}</small>
+                                            @else
+                                                <span class="text-muted">Unknown</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @php
+                                                $statusColors = [
+                                                    'found' => 'warning',
+                                                    'claimed' => 'success',
+                                                    'disposed' => 'secondary',
+                                                    'donated' => 'info',
+                                                ];
+                                            @endphp
+                                            <span class="badge bg-{{ $statusColors[$item->status] ?? 'secondary' }}">
+                                                {{ ucfirst($item->status) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button wire:click="editItem('{{ $item->id }}')"
+                                                        class="btn btn-sm btn-outline-primary" title="Edit">
+                                                    <i class="ti ti-edit"></i>
+                                                </button>
+                                                @if($item->status === 'found')
+                                                    <button wire:click="updateItemStatus('{{ $item->id }}', 'claimed')"
+                                                            class="btn btn-sm btn-outline-success" title="Mark as Claimed">
+                                                        <i class="ti ti-check"></i>
+                                                    </button>
+                                                @endif
+                                                <button wire:click="deleteItem('{{ $item->id }}')"
+                                                        onclick="return confirm('Are you sure you want to delete this item?')"
+                                                        class="btn btn-sm btn-outline-danger" title="Delete">
+                                                    <i class="ti ti-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="text-center py-5">
+                                            <i class="ti ti-inbox-off fs-1 text-muted"></i>
+                                            <p class="text-muted mt-2">No items found</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="mt-3">
+                        {{ $items->links() }}
                     </div>
                 @else
                     <div class="text-center py-5">
@@ -291,8 +386,8 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            <i class="ti ti-plus me-2"></i>
-                            Log Lost & Found Item
+                            <i class="ti ti-{{ $editMode ? 'edit' : 'plus' }} me-2"></i>
+                            {{ $editMode ? 'Edit' : 'Log' }} Lost & Found Item
                         </h5>
                         <button type="button" class="btn-close" wire:click="closeModal"></button>
                     </div>
@@ -399,7 +494,7 @@
                             <i class="ti ti-x me-1"></i> Cancel
                         </button>
                         <button type="button" class="btn btn-primary" wire:click="save">
-                            <i class="ti ti-device-floppy me-1"></i> Log Item
+                            <i class="ti ti-device-floppy me-1"></i> {{ $editMode ? 'Update' : 'Log' }} Item
                         </button>
                     </div>
                 </div>

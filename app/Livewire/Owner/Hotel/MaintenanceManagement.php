@@ -31,6 +31,9 @@ class MaintenanceManagement extends Component
     #[Rule('nullable|exists:rooms,id')]
     public $room_id = null;
 
+    #[Rule('nullable|exists:hotel_branches,id')]
+    public $branch_id = null;
+
     #[Rule('required|in:plumbing,electrical,AC,furniture,network,other')]
     public $category = 'other';
 
@@ -74,6 +77,15 @@ class MaintenanceManagement extends Component
     public function openModal()
     {
         $this->resetForm();
+
+        // Set default branch_id from the first available branch
+        if ($this->selectedHotel) {
+            $defaultBranch = \App\Models\HotelBranch::where('business_id', $this->selectedHotel)
+                ->where('status', 'active')
+                ->first();
+            $this->branch_id = $defaultBranch ? $defaultBranch->id : null;
+        }
+
         $this->showModal = true;
     }
 
@@ -88,6 +100,7 @@ class MaintenanceManagement extends Component
         $this->editMode = false;
         $this->requestId = null;
         $this->room_id = null;
+        $this->branch_id = null;
         $this->category = 'other';
         $this->description = '';
         $this->priority = 'normal';
@@ -104,6 +117,7 @@ class MaintenanceManagement extends Component
         try {
             $data = [
                 'business_id' => $this->selectedHotel,
+                'branch_id' => $this->branch_id,
                 'room_id' => $this->room_id,
                 'category' => $this->category,
                 'description' => $this->description,
@@ -136,6 +150,7 @@ class MaintenanceManagement extends Component
         $this->editMode = true;
         $this->requestId = $request->id;
         $this->room_id = $request->room_id;
+        $this->branch_id = $request->branch_id;
         $this->category = $request->category;
         $this->description = $request->description;
         $this->priority = $request->priority;

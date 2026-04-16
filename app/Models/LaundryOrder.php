@@ -27,13 +27,25 @@ class LaundryOrder extends Model
         'status',
         'is_express',
         'notes',
+        'received_at',
+        'completed_at',
+        'charge_amount',
+        'item_type',
+        'quantity',
+        'service_type',
+        'expected_completion',
+        'special_instructions',
     ];
 
     protected $casts = [
         'collected_at' => 'datetime',
         'ready_at' => 'datetime',
         'delivered_at' => 'datetime',
+        'received_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'expected_completion' => 'datetime',
         'total_amount' => 'decimal:2',
+        'charge_amount' => 'decimal:2',
         'is_express' => 'boolean',
     ];
 
@@ -65,5 +77,15 @@ class LaundryOrder extends Model
     public function items(): HasMany
     {
         return $this->hasMany(LaundryOrderItem::class);
+    }
+
+    public function deliveredBy(): BelongsTo
+    {
+        return $this->belongsTo(staffs::class, 'delivered_by');
+    }
+
+    public function collectedBy(): BelongsTo
+    {
+        return $this->belongsTo(staffs::class, 'collected_by');
     }
 }

@@ -81,9 +81,9 @@
                         </div>
 
                         @if(count($outlets) > 0)
-                            <div class="table-responsive">
+                            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                                 <table class="table table-hover table-bordered">
-                                    <thead class="table-light">
+                                    <thead class="table-light" style="position: sticky; top: 0; z-index: 10; background-color: #f8f9fa;">
                                         <tr>
                                             <th>Name</th>
                                             <th>Type</th>
@@ -145,9 +145,9 @@
                                 <i class="ti ti-alert-triangle me-2"></i>Please select an outlet first to manage tables.
                             </div>
                         @elseif(count($tables) > 0)
-                            <div class="table-responsive">
+                            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                                 <table class="table table-hover table-bordered">
-                                    <thead class="table-light">
+                                    <thead class="table-light" style="position: sticky; top: 0; z-index: 10; background-color: #f8f9fa;">
                                         <tr>
                                             <th>Table #</th>
                                             <th>Capacity</th>
@@ -213,9 +213,9 @@
                                 <i class="ti ti-alert-triangle me-2"></i>Please select an outlet first to manage categories.
                             </div>
                         @elseif(count($categories) > 0)
-                            <div class="table-responsive">
+                            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                                 <table class="table table-hover table-bordered">
-                                    <thead class="table-light">
+                                    <thead class="table-light" style="position: sticky; top: 0; z-index: 10; background-color: #f8f9fa;">
                                         <tr>
                                             <th>Name</th>
                                             <th>Description</th>
@@ -294,9 +294,9 @@
                             </div>
 
                             @if(count($menuItems) > 0)
-                            <div class="table-responsive">
+                            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                                 <table class="table table-hover table-bordered">
-                                    <thead class="table-light">
+                                    <thead class="table-light" style="position: sticky; top: 0; z-index: 10; background-color: #f8f9fa;">
                                         <tr>
                                             <th>Name</th>
                                             <th>Category</th>

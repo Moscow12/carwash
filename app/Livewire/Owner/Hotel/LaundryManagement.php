@@ -129,6 +129,15 @@ class LaundryManagement extends Component
                 LaundryOrder::findOrFail($this->orderId)->update($data);
                 session()->flash('message', 'Laundry order updated successfully.');
             } else {
+                // Auto-generate order number
+                $lastOrder = LaundryOrder::where('business_id', $this->selectedBusiness)
+                    ->whereNotNull('order_no')
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                $nextNumber = $lastOrder ? (int) substr($lastOrder->order_no, 3) + 1 : 1;
+                $data['order_no'] = 'LO-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+
                 LaundryOrder::create($data);
                 session()->flash('message', 'Laundry order created successfully.');
             }
@@ -203,6 +212,16 @@ class LaundryManagement extends Component
             session()->flash('message', 'Order cancelled.');
         } catch (\Exception $e) {
             session()->flash('error', 'Cancel failed: ' . $e->getMessage());
+        }
+    }
+
+    public function deleteOrder($id)
+    {
+        try {
+            LaundryOrder::findOrFail($id)->delete();
+            session()->flash('message', 'Order deleted successfully.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Delete failed: ' . $e->getMessage());
         }
     }
 
