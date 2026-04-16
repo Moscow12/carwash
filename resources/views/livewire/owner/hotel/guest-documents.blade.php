@@ -201,7 +201,7 @@
                                             </div>
                                             <div>
                                                 <div class="fw-bold">{{ $guest->full_name }}</div>
-                                                @if($guest->vip_level !== 'regular')
+                                                @if($guest->vip_level !== 'standard')
                                                     <span class="badge bg-warning text-dark">
                                                         <i class="ti ti-crown"></i> {{ ucfirst($guest->vip_level) }}
                                                     </span>
@@ -335,10 +335,9 @@
                                     <label class="form-label">Document Type <span class="text-danger">*</span></label>
                                     <select wire:model="document_type" class="form-select @error('document_type') is-invalid @enderror">
                                         <option value="passport">Passport</option>
-                                        <option value="national_id">National ID</option>
-                                        <option value="drivers_license">Driver's License</option>
-                                        <option value="visa">Visa</option>
-                                        <option value="other">Other</option>
+                                        <option value="nida">National ID (NIDA)</option>
+                                        <option value="driving_license">Driving License</option>
+                                        <option value="voter_id">Voter ID</option>
                                     </select>
                                     @error('document_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>

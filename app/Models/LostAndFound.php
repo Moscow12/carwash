@@ -17,11 +17,15 @@ class LostAndFound extends Model
         'business_id',
         'branch_id',
         'room_id',
+        'category',
+        'item_name',
         'item_description',
         'found_date',
+        'found_location',
         'status',
         'found_by',
         'claimed_by_guest',
+        'photo_path',
         'notes',
     ];
 

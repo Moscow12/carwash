@@ -99,42 +99,31 @@
         <div class="card-body">
             <div class="row g-3 align-items-end">
                 <div class="col-md-2">
-                    <x-forms.select2
-                        name="selectedBusiness"
-                        label="Business"
-                        :options="$businesses"
-                        wire:model.live="selectedBusiness"
-                        placeholder="All Businesses"
-                        wrapper="false"
-                    />
+                    <label class="form-label">Business</label>
+                    <select wire:model.live="selectedBusiness" class="form-select">
+                        <option value="">All Businesses</option>
+                        @foreach($businesses as $business)
+                            <option value="{{ $business->id }}">{{ $business->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="col-md-2">
-                    <x-forms.select2
-                        name="saleStatusFilter"
-                        label="Sale Status"
-                        :options="[
-                            ['id' => 'completed', 'name' => 'Completed'],
-                            ['id' => 'pending', 'name' => 'Pending'],
-                            ['id' => 'canceled', 'name' => 'Canceled']
-                        ]"
-                        wire:model.live="saleStatusFilter"
-                        placeholder="All Status"
-                        wrapper="false"
-                    />
+                    <label class="form-label">Sale Status</label>
+                    <select wire:model.live="saleStatusFilter" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="completed">Completed</option>
+                        <option value="pending">Pending</option>
+                        <option value="canceled">Canceled</option>
+                    </select>
                 </div>
                 <div class="col-md-2">
-                    <x-forms.select2
-                        name="paymentStatusFilter"
-                        label="Payment Status"
-                        :options="[
-                            ['id' => 'paid', 'name' => 'Paid'],
-                            ['id' => 'unpaid', 'name' => 'Unpaid'],
-                            ['id' => 'partial', 'name' => 'Partial']
-                        ]"
-                        wire:model.live="paymentStatusFilter"
-                        placeholder="All"
-                        wrapper="false"
-                    />
+                    <label class="form-label">Payment Status</label>
+                    <select wire:model.live="paymentStatusFilter" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="paid">Paid</option>
+                        <option value="unpaid">Unpaid</option>
+                        <option value="partial">Partial</option>
+                    </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small">From Date</label>
