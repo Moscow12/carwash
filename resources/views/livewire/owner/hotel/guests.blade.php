@@ -5,6 +5,9 @@
             <h4 class="mb-1">Guest Directory</h4>
             <p class="text-muted mb-0">Manage guest information and profiles</p>
         </div>
+        <a href="{{ route('owner.hotel.reservations') }}" class="btn btn-primary">
+             Reservations
+        </a>
         <button wire:click="openModal" class="btn btn-primary">
             <i class="ti ti-plus me-1"></i> Add Guest
         </button>
@@ -101,7 +104,7 @@
                         <label class="form-label">VIP Level</label>
                         <select wire:model.live="vipFilter" class="form-select">
                             <option value="">All Levels</option>
-                            <option value="regular">Regular</option>
+                            <option value="standard">Standard</option>
                             <option value="silver">Silver</option>
                             <option value="gold">Gold</option>
                             <option value="platinum">Platinum</option>
@@ -158,7 +161,7 @@
                                     <td>
                                         @php
                                             $vipColors = [
-                                                'regular' => 'secondary',
+                                                'standard' => 'secondary',
                                                 'silver' => 'secondary',
                                                 'gold' => 'warning',
                                                 'platinum' => 'primary',
@@ -185,6 +188,9 @@
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
+                                            <button wire:click="openModalReservation('{{ $guest->id }}')" class="btn btn-sm btn-outline-primary" title="Booking">
+                                                <i class="ti ti-plus me-1"></i> Booking
+                                            </button>
                                             <button wire:click="editGuest('{{ $guest->id }}')" class="btn btn-sm btn-outline-primary" title="Edit">
                                                 <i class="ti ti-edit"></i>
                                             </button>
@@ -235,6 +241,14 @@
                         <button type="button" class="btn-close" wire:click="closeModal"></button>
                     </div>
                     <div class="modal-body">
+                        <!-- Error Message in Modal -->
+                        @if (session()->has('error'))
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="ti ti-alert-circle me-2"></i>{{ session('error') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+
                         <form wire:submit.prevent="save">
                             <div class="row g-3">
                                 <!-- Basic Information -->
@@ -242,25 +256,25 @@
 
                                 <div class="col-md-6">
                                     <label class="form-label">First Name <span class="text-danger">*</span></label>
-                                    <input type="text" wire:model="first_name" class="form-control @error('first_name') is-invalid @enderror">
+                                    <input type="text" wire:model.defer="first_name" class="form-control @error('first_name') is-invalid @enderror" required>
                                     @error('first_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                                    <input type="text" wire:model="last_name" class="form-control @error('last_name') is-invalid @enderror">
+                                    <input type="text" wire:model.defer="last_name" class="form-control @error('last_name') is-invalid @enderror" required>
                                     @error('last_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Email</label>
-                                    <input type="email" wire:model="email" class="form-control @error('email') is-invalid @enderror" placeholder="Optional">
+                                    <input type="email" wire:model.defer="email" class="form-control @error('email') is-invalid @enderror" placeholder="Optional">
                                     @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Phone <span class="text-danger">*</span></label>
-                                    <input type="text" wire:model="phone" class="form-control @error('phone') is-invalid @enderror">
+                                    <input type="text" wire:model.defer="phone" class="form-control @error('phone') is-invalid @enderror" required>
                                     @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 
@@ -310,7 +324,7 @@
                                 <!-- ID Information -->
                                 <div class="col-md-6">
                                     <label class="form-label">ID Type</label>
-                                    <select wire:model="id_type" class="form-select">
+                                    <select wire:model.defer="id_type" class="form-select">
                                         <option value="">Select Type</option>
                                         <option value="passport">Passport</option>
                                         <option value="national_id">National ID</option>
@@ -320,7 +334,7 @@
 
                                 <div class="col-md-6">
                                     <label class="form-label">ID Number</label>
-                                    <input type="text" wire:model="id_number" class="form-control">
+                                    <input type="text" wire:model.defer="id_number" class="form-control">
                                 </div>
 
                                 <div class="col-12">
@@ -333,8 +347,8 @@
 
                                 <div class="col-md-4">
                                     <label class="form-label">VIP Level</label>
-                                    <select wire:model="vip_level" class="form-select">
-                                        <option value="regular">Regular</option>
+                                    <select wire:model.defer="vip_level" class="form-select">
+                                        <option value="standard">Standard</option>
                                         <option value="silver">Silver</option>
                                         <option value="gold">Gold</option>
                                         <option value="platinum">Platinum</option>
@@ -343,12 +357,13 @@
 
                                 <div class="col-md-4">
                                     <label class="form-label">Loyalty Points</label>
-                                    <input type="number" wire:model="loyalty_points" class="form-control" min="0">
+                                    <input type="number" wire:model.defer="loyalty_points" class="form-control" min="0" placeholder="0">
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label class="form-label">Status <span class="text-danger">*</span></label>
-                                    <select wire:model="status" class="form-select">
+                                    <label class="form-label">Status</label>
+                                    <select wire:model.defer="status" class="form-select">
+                                        <option value="">Active (Default)</option>
                                         <option value="active">Active</option>
                                         <option value="inactive">Inactive</option>
                                     </select>
@@ -377,9 +392,159 @@
                         <button type="button" class="btn btn-secondary" wire:click="closeModal">
                             <i class="ti ti-x me-1"></i> Cancel
                         </button>
-                        <button type="button" class="btn btn-primary" wire:click="save">
-                            <i class="ti ti-device-floppy me-1"></i>
-                            {{ $editMode ? 'Update Guest' : 'Save Guest' }}
+                        <button type="button" class="btn btn-primary" wire:click="save" wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="save">
+                                <i class="ti ti-device-floppy me-1"></i>
+                                {{ $editMode ? 'Update Guest' : 'Save Guest' }}
+                            </span>
+                            <span wire:loading wire:target="save">
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                Saving...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Quick Reservation Modal -->
+    @if($showReservationModal)
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="ti ti-calendar-plus me-2"></i>
+                            Quick Reservation
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" wire:click="closeReservationModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Error Message in Reservation Modal -->
+                        @if (session()->has('error'))
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="ti ti-alert-circle me-2"></i>{{ session('error') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+
+                        <form wire:submit.prevent="saveReservation">
+                            <div class="row g-3">
+                                <!-- Guest Info Display -->
+                                @php
+                                    $selectedGuest = $guests->firstWhere('id', $selectedGuestForReservation);
+                                @endphp
+                                @if($selectedGuest)
+                                    <div class="col-12">
+                                        <div class="alert alert-info">
+                                            <strong><i class="ti ti-user me-1"></i> Guest:</strong> {{ $selectedGuest->full_name }}
+                                            <br>
+                                            <small><i class="ti ti-phone me-1"></i> {{ $selectedGuest->phone }} | <i class="ti ti-mail me-1"></i> {{ $selectedGuest->email }}</small>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <!-- Room Type -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Room Type <span class="text-danger">*</span></label>
+                                    <select wire:model="room_type_id" class="form-select @error('room_type_id') is-invalid @enderror">
+                                        <option value="">Select Room Type</option>
+                                        @foreach($roomTypes as $roomType)
+                                            <option value="{{ $roomType->id }}">{{ $roomType->name }} - {{ $roomType->base_occupancy }} pax</option>
+                                        @endforeach
+                                    </select>
+                                    @error('room_type_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
+                                <!-- Rate Plan -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Rate Plan</label>
+                                    <select wire:model="rate_plan_id" class="form-select">
+                                        <option value="">Default Rate</option>
+                                        @foreach($ratePlans as $ratePlan)
+                                            <option value="{{ $ratePlan->id }}">{{ $ratePlan->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Check-in Date -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Check-in Date <span class="text-danger">*</span></label>
+                                    <input type="date" wire:model="check_in_date" class="form-control @error('check_in_date') is-invalid @enderror">
+                                    @error('check_in_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
+                                <!-- Check-out Date -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Check-out Date <span class="text-danger">*</span></label>
+                                    <input type="date" wire:model="check_out_date" class="form-control @error('check_out_date') is-invalid @enderror">
+                                    @error('check_out_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
+                                <!-- Adults -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Adults <span class="text-danger">*</span></label>
+                                    <input type="number" wire:model="adults" class="form-control @error('adults') is-invalid @enderror" min="1">
+                                    @error('adults')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
+                                <!-- Children -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Children</label>
+                                    <input type="number" wire:model="children" class="form-control" min="0">
+                                </div>
+
+                                <!-- Number of Rooms -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Rooms <span class="text-danger">*</span></label>
+                                    <input type="number" wire:model="number_of_rooms" class="form-control @error('number_of_rooms') is-invalid @enderror" min="1">
+                                    @error('number_of_rooms')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
+                                <!-- Room Rate -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Room Rate per Night</label>
+                                    <input type="number" wire:model="room_rate" class="form-control" min="0" step="0.01">
+                                </div>
+
+                                <!-- Deposit Amount -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Deposit Amount</label>
+                                    <input type="number" wire:model="deposit_amount" class="form-control" min="0" step="0.01">
+                                </div>
+
+                                <!-- Booking Source -->
+                                <div class="col-12">
+                                    <label class="form-label">Booking Source</label>
+                                    <select wire:model="source_id" class="form-select">
+                                        <option value="">Walk-in</option>
+                                        @foreach($bookingSources as $source)
+                                            <option value="{{ $source->id }}">{{ $source->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Special Requests -->
+                                <div class="col-12">
+                                    <label class="form-label">Special Requests</label>
+                                    <textarea wire:model="special_requests" class="form-control" rows="2" placeholder="Any special requirements..."></textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="closeReservationModal">
+                            <i class="ti ti-x me-1"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-primary" wire:click="saveReservation" wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="saveReservation">
+                                <i class="ti ti-check me-1"></i> Create Reservation
+                            </span>
+                            <span wire:loading wire:target="saveReservation">
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                Creating...
+                            </span>
                         </button>
                     </div>
                 </div>
