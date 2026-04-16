@@ -25,7 +25,7 @@ class GuestDocuments extends Component
     public $selectedReservation = null;
 
     // Document properties
-    #[Rule('required|in:passport,national_id,drivers_license,visa,other')]
+    #[Rule('required|in:passport,nida,driving_license,voter_id')]
     public $document_type = 'passport';
 
     #[Rule('required|string|max:100')]

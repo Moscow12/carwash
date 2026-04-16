@@ -261,7 +261,7 @@
                                     <select wire:model="room_id" class="form-select">
                                         <option value="">Select Room</option>
                                         @foreach($rooms as $room)
-                                            <option value="{{ $room->id }}">{{ $room->room_number }}</option>
+                                            <option value="{{ $room->id }}">{{ $room->full_number }}</option>
                                         @endforeach
                                     </select>
                                 </div>

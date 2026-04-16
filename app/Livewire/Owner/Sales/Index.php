@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Business;
 use App\Models\sales;
 use App\Models\sales_payments;
 use App\Models\payment_method;
@@ -56,7 +57,7 @@ class Index extends Component
 
     public function mount()
     {
-        $firstBusiness = Auth::user()->assignedBusinesses()->first();
+        $firstBusiness = Business::where('owner_id', Auth::id())->first();
         if ($firstBusiness) {
             $this->selectedBusiness = $firstBusiness->id;
         }
@@ -114,21 +115,32 @@ class Index extends Component
             return;
         }
 
-        $baseQuery = sales::where('business_id', $this->selectedBusiness)
-            ->where('sale_status', '!=', 'canceled') // Exclude canceled sales
+        // Use single optimized query to get all stats
+        $stats = sales::where('business_id', $this->selectedBusiness)
+            ->where('sale_status', '!=', 'canceled')
             ->when($this->dateFrom, fn($q) => $q->whereDate('sale_date', '>=', $this->dateFrom))
-            ->when($this->dateTo, fn($q) => $q->whereDate('sale_date', '<=', $this->dateTo));
+            ->when($this->dateTo, fn($q) => $q->whereDate('sale_date', '<=', $this->dateTo))
+            ->selectRaw('
+                COUNT(*) as total_count,
+                SUM(total_amount) as total_revenue,
+                SUM(CASE WHEN payment_status = "partial" THEN 1 ELSE 0 END) as partial_count,
+                SUM(CASE WHEN payment_status = "unpaid" THEN 1 ELSE 0 END) as unpaid_count
+            ')
+            ->first();
 
-        $this->totalSales = (clone $baseQuery)->count();
-        $this->totalRevenue = (float) (clone $baseQuery)->sum('total_amount');
-
-        // Count partial and unpaid sales
-        $this->partialSalesCount = (clone $baseQuery)->where('payment_status', 'partial')->count();
-        $this->unpaidSalesCount = (clone $baseQuery)->where('payment_status', 'unpaid')->count();
+        $this->totalSales = $stats->total_count ?? 0;
+        $this->totalRevenue = (float) ($stats->total_revenue ?? 0);
+        $this->partialSalesCount = $stats->partial_count ?? 0;
+        $this->unpaidSalesCount = $stats->unpaid_count ?? 0;
 
         // Calculate actual paid amount from payments table
-        $salesIds = (clone $baseQuery)->pluck('id');
-        $this->paidSales = (float) sales_payments::whereIn('sale_id', $salesIds)->sum('amount');
+        $this->paidSales = (float) sales_payments::whereHas('sale', function($query) {
+            $query->where('business_id', $this->selectedBusiness)
+                  ->where('sale_status', '!=', 'canceled')
+                  ->when($this->dateFrom, fn($q) => $q->whereDate('sale_date', '>=', $this->dateFrom))
+                  ->when($this->dateTo, fn($q) => $q->whereDate('sale_date', '<=', $this->dateTo));
+        })->sum('amount');
+
         $this->unpaidSales = max(0, $this->totalRevenue - $this->paidSales);
     }
 
@@ -169,6 +181,7 @@ class Index extends Component
         // Load payment methods for this business
         $this->availablePaymentMethods = payment_method::where('business_id', $sale->business_id)
             ->where('status', 'active')
+            ->select('id', 'name', 'business_id')
             ->get()
             ->toArray();
 
@@ -341,9 +354,15 @@ class Index extends Component
     {
         $this->loadStats();
 
-        $businesses = Auth::user()->assignedBusinesses()->orderBy('name')->get();
+        $businesses = Business::where('owner_id', Auth::id())
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
 
-        $query = sales::query()
+        $query = sales::select([
+                'id', 'business_id', 'sale_date', 'customer_id', 'user_id',
+                'total_amount', 'payment_status', 'sale_status', 'created_at'
+            ])
             ->when($this->selectedBusiness, fn($q) => $q->where('business_id', $this->selectedBusiness))
             ->when($this->saleStatusFilter, fn($q) => $q->where('sale_status', $this->saleStatusFilter))
             ->when($this->paymentStatusFilter, fn($q) => $q->where('payment_status', $this->paymentStatusFilter))
@@ -355,7 +374,18 @@ class Index extends Component
                         ->orWhereHas('items', fn($iq) => $iq->where('plate_number', 'like', "%{$this->search}%"));
                 });
             })
-            ->with(['customer', 'user', 'items.item', 'payments'])
+            ->with([
+                'customer:id,name,phone',
+                'user:id,name',
+                'items' => function($query) {
+                    $query->select('id', 'sale_id', 'item_id', 'price', 'plate_number', 'staff_id', 'discount', 'commission')
+                          ->limit(3);
+                },
+                'items.item:id,name',
+                'payments' => function($query) {
+                    $query->select('id', 'sale_id', 'amount', 'payment_method_id');
+                }
+            ])
             ->latest('sale_date');
 
         // Handle "all" option
