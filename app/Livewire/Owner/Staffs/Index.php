@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\staffs;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\UserBusinessRole;
 
 #[Layout('components.layouts.app-owner')]
 class Index extends Component
@@ -244,6 +245,18 @@ class Index extends Component
                             ]);
 
                             $data['user_id'] = $user->id;
+
+                            // Create UserBusinessRole entry for the staff
+                            UserBusinessRole::updateOrCreate(
+                                [
+                                    'user_id' => $user->id,
+                                    'business_id' => $this->business_id,
+                                ],
+                                [
+                                    'role' => 'staff',
+                                    'is_active' => true,
+                                ]
+                            );
                         }
                     } else {
                         // If canLogin is disabled and user exists, optionally deactivate user
@@ -272,6 +285,14 @@ class Index extends Component
                     ]);
 
                     $userId = $user->id;
+
+                    // Create UserBusinessRole entry for the staff
+                    UserBusinessRole::create([
+                        'user_id' => $user->id,
+                        'business_id' => $this->business_id,
+                        'role' => 'staff',
+                        'is_active' => true,
+                    ]);
                 }
 
                 $data['user_id'] = $userId;
