@@ -37,6 +37,11 @@ class customers extends Model
         return $this->hasMany(sales::class, 'customer_id');
     }
 
+    public function tenancyAgreements()
+    {
+        return $this->hasMany(TenancyAgreement::class, 'customer_id');
+    }
+
     // Scopes
     public function scopeActive($query)
     {

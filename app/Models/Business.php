@@ -220,6 +220,17 @@ class Business extends Model
         return $this->hasMany(VoidLog::class, 'business_id');
     }
 
+    // Rental module relationships
+    public function landlords(): HasMany
+    {
+        return $this->hasMany(Landlord::class, 'business_id');
+    }
+
+    public function unitFeatures(): HasMany
+    {
+        return $this->hasMany(UnitFeature::class, 'business_id');
+    }
+
     // Scopes
     public function scopeActive(Builder $query): Builder
     {
