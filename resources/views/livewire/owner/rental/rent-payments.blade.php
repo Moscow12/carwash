@@ -16,8 +16,8 @@
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h3 class="mb-1">Rent Payments</h3>
-            <p class="text-muted mb-0">Record rent receipts; mirrored to the unified payments ledger</p>
+            <h3 class="mb-1">Rent Roll</h3>
+            <p class="text-muted mb-0">Paid &amp; unpaid rent per agreement for <strong>{{ $rollMonthLabel }}</strong></p>
         </div>
         <button wire:click="openAddModal" class="btn btn-primary" @disabled(!$selectedBusiness || $agreements->isEmpty())>
             <i class="ti ti-plus me-1"></i> Record Payment
@@ -58,8 +58,21 @@
     </div>
     @endif
 
-    {{-- Stats --}}
+    {{-- Stats (for the selected roll month) --}}
     <div class="row g-3 mb-4">
+        <div class="col-md col-6">
+            <div class="card border-0 shadow-sm h-100"><div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar bg-primary-subtle text-primary rounded-3 me-3 d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
+                        <i class="ti ti-cash fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Expected ({{ $rollMonthLabel }})</div>
+                        <div class="h5 mb-0">TZS {{ number_format($stats['expected'], 0) }}</div>
+                    </div>
+                </div>
+            </div></div>
+        </div>
         <div class="col-md col-6">
             <div class="card border-0 shadow-sm h-100"><div class="card-body">
                 <div class="d-flex align-items-center">
@@ -67,9 +80,8 @@
                         <i class="ti ti-coin fs-4"></i>
                     </div>
                     <div>
-                        <div class="text-muted small">{{ now()->format('M Y') }} Collected</div>
-                        <div class="h5 mb-0">TZS {{ number_format($stats['this_month'], 0) }}</div>
-                        <small class="text-muted">{{ $stats['this_month_count'] }} receipt(s)</small>
+                        <div class="text-muted small">Collected</div>
+                        <div class="h5 mb-0">TZS {{ number_format($stats['collected'], 0) }}</div>
                     </div>
                 </div>
             </div></div>
@@ -81,7 +93,7 @@
                         <i class="ti ti-alert-circle fs-4"></i>
                     </div>
                     <div>
-                        <div class="text-muted small">Outstanding this month</div>
+                        <div class="text-muted small">Outstanding</div>
                         <div class="h5 mb-0">TZS {{ number_format($stats['outstanding'], 0) }}</div>
                     </div>
                 </div>
@@ -90,25 +102,12 @@
         <div class="col-md col-6">
             <div class="card border-0 shadow-sm h-100"><div class="card-body">
                 <div class="d-flex align-items-center">
-                    <div class="avatar bg-info-subtle text-info rounded-3 me-3 d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
-                        <i class="ti ti-calendar fs-4"></i>
+                    <div class="avatar bg-warning-subtle text-warning rounded-3 me-3 d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
+                        <i class="ti ti-home-x fs-4"></i>
                     </div>
                     <div>
-                        <div class="text-muted small">Last 30 days</div>
-                        <div class="h5 mb-0">TZS {{ number_format($stats['last_30_days'], 0) }}</div>
-                    </div>
-                </div>
-            </div></div>
-        </div>
-        <div class="col-md col-6">
-            <div class="card border-0 shadow-sm h-100"><div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="avatar bg-primary-subtle text-primary rounded-3 me-3 d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
-                        <i class="ti ti-receipt fs-4"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted small">All-time Collected</div>
-                        <div class="h5 mb-0">TZS {{ number_format($stats['all_time'], 0) }}</div>
+                        <div class="text-muted small">Unpaid / Partial</div>
+                        <div class="h5 mb-0">{{ number_format($stats['unpaid_count']) }}</div>
                     </div>
                 </div>
             </div></div>
@@ -120,92 +119,104 @@
         <div class="card-body py-3">
             <div class="row g-3 align-items-center">
                 <div class="col-md-3">
+                    <label class="form-label mb-1 small text-muted">Roll month</label>
+                    <input type="month" wire:model.live="rollMonth" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label mb-1 small text-muted">Search</label>
                     <div class="input-group">
                         <span class="input-group-text bg-transparent border-end-0"><i class="ti ti-search"></i></span>
-                        <input type="text" wire:model.live.debounce.300ms="search" class="form-control border-start-0 ps-0" placeholder="Search tenant or reference…">
+                        <input type="text" wire:model.live.debounce.300ms="search" class="form-control border-start-0 ps-0" placeholder="Tenant or unit number…">
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <select wire:model.live="agreementFilter" class="form-select" @disabled(!$selectedBusiness)>
-                        <option value="">All Agreements</option>
-                        @foreach($agreements as $a)
-                            <option value="{{ $a->id }}">
-                                {{ $a->customer?->name }} · Unit {{ $a->unit?->unit_number }}
-                            </option>
-                        @endforeach
+                    <label class="form-label mb-1 small text-muted">Status</label>
+                    <select wire:model.live="rollStatusFilter" class="form-select">
+                        <option value="">All</option>
+                        <option value="unpaid">Unpaid</option>
+                        <option value="partial">Partially paid</option>
+                        <option value="paid">Paid</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <input type="month" wire:model.live="monthFilter" class="form-control" placeholder="For month">
-                </div>
-                <div class="col-md-3">
-                    <select wire:model.live="methodFilter" class="form-select">
-                        <option value="">All Methods</option>
-                        @foreach($methods as $m)
-                            <option value="{{ $m->id }}">{{ $m->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-1 text-end">
-                    <span class="text-muted small">{{ $payments->total() }}</span>
+                <div class="col-md-2 text-end">
+                    <label class="form-label mb-1 small text-muted d-block">Agreements</label>
+                    <span class="text-muted">{{ $roll->total() }}</span>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Table --}}
+    {{-- Rent Roll Table --}}
     <div class="card border-0 shadow-sm">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light">
                     <tr>
-                        <th class="ps-3">Date</th>
-                        <th>Tenant</th>
+                        <th class="ps-3">Tenant</th>
                         <th>Unit</th>
-                        <th>For Month</th>
-                        <th class="text-end">Amount</th>
-                        <th>Method</th>
-                        <th>Reference</th>
-                        <th>By</th>
-                        <th class="text-end pe-3"></th>
+                        <th class="text-end">Rent Due</th>
+                        <th class="text-end">Paid</th>
+                        <th class="text-end">Balance</th>
+                        <th>Status</th>
+                        <th class="text-end pe-3">Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($payments as $p)
-                    <tr>
-                        <td class="ps-3">{{ $p->payment_date?->format('M d, Y') }}</td>
-                        <td>
-                            <div class="fw-medium">{{ $p->agreement?->customer?->name ?? '—' }}</div>
-                        </td>
-                        <td><small>{{ $p->agreement?->unit?->unit_number ?? '—' }}</small></td>
-                        <td><span class="badge bg-light text-dark border">{{ $p->payment_for_month?->format('M Y') }}</span></td>
-                        <td class="text-end fw-bold">TZS {{ number_format($p->amount_paid, 0) }}</td>
-                        <td><small>{{ $p->paymentMethod?->name ?? '—' }}</small></td>
-                        <td><small class="text-muted">{{ $p->reference_no ?? '—' }}</small></td>
-                        <td><small>{{ $p->receivedBy?->name ?? '—' }}</small></td>
-                        <td class="text-end pe-3">
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
-                                    <i class="ti ti-dots-vertical"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" href="#" wire:click.prevent="openViewModal('{{ $p->id }}')"><i class="ti ti-eye me-2"></i>View</a></li>
-                                    <li><a class="dropdown-item" href="#" wire:click.prevent="openEditModal('{{ $p->id }}')"><i class="ti ti-edit me-2"></i>Edit</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" href="#" wire:click.prevent="voidPayment('{{ $p->id }}')" wire:confirm="Void this receipt? The mirrored ledger entry will also be voided.">
-                                        <i class="ti ti-ban me-2"></i>Void
-                                    </a></li>
-                                </ul>
+                    @forelse($roll as $row)
+                    @php
+                        $a = $row['agreement'];
+                        [$badge, $label] = match($row['status']) {
+                            'paid' => ['success', 'Paid'],
+                            'partial' => ['warning', 'Partial'],
+                            default => ['danger', 'Unpaid'],
+                        };
+                    @endphp
+                    <tr wire:key="roll-{{ $a->id }}">
+                        <td class="ps-3">
+                            <div class="fw-medium">
+                                {{ $a->customer?->name ?? '—' }}
+                                @if($a->agreement_status !== 'active')
+                                    @php $agColor = $a->agreement_status === 'draft' ? 'secondary' : 'warning'; @endphp
+                                    <span class="badge bg-{{ $agColor }}-subtle text-{{ $agColor }} ms-1">{{ ucfirst($a->agreement_status) }}</span>
+                                @endif
                             </div>
+                            <small class="text-muted">{{ $a->customer?->phone }}</small>
+                        </td>
+                        <td>
+                            <small>{{ $a->unit?->property?->property_name }}</small><br>
+                            <small class="text-muted">Unit {{ $a->unit?->unit_number ?? '—' }}</small>
+                        </td>
+                        <td class="text-end">TZS {{ number_format($row['due'], 0) }}</td>
+                        <td class="text-end text-success">TZS {{ number_format($row['paid'], 0) }}</td>
+                        <td class="text-end fw-bold {{ $row['remaining'] > 0 ? 'text-danger' : 'text-muted' }}">
+                            TZS {{ number_format($row['remaining'], 0) }}
+                        </td>
+                        <td><span class="badge bg-{{ $badge }}-subtle text-{{ $badge }}">{{ $label }}</span></td>
+                        <td class="text-end pe-3">
+                            @if($row['remaining'] > 0)
+                                <button wire:click="openRecordModal('{{ $a->id }}')" class="btn btn-sm btn-primary">
+                                    <i class="ti ti-plus me-1"></i> Record Payment
+                                </button>
+                            @else
+                                <button wire:click="openAgreementReceipts('{{ $a->id }}')" class="btn btn-sm btn-outline-secondary">
+                                    <i class="ti ti-receipt me-1"></i> Receipts
+                                </button>
+                            @endif
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center py-5 text-muted">
+                        <td colspan="7" class="text-center py-5 text-muted">
                             <div class="avatar avatar-lg bg-light text-muted rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width:56px;height:56px;">
-                                <i class="ti ti-receipt fs-2"></i>
+                                <i class="ti ti-home-2 fs-2"></i>
                             </div>
-                            <div class="small">No rent receipts yet for these filters.</div>
+                            <div class="small">
+                                @if(!$selectedBusiness)
+                                    Select a rental business to view the rent roll.
+                                @else
+                                    No agreements with rent due in {{ $rollMonthLabel }} for these filters.
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @endforelse
@@ -214,8 +225,8 @@
         </div>
     </div>
 
-    @if($payments->hasPages())
-    <div class="d-flex justify-content-center mt-4">{{ $payments->links() }}</div>
+    @if($roll->hasPages())
+    <div class="d-flex justify-content-center mt-4">{{ $roll->links() }}</div>
     @endif
 
     {{-- Add/Edit Modal --}}
@@ -386,6 +397,77 @@
                         <button wire:click="openEditModal('{{ $viewPayment->id }}')" class="btn btn-primary flex-fill">
                             <i class="ti ti-edit me-1"></i>Edit
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Agreement Receipts Modal --}}
+    @if($showReceiptsModal && $receiptsAgreement)
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5);overflow-y:auto;">
+        <div class="modal-dialog modal-dialog-centered modal-lg my-4">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title">
+                        <i class="ti ti-receipt me-2"></i>
+                        Receipts — {{ $receiptsAgreement->customer?->name }}
+                        <small class="text-muted">· Unit {{ $receiptsAgreement->unit?->unit_number }}</small>
+                    </h5>
+                    <button type="button" class="btn-close" wire:click="closeReceiptsModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-end mb-3">
+                        <button wire:click="openRecordModal('{{ $receiptsAgreement->id }}')" class="btn btn-sm btn-primary">
+                            <i class="ti ti-plus me-1"></i> Record Payment
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>For Month</th>
+                                    <th class="text-end">Amount</th>
+                                    <th>Method</th>
+                                    <th>Reference</th>
+                                    <th class="text-end"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($receiptsAgreement->rentPayments as $p)
+                                <tr wire:key="receipt-{{ $p->id }}">
+                                    <td>{{ $p->payment_date?->format('M d, Y') }}</td>
+                                    <td><span class="badge bg-light text-dark border">{{ $p->payment_for_month?->format('M Y') }}</span></td>
+                                    <td class="text-end fw-bold">TZS {{ number_format($p->amount_paid, 0) }}</td>
+                                    <td><small>{{ $p->paymentMethod?->name ?? '—' }}</small></td>
+                                    <td><small class="text-muted">{{ $p->reference_no ?? '—' }}</small></td>
+                                    <td class="text-end">
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
+                                                <i class="ti ti-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item" href="#" wire:click.prevent="openViewModal('{{ $p->id }}')"><i class="ti ti-eye me-2"></i>View</a></li>
+                                                <li><a class="dropdown-item" href="#" wire:click.prevent="openEditModal('{{ $p->id }}')"><i class="ti ti-edit me-2"></i>Edit</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-danger" href="#" wire:click.prevent="voidPayment('{{ $p->id }}')" wire:confirm="Void this receipt? The mirrored ledger entry will also be voided.">
+                                                    <i class="ti ti-ban me-2"></i>Void
+                                                </a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr><td colspan="6" class="text-center text-muted py-4 small">No receipts recorded for this agreement yet.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pt-4">
+                        <button wire:click="closeReceiptsModal" class="btn btn-light w-100">Close</button>
                     </div>
                 </div>
             </div>

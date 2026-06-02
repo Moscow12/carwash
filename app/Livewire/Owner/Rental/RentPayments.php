@@ -24,18 +24,19 @@ class RentPayments extends Component
     public ?string $selectedBusiness = null;
     public \Illuminate\Support\Collection $ownerBusinesses;
 
-    // Filters
-    public $search = '';
-    public $agreementFilter = '';
-    public $monthFilter = '';
-    public $methodFilter = '';
+    // Rent-roll controls
+    public $rollMonth = '';            // 'Y-m' — which month's roll to show
+    public $search = '';               // tenant / unit search
+    public $rollStatusFilter = '';     // '', 'paid', 'partial', 'unpaid'
 
     // Modal state
     public $showModal = false;
     public $showViewModal = false;
+    public $showReceiptsModal = false;
     public $editMode = false;
     public $paymentId = null;
     public $viewPayment = null;
+    public $receiptsAgreement = null;   // agreement whose receipt history is shown
 
     // Form fields (mirror rent_payments table)
     public $tenancy_agreement_id = '';
@@ -57,6 +58,7 @@ class RentPayments extends Component
         if ($this->ownerBusinesses->isNotEmpty()) {
             $this->selectedBusiness = $this->ownerBusinesses->first()->id;
         }
+        $this->rollMonth = now()->format('Y-m');
         $this->payment_date = now()->toDateString();
         $this->payment_for_month = now()->startOfMonth()->toDateString();
     }
@@ -64,13 +66,11 @@ class RentPayments extends Component
     // ─── Reactivity ─────────────────────────────────────────────
 
     public function updatingSearch(): void { $this->resetPage(); }
-    public function updatingAgreementFilter(): void { $this->resetPage(); }
-    public function updatingMonthFilter(): void { $this->resetPage(); }
-    public function updatingMethodFilter(): void { $this->resetPage(); }
+    public function updatingRollMonth(): void { $this->resetPage(); }
+    public function updatingRollStatusFilter(): void { $this->resetPage(); }
 
     public function updatedSelectedBusiness(): void
     {
-        $this->reset(['agreementFilter']);
         $this->resetPage();
     }
 
@@ -93,6 +93,39 @@ class RentPayments extends Component
         $this->showModal = true;
     }
 
+    /**
+     * Record a payment against a specific agreement for the rent-roll month,
+     * pre-filling the outstanding balance. Driven by the "Record Payment"
+     * button on each unpaid row.
+     */
+    public function openRecordModal(string $agreementId): void
+    {
+        if (!$this->ensureBusinessSelected()) return;
+
+        $agreement = TenancyAgreement::whereHas('landlord', fn ($q) => $q->where('business_id', $this->selectedBusiness))
+            ->find($agreementId);
+        if (!$agreement) {
+            session()->flash('error', 'That agreement is not part of this business.');
+            return;
+        }
+
+        $this->resetForm();
+        $this->editMode = false;
+        $this->showReceiptsModal = false;
+
+        $month = Carbon::parse($this->rollMonth . '-01');
+        $due = $agreement->dueAmountForMonth($month);
+        $paid = (float) $agreement->rentPayments()->forMonth($this->rollMonth)->sum('amount_paid');
+        $remaining = max(0, $due - $paid);
+
+        $this->tenancy_agreement_id = $agreement->id;
+        $this->payment_for_month = $month->startOfMonth()->toDateString();
+        // Default to the outstanding balance (fall back to full rent if the month isn't a due month)
+        $this->amount_paid = $remaining > 0 ? $remaining : $agreement->rent_amount;
+
+        $this->showModal = true;
+    }
+
     public function openEditModal(string $id): void
     {
         if (!$this->ensureBusinessSelected()) return;
@@ -110,6 +143,7 @@ class RentPayments extends Component
         $this->receipt_channel = $rp->payment?->receipt_channel ?? 'none';
 
         $this->editMode = true;
+        $this->showReceiptsModal = false;
         $this->showModal = true;
     }
 
@@ -128,8 +162,35 @@ class RentPayments extends Component
             ->find($id);
 
         if ($this->viewPayment) {
+            $this->showReceiptsModal = false;
             $this->showViewModal = true;
         }
+    }
+
+    /** Show the full receipt history for one agreement. */
+    public function openAgreementReceipts(string $agreementId): void
+    {
+        if (!$this->ensureBusinessSelected()) return;
+
+        $this->receiptsAgreement = TenancyAgreement::whereHas('landlord', fn ($q) => $q->where('business_id', $this->selectedBusiness))
+            ->with([
+                'customer:id,name,phone',
+                'unit:id,unit_number,property_id',
+                'unit.property:id,property_name',
+                'rentPayments' => fn ($q) => $q->with('paymentMethod:id,name', 'receivedBy:id,name')
+                    ->orderBy('payment_date', 'desc'),
+            ])
+            ->find($agreementId);
+
+        if ($this->receiptsAgreement) {
+            $this->showReceiptsModal = true;
+        }
+    }
+
+    public function closeReceiptsModal(): void
+    {
+        $this->showReceiptsModal = false;
+        $this->receiptsAgreement = null;
     }
 
     public function closeModal(): void
@@ -293,8 +354,19 @@ class RentPayments extends Component
 
     // ─── Render ─────────────────────────────────────────────────
 
+    /** The first of the roll month as a Carbon instance. */
+    protected function rollMonthCarbon(): Carbon
+    {
+        return Carbon::parse(($this->rollMonth ?: now()->format('Y-m')) . '-01')->startOfMonth();
+    }
+
     public function render()
     {
+        $methods = $this->selectedBusiness
+            ? payment_method::where('business_id', $this->selectedBusiness)->orderBy('name')->get()
+            : collect();
+
+        // Agreements for the modal's picker (record against any active/draft/expired agreement)
         $agreements = $this->selectedBusiness
             ? TenancyAgreement::whereHas('landlord', fn ($q) => $q->where('business_id', $this->selectedBusiness))
                 ->whereIn('agreement_status', ['active', 'draft', 'expired'])
@@ -303,57 +375,101 @@ class RentPayments extends Component
                 ->get()
             : collect();
 
-        $methods = $this->selectedBusiness
-            ? payment_method::where('business_id', $this->selectedBusiness)->orderBy('name')->get()
-            : collect();
-
         if (!$this->selectedBusiness) {
-            $payments = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
-            $stats = ['this_month' => 0, 'this_month_count' => 0, 'last_30_days' => 0, 'all_time' => 0, 'outstanding' => 0];
-        } else {
-            $payments = $this->scopedQuery()
-                ->with([
-                    'agreement.customer:id,name',
-                    'agreement.unit:id,unit_number',
-                    'paymentMethod:id,name',
-                    'receivedBy:id,name',
-                ])
-                ->when($this->search, function ($q) {
-                    $q->where(function ($qq) {
-                        $qq->where('reference_no', 'like', '%' . $this->search . '%')
-                           ->orWhereHas('agreement.customer', fn ($c) => $c->where('name', 'like', '%' . $this->search . '%'));
-                    });
-                })
-                ->when($this->agreementFilter, fn ($q) => $q->where('tenancy_agreement_id', $this->agreementFilter))
-                ->when($this->monthFilter, fn ($q) => $q->forMonth($this->monthFilter))
-                ->when($this->methodFilter, fn ($q) => $q->where('payment_method_id', $this->methodFilter))
-                ->orderBy('payment_date', 'desc')
-                ->paginate(15);
+            $roll = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
+            $stats = ['expected' => 0, 'collected' => 0, 'outstanding' => 0, 'unpaid_count' => 0];
 
-            $base = $this->scopedQuery();
-            $thisMonth = now()->format('Y-m');
-
-            // Outstanding = sum of active agreements' rent for the current month minus what's already paid
-            $expectedThisMonth = TenancyAgreement::whereHas('landlord', fn ($q) => $q->where('business_id', $this->selectedBusiness))
-                ->where('agreement_status', 'active')
-                ->sum('rent_amount');
-            $collectedThisMonth = (clone $base)->forMonth($thisMonth)->sum('amount_paid');
-
-            $stats = [
-                'this_month' => $collectedThisMonth,
-                'this_month_count' => (clone $base)->forMonth($thisMonth)->count(),
-                'last_30_days' => (clone $base)->where('payment_date', '>=', now()->subDays(30))->sum('amount_paid'),
-                'all_time' => (clone $base)->sum('amount_paid'),
-                'outstanding' => max(0, $expectedThisMonth - $collectedThisMonth),
-            ];
+            return view('livewire.owner.rental.rent-payments', [
+                'roll' => $roll,
+                'stats' => $stats,
+                'businesses' => $this->ownerBusinesses,
+                'agreements' => $agreements,
+                'methods' => $methods,
+                'rollMonthLabel' => $this->rollMonthCarbon()->format('M Y'),
+            ]);
         }
 
+        $month = $this->rollMonthCarbon();
+        $monthKey = $month->format('Y-m');
+        $monthEnd = $month->copy()->endOfMonth();
+
+        // Agreements (active, draft, expired) that have started by the roll month and
+        // whose end_date (if any) hasn't passed. Expired agreements without an end_date
+        // are additionally capped at their last due month by isDueInMonth() below.
+        $agreementQuery = TenancyAgreement::whereHas('landlord', fn ($q) => $q->where('business_id', $this->selectedBusiness))
+            ->whereIn('agreement_status', ['active', 'draft', 'expired'])
+            ->whereDate('start_date', '<=', $monthEnd)
+            ->where(function ($q) use ($month) {
+                $q->whereNull('end_date')->orWhereDate('end_date', '>=', $month->toDateString());
+            })
+            ->when($this->search, function ($q) {
+                $q->where(function ($qq) {
+                    $qq->whereHas('customer', fn ($c) => $c->where('name', 'like', '%' . $this->search . '%'))
+                       ->orWhereHas('unit', fn ($u) => $u->where('unit_number', 'like', '%' . $this->search . '%'));
+                });
+            })
+            ->with([
+                'customer:id,name,phone',
+                'unit:id,unit_number,property_id',
+                'unit.property:id,property_name',
+            ]);
+
+        // Pull matching agreements once, compute the roll row for each due agreement.
+        // Active agreements per business are bounded, so in-memory roll-up is fine.
+        $allRows = $agreementQuery->orderBy('start_date', 'desc')->get()
+            ->filter(fn ($a) => $a->isDueInMonth($month))   // only bill months that fall due
+            ->map(function ($a) use ($monthKey) {
+                $due = (float) $a->rent_amount;
+                $paid = (float) $a->rentPayments()->forMonth($monthKey)->sum('amount_paid');
+                $remaining = max(0, $due - $paid);
+
+                return [
+                    'agreement' => $a,
+                    'due' => $due,
+                    'paid' => $paid,
+                    'remaining' => $remaining,
+                    'status' => $paid <= 0 ? 'unpaid' : ($remaining > 0 ? 'partial' : 'paid'),
+                ];
+            })
+            ->values();
+
+        // Stats over the full month roll (before the status filter narrows it)
+        $expected = $allRows->sum('due');
+        $collected = $allRows->sum(fn ($r) => min($r['paid'], $r['due']));
+        $stats = [
+            'expected' => $expected,
+            'collected' => $collected,
+            'outstanding' => max(0, $expected - $collected),
+            'unpaid_count' => $allRows->filter(fn ($r) => $r['remaining'] > 0)->count(),
+        ];
+
+        // Apply the status filter and a stable sort (unpaid first, then by tenant)
+        $rows = $allRows
+            ->when($this->rollStatusFilter !== '', fn ($c) => $c->where('status', $this->rollStatusFilter))
+            ->sortBy([
+                fn ($r) => ['unpaid' => 0, 'partial' => 1, 'paid' => 2][$r['status']],
+                fn ($r) => $r['agreement']->customer?->name ?? '',
+            ])
+            ->values();
+
+        // Manual paginator over the computed rows
+        $perPage = 15;
+        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage('page');
+        $roll = new \Illuminate\Pagination\LengthAwarePaginator(
+            $rows->forPage($page, $perPage)->values(),
+            $rows->count(),
+            $perPage,
+            $page,
+            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]
+        );
+
         return view('livewire.owner.rental.rent-payments', [
-            'payments' => $payments,
+            'roll' => $roll,
             'stats' => $stats,
             'businesses' => $this->ownerBusinesses,
             'agreements' => $agreements,
             'methods' => $methods,
+            'rollMonthLabel' => $month->format('M Y'),
         ]);
     }
 }

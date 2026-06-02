@@ -85,4 +85,83 @@ class TenancyAgreement extends Model
     {
         return $this->agreement_status === 'active';
     }
+
+    /** Number of months between billing cycles for each payment_frequency. */
+    public function frequencyIntervalMonths(): int
+    {
+        return match ($this->payment_frequency) {
+            'quarterly' => 3,
+            'semi_annual' => 6,
+            'annual' => 12,
+            default => 1, // monthly
+        };
+    }
+
+    /**
+     * The last month (1st of month) for which rent can fall due, or null if open-ended.
+     *
+     * - end_date set → its month caps the term (any status).
+     * - expired with no end_date → cap at the last billed month (latest receipt's
+     *   payment_for_month), falling back to the start month so it shows once and no
+     *   further. This stops an open-ended expired agreement billing indefinitely.
+     */
+    public function lastDueMonth(): ?\Carbon\Carbon
+    {
+        if ($this->end_date) {
+            return $this->end_date->copy()->startOfMonth();
+        }
+
+        if ($this->agreement_status === 'expired') {
+            $lastBilled = $this->rentPayments()->max('payment_for_month');
+            $cap = $lastBilled
+                ? \Carbon\Carbon::parse($lastBilled)
+                : $this->start_date;
+
+            return $cap?->copy()->startOfMonth();
+        }
+
+        return null; // active / draft with no end_date → open-ended
+    }
+
+    /**
+     * Whether rent falls due in the given month for this agreement's billing cycle.
+     * A month is "due" when it is on or after start month, within the term (capped
+     * by lastDueMonth), and an exact number of billing cycles from the start month.
+     *
+     * @param  \Carbon\Carbon  $month  Any date within the target month.
+     */
+    public function isDueInMonth(\Carbon\Carbon $month): bool
+    {
+        if (!$this->start_date) {
+            return false;
+        }
+
+        $start = $this->start_date->copy()->startOfMonth();
+        $target = $month->copy()->startOfMonth();
+
+        // Before the tenancy begins → nothing due
+        if ($target->lt($start)) {
+            return false;
+        }
+
+        // After the term ends (end_date, or the expired cap) → nothing due
+        $lastDue = $this->lastDueMonth();
+        if ($lastDue && $target->gt($lastDue)) {
+            return false;
+        }
+
+        $monthsElapsed = $start->diffInMonths($target);
+
+        return $monthsElapsed % $this->frequencyIntervalMonths() === 0;
+    }
+
+    /**
+     * Amount owed for the given month: the full rent on a due month, otherwise 0.
+     *
+     * @param  \Carbon\Carbon  $month
+     */
+    public function dueAmountForMonth(\Carbon\Carbon $month): float
+    {
+        return $this->isDueInMonth($month) ? (float) $this->rent_amount : 0.0;
+    }
 }

@@ -51,7 +51,7 @@
     @if($selectedBusiness)
 
     {{-- Alerts strip --}}
-    @if($alerts['overdue_rent'] + $alerts['unpaid_bills'] + $alerts['open_tickets'] + $alerts['units_in_maintenance'] > 0)
+    @if($alerts['overdue_rent'] + $alerts['unpaid_bills'] + $alerts['open_tickets'] + $alerts['units_in_maintenance'] + $alerts['expiring_soon'] + $alerts['expired'] > 0)
     <div class="row g-3 mb-4">
         @if($alerts['overdue_rent'] > 0)
         <div class="col-md-3 col-sm-6">
@@ -62,6 +62,36 @@
                         <div>
                             <div class="h5 mb-0 text-danger">{{ $alerts['overdue_rent'] }}</div>
                             <small class="text-muted">tenants haven't paid this month</small>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        @endif
+        @if($alerts['expired'] > 0)
+        <div class="col-md-3 col-sm-6">
+            <a href="{{ route('owner.rental.agreements') }}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100 border-start border-danger border-4">
+                    <div class="card-body d-flex align-items-center">
+                        <i class="ti ti-file-x text-danger fs-2 me-3"></i>
+                        <div>
+                            <div class="h5 mb-0 text-danger">{{ $alerts['expired'] }}</div>
+                            <small class="text-muted">expired lease(s)</small>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        @endif
+        @if($alerts['expiring_soon'] > 0)
+        <div class="col-md-3 col-sm-6">
+            <a href="{{ route('owner.rental.agreements') }}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100 border-start border-warning border-4">
+                    <div class="card-body d-flex align-items-center">
+                        <i class="ti ti-calendar-exclamation text-warning fs-2 me-3"></i>
+                        <div>
+                            <div class="h5 mb-0 text-warning">{{ $alerts['expiring_soon'] }}</div>
+                            <small class="text-muted">lease(s) expiring within 30 days</small>
                         </div>
                     </div>
                 </div>
@@ -327,6 +357,69 @@
             </div>
         </div>
     </div>
+
+    {{-- Expiring / expired agreements --}}
+    @if($expiringAgreements->isNotEmpty())
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0"><i class="ti ti-calendar-exclamation text-warning me-2"></i>Expiring &amp; Expired Leases</h6>
+                <a href="{{ route('owner.rental.agreements') }}" class="small text-decoration-none">Manage <i class="ti ti-arrow-right"></i></a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="text-muted small">
+                        <tr>
+                            <th>Tenant</th>
+                            <th>Unit</th>
+                            <th>End date</th>
+                            <th>Status</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($expiringAgreements as $row)
+                        @php
+                            $a = $row['agreement'];
+                            $days = $row['days'];
+                            if ($row['is_expired']) {
+                                $badge = 'danger';
+                                $label = $days === null ? 'Expired' : ($days < 0 ? abs($days) . 'd overdue' : 'Expired');
+                            } else {
+                                $badge = $days !== null && $days <= 7 ? 'danger' : 'warning';
+                                $label = $days === 0 ? 'Ends today' : 'in ' . $days . 'd';
+                            }
+                        @endphp
+                        <tr wire:key="exp-{{ $a->id }}">
+                            <td>
+                                <div class="fw-medium small">{{ $a->customer?->name ?? '—' }}</div>
+                                <small class="text-muted">{{ $a->customer?->phone }}</small>
+                            </td>
+                            <td>
+                                <small>{{ $a->unit?->property?->property_name }}</small><br>
+                                <small class="text-muted">Unit {{ $a->unit?->unit_number ?? '—' }}</small>
+                            </td>
+                            <td><small>{{ $a->end_date?->format('M d, Y') ?? '—' }}</small></td>
+                            <td>
+                                <span class="badge bg-{{ $badge }}-subtle text-{{ $badge }}">
+                                    {{ $row['is_expired'] ? 'Expired' : 'Expiring' }}
+                                </span>
+                                <div><small class="text-muted">{{ $label }}</small></div>
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ route('owner.rental.agreements') }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="ti ti-refresh me-1"></i>Renew
+                                </a>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    @endif
 
     {{-- Top properties --}}
     @if($topProperties->isNotEmpty())

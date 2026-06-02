@@ -43,6 +43,7 @@ class RentalDashboard extends Component
                 'recentPayments' => collect(),
                 'openTickets' => collect(),
                 'topProperties' => collect(),
+                'expiringAgreements' => collect(),
                 'businesses' => $this->ownerBusinesses,
             ]);
         }
@@ -50,6 +51,8 @@ class RentalDashboard extends Component
         $bizId = $this->selectedBusiness;
         $monthStart = now()->startOfMonth();
         $thisMonth = now()->format('Y-m');
+        $today = now()->startOfDay();
+        $soonThreshold = now()->copy()->addDays(30)->endOfDay();
 
         // ─── Base scoped queries ─────────────────────────────────
         $unitsQ = RentalUnit::whereHas('property.landlord', fn ($q) => $q->where('business_id', $bizId));
@@ -113,11 +116,44 @@ class RentalDashboard extends Component
             })
             ->count();
 
+        // ─── Expiring / expired agreements ───────────────────────
+        // "Near expire": still active, has an end_date within the next 30 days (and not past).
+        // "Expired": status is 'expired', OR still flagged active but the end_date has passed.
+        $expiringAgreements = (clone $agreementsQ)
+            ->with(['customer:id,name,phone', 'unit:id,unit_number,property_id', 'unit.property:id,property_name'])
+            ->where(function ($q) use ($today, $soonThreshold) {
+                $q->where('agreement_status', 'expired')
+                  ->orWhere(function ($qq) use ($today, $soonThreshold) {
+                      $qq->where('agreement_status', 'active')
+                         ->whereNotNull('end_date')
+                         ->whereDate('end_date', '<=', $soonThreshold);
+                  });
+            })
+            ->orderByRaw('end_date IS NULL, end_date asc')
+            ->get()
+            ->map(function ($a) use ($today) {
+                $end = $a->end_date;
+                $isExpired = $a->agreement_status === 'expired'
+                    || ($end && $end->lt($today));
+                $daysToEnd = $end ? (int) $today->diffInDays($end->copy()->startOfDay(), false) : null;
+
+                return [
+                    'agreement' => $a,
+                    'is_expired' => $isExpired,
+                    'days' => $daysToEnd,   // negative = past, positive = upcoming, null = no end_date
+                ];
+            });
+
+        $expiredCount = $expiringAgreements->where('is_expired', true)->count();
+        $expiringSoonCount = $expiringAgreements->where('is_expired', false)->count();
+
         $alerts = [
             'overdue_rent' => $overdueAgreements,
             'unpaid_bills' => (clone $billsQ)->whereIn('status', ['unpaid', 'partial'])->count(),
             'open_tickets' => (clone $ticketsQ)->whereIn('status', ['open', 'in_progress'])->count(),
             'units_in_maintenance' => $occupancy['maintenance'],
+            'expiring_soon' => $expiringSoonCount,
+            'expired' => $expiredCount,
         ];
 
         // ─── Recent payments (last 5) ────────────────────────────
@@ -150,6 +186,7 @@ class RentalDashboard extends Component
             'recentPayments' => $recentPayments,
             'openTickets' => $openTickets,
             'topProperties' => $topProperties,
+            'expiringAgreements' => $expiringAgreements,
             'businesses' => $this->ownerBusinesses,
         ]);
     }
@@ -166,6 +203,6 @@ class RentalDashboard extends Component
 
     private function emptyAlerts(): array
     {
-        return ['overdue_rent' => 0, 'unpaid_bills' => 0, 'open_tickets' => 0, 'units_in_maintenance' => 0];
+        return ['overdue_rent' => 0, 'unpaid_bills' => 0, 'open_tickets' => 0, 'units_in_maintenance' => 0, 'expiring_soon' => 0, 'expired' => 0];
     }
 }
