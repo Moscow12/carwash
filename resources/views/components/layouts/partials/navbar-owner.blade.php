@@ -12,7 +12,63 @@
       <span class="text">POS</span>
     </a>
   </li>
-
+<!-- rental management -->
+  <li class="nav-item dropdown" id="rentalManagementMenu">
+    <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.rental*') ? 'active' : '' }}"
+      href="#!"
+      role="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="{{ request()->routeIs('owner.rental*') ? 'true' : 'false' }}">
+      <span class="nav-icon"><i class="ti ti-building-warehouse fs-5"></i></span>
+      <span class="text">Rental Management</span>
+    </a>
+    <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.rental*') ? 'show' : '' }}">
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.rental.dashboard") ? "active" : "" }}' href="{{ route('owner.rental.dashboard') }}">
+          <i class="ti ti-dashboard me-2"></i> Dashboard
+        </a>
+      </li>
+      <li><hr class="dropdown-divider"></li>
+      <li class="nav-item"><small class="dropdown-header text-muted">Catalog</small></li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.rental.landlords") ? "active" : "" }}' href="{{ route('owner.rental.landlords') }}">
+          <i class="ti ti-users me-2"></i> Landlords
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.rental.properties") ? "active" : "" }}' href="{{ route('owner.rental.properties') }}">
+          <i class="ti ti-building me-2"></i> Properties
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.rental.units") ? "active" : "" }}' href="{{ route('owner.rental.units') }}">
+          <i class="ti ti-home-2 me-2"></i> Rental Units
+        </a>
+      </li>
+      <li><hr class="dropdown-divider"></li>
+      <li class="nav-item"><small class="dropdown-header text-muted">Operations</small></li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.rental.agreements") ? "active" : "" }}' href="{{ route('owner.rental.agreements') }}">
+          <i class="ti ti-file-text me-2"></i> Tenancy Agreements
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.rental.rent-payments") ? "active" : "" }}' href="{{ route('owner.rental.rent-payments') }}">
+          <i class="ti ti-receipt me-2"></i> Rent Payments
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.rental.utility-bills") ? "active" : "" }}' href="{{ route('owner.rental.utility-bills') }}">
+          <i class="ti ti-bolt me-2"></i> Utility Bills
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class='dropdown-item {{ request()->routeIs("owner.rental.maintenance") ? "active" : "" }}' href="{{ route('owner.rental.maintenance') }}">
+          <i class="ti ti-tool me-2"></i> Maintenance
+        </a>
+      </li>
+    </ul>
+  </li>
  <!-- Hotel Management -->
   <li class="nav-item dropdown" id="hotelManagementMenu">
     <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.hotel*') ? 'active' : '' }}"

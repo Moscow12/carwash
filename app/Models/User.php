@@ -215,4 +215,22 @@ class User extends Authenticatable
     {
         return $this->hasMany(VoidLog::class, 'voided_by');
     }
+
+    /**
+     * Landlord profiles this user holds — one per rental business they're
+     * registered as a landlord under. A user can own rental properties under
+     * multiple management businesses while ALSO owning hotels, restaurants, etc.
+     */
+    public function landlordProfiles(): HasMany
+    {
+        return $this->hasMany(Landlord::class, 'user_id');
+    }
+
+    /**
+     * True if the user is listed as a landlord on any rental business.
+     */
+    public function isLandlord(): bool
+    {
+        return $this->landlordProfiles()->exists();
+    }
 }

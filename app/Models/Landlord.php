@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Builder;
 
 class Landlord extends Model
 {
@@ -16,6 +16,7 @@ class Landlord extends Model
 
     protected $fillable = [
         'business_id',
+        'user_id',
         'name',
         'phone',
         'email',
@@ -28,9 +29,16 @@ class Landlord extends Model
         'status',
     ];
 
+    // ─── Relationships ───────────────────────────────────────────
+
     public function business(): BelongsTo
     {
         return $this->belongsTo(Business::class, 'business_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function country(): BelongsTo
@@ -68,6 +76,8 @@ class Landlord extends Model
         return $this->hasMany(TenancyAgreement::class, 'landlord_id');
     }
 
+    // ─── Scopes ──────────────────────────────────────────────────
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'active');
@@ -76,5 +86,27 @@ class Landlord extends Model
     public function scopeForBusiness(Builder $query, string $businessId): Builder
     {
         return $query->where('business_id', $businessId);
+    }
+
+    public function scopeForUser(Builder $query, string $userId): Builder
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    public function scopeLinkedToUser(Builder $query): Builder
+    {
+        return $query->whereNotNull('user_id');
+    }
+
+    public function scopeExternal(Builder $query): Builder
+    {
+        return $query->whereNull('user_id');
+    }
+
+    // ─── Accessors ───────────────────────────────────────────────
+
+    public function getHasLoginAttribute(): bool
+    {
+        return $this->user_id !== null;
     }
 }

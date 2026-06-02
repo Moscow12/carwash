@@ -54,16 +54,25 @@
                                         <p class="text-muted">Fill in your details to get started</p>
                                     </div>
 
-                                    <form wire:submit.prevent="register">
+                                    @if (session('success'))
+                                        <div class="alert alert-success" role="alert">
+                                            {{ session('success') }}
+                                        </div>
+                                    @endif
+
+                                    <form wire:submit.prevent="register" novalidate>
                                         <div class="row g-3">
                                             <div class="col-12">
-                                                <label class="form-label fw-semibold">Full Name</label>
+                                                <label for="reg-name" class="form-label fw-semibold">Full Name</label>
                                                 <div class="input-group">
                                                     <span class="input-group-text bg-light border-end-0">
                                                         <i class="fas fa-user text-muted"></i>
                                                     </span>
                                                     <input type="text"
-                                                           wire:model="name"
+                                                           id="reg-name"
+                                                           name="name"
+                                                           autocomplete="name"
+                                                           wire:model.blur="name"
                                                            class="form-control form-control-site border-start-0 ps-0 @error('name') is-invalid @enderror"
                                                            placeholder="Enter your full name">
                                                 </div>
@@ -73,13 +82,16 @@
                                             </div>
 
                                             <div class="col-md-6">
-                                                <label class="form-label fw-semibold">Email Address</label>
+                                                <label for="reg-email" class="form-label fw-semibold">Email Address</label>
                                                 <div class="input-group">
                                                     <span class="input-group-text bg-light border-end-0">
                                                         <i class="fas fa-envelope text-muted"></i>
                                                     </span>
                                                     <input type="email"
-                                                           wire:model="email"
+                                                           id="reg-email"
+                                                           name="email"
+                                                           autocomplete="email"
+                                                           wire:model.blur="email"
                                                            class="form-control form-control-site border-start-0 ps-0 @error('email') is-invalid @enderror"
                                                            placeholder="Enter your email">
                                                 </div>
@@ -89,15 +101,18 @@
                                             </div>
 
                                             <div class="col-md-6">
-                                                <label class="form-label fw-semibold">Phone Number</label>
+                                                <label for="reg-phone" class="form-label fw-semibold">Phone Number</label>
                                                 <div class="input-group">
                                                     <span class="input-group-text bg-light border-end-0">
                                                         <i class="fas fa-phone text-muted"></i>
                                                     </span>
                                                     <input type="tel"
-                                                           wire:model="phone"
+                                                           id="reg-phone"
+                                                           name="phone"
+                                                           autocomplete="tel"
+                                                           wire:model.blur="phone"
                                                            class="form-control form-control-site border-start-0 ps-0 @error('phone') is-invalid @enderror"
-                                                           placeholder="Enter your phone">
+                                                           placeholder="e.g. +255 700 000 000">
                                                 </div>
                                                 @error('phone')
                                                     <div class="text-danger small mt-1">{{ $message }}</div>
@@ -105,15 +120,18 @@
                                             </div>
 
                                             <div class="col-md-6">
-                                                <label class="form-label fw-semibold">Password</label>
+                                                <label for="reg-password" class="form-label fw-semibold">Password</label>
                                                 <div class="input-group">
                                                     <span class="input-group-text bg-light border-end-0">
                                                         <i class="fas fa-lock text-muted"></i>
                                                     </span>
                                                     <input type="password"
-                                                           wire:model="password"
+                                                           id="reg-password"
+                                                           name="password"
+                                                           autocomplete="new-password"
+                                                           wire:model.blur="password"
                                                            class="form-control form-control-site border-start-0 ps-0 @error('password') is-invalid @enderror"
-                                                           placeholder="Create a password">
+                                                           placeholder="At least 8 characters">
                                                 </div>
                                                 @error('password')
                                                     <div class="text-danger small mt-1">{{ $message }}</div>
@@ -121,30 +139,42 @@
                                             </div>
 
                                             <div class="col-md-6">
-                                                <label class="form-label fw-semibold">Confirm Password</label>
+                                                <label for="reg-password-confirm" class="form-label fw-semibold">Confirm Password</label>
                                                 <div class="input-group">
                                                     <span class="input-group-text bg-light border-end-0">
                                                         <i class="fas fa-lock text-muted"></i>
                                                     </span>
                                                     <input type="password"
-                                                           wire:model="password_confirmation"
+                                                           id="reg-password-confirm"
+                                                           name="password_confirmation"
+                                                           autocomplete="new-password"
+                                                           wire:model.blur="password_confirmation"
                                                            class="form-control form-control-site border-start-0 ps-0"
-                                                           placeholder="Confirm your password">
+                                                           placeholder="Re-enter your password">
                                                 </div>
                                             </div>
 
                                             <div class="col-12">
                                                 <div class="form-check">
-                                                    <input type="checkbox" class="form-check-input" id="terms" required>
+                                                    <input type="checkbox"
+                                                           class="form-check-input @error('terms') is-invalid @enderror"
+                                                           id="terms"
+                                                           wire:model="terms">
                                                     <label class="form-check-label text-muted" for="terms">
                                                         I agree to the <a href="#" class="text-info">Terms of Service</a>
                                                         and <a href="#" class="text-info">Privacy Policy</a>
                                                     </label>
                                                 </div>
+                                                @error('terms')
+                                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                                @enderror
                                             </div>
 
                                             <div class="col-12">
-                                                <button type="submit" class="btn btn-cams btn-lg w-100">
+                                                <button type="submit"
+                                                        class="btn btn-cams btn-lg w-100"
+                                                        wire:loading.attr="disabled"
+                                                        wire:target="register">
                                                     <span wire:loading.remove wire:target="register">
                                                         <i class="fas fa-user-plus me-2"></i>Create Account
                                                     </span>
@@ -163,23 +193,6 @@
                                                 Sign in
                                             </a>
                                         </p>
-                                    </div>
-
-                                    <hr class="my-4">
-
-                                    <div class="text-center">
-                                        <p class="text-muted small mb-3">Or sign up with</p>
-                                        <div class="d-flex justify-content-center gap-3">
-                                            <a href="#" class="btn btn-outline-secondary px-4">
-                                                <i class="fab fa-google"></i>
-                                            </a>
-                                            <a href="#" class="btn btn-outline-secondary px-4">
-                                                <i class="fab fa-facebook-f"></i>
-                                            </a>
-                                            <a href="#" class="btn btn-outline-secondary px-4">
-                                                <i class="fab fa-apple"></i>
-                                            </a>
-                                        </div>
                                     </div>
                                 </div>
                             </div>

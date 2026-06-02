@@ -172,6 +172,17 @@
                                 <label class="form-label">Operating Hours</label>
                                 <input type="text" wire:model="operating_hours" class="form-control" placeholder="e.g., 8:00 AM - 6:00 PM">
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Business type</label>
+                               <select class="form-select" wire:model="type">
+                                    <option value="restaurant">Restaurant</option>
+                                    <option value="bar">Bar</option>
+                                    <option value="hotel">Hotel</option>
+                                    <option value="rental">Rental</option>
+                                    <option value="pos">POS</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
                         </div>
 
                         {{-- Location --}}

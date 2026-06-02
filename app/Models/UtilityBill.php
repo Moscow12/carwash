@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Builder;
 
 class UtilityBill extends Model
@@ -37,5 +38,13 @@ class UtilityBill extends Model
     public function scopeUnpaid(Builder $query): Builder
     {
         return $query->whereIn('status', ['unpaid', 'partial']);
+    }
+
+    /**
+     * Mirror record in the unified payments ledger (alias registered in AppServiceProvider).
+     */
+    public function payment(): MorphOne
+    {
+        return $this->morphOne(Payment::class, 'payable');
     }
 }

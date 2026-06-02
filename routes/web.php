@@ -251,6 +251,16 @@ Route::middleware(['auth', 'role:owner,staff'])->prefix('owner')->group(function
     Route::get('/inventory/purchases/create', \App\Livewire\Owner\Inventory\CreatePurchase::class)->name('owner.inventory.purchases.create');
     Route::get('/inventory/stocktransfers', \App\Livewire\Owner\Inventory\StockTransferManagement::class)->name('owner.inventory.stocktransfers');
 
+    // rental management
+    Route::get('/rental/dashboard', \App\Livewire\Owner\Rental\RentalDashboard::class)->name('owner.rental.dashboard');
+    Route::get('/rental/landlords', \App\Livewire\Owner\Rental\Landlords::class)->name('owner.rental.landlords');
+    Route::get('/rental/properties', \App\Livewire\Owner\Rental\RentalProperties::class)->name('owner.rental.properties');
+    Route::get('/rental/units', \App\Livewire\Owner\Rental\RentalUnits::class)->name('owner.rental.units');
+    Route::get('/rental/rental-agreements', \App\Livewire\Owner\Rental\RentalAgreements::class)->name('owner.rental.agreements');
+    Route::get('/rental/rent-payments', \App\Livewire\Owner\Rental\RentPayments::class)->name('owner.rental.rent-payments');
+    Route::get('/rental/utility-bills', \App\Livewire\Owner\Rental\UtilityBills::class)->name('owner.rental.utility-bills');
+    Route::get('/rental/maintenance', \App\Livewire\Owner\Rental\MaintenanceRequests::class)->name('owner.rental.maintenance');
+
 });
 
 // Customer Dashboard (Protected Routes - Customer Only)

@@ -56,6 +56,9 @@ class Index extends Component
     public $operating_hours = '';
 
     #[Rule('required|string|max:255')]
+    public $type = '';
+
+    #[Rule('required|string|max:255')]
     public $resentative_name = '';
 
     #[Rule('required|string|max:50')]
@@ -136,6 +139,7 @@ class Index extends Component
         $this->resentative_name = $business->resentative_name;
         $this->resentative_phone = $business->resentative_phone;
         $this->region_id = $business->region_id;
+        $this->type = $business->type;
 
         $this->allDistricts = districts::where('region_id', $business->region_id)->orderBy('name')->get();
         $this->district_id = $business->district_id;
@@ -164,6 +168,7 @@ class Index extends Component
             'email' => $this->email ?: null,
             'website' => $this->website ?: null,
             'operating_hours' => $this->operating_hours ?: null,
+            'type' => $this->type,
             'resentative_name' => $this->resentative_name,
             'resentative_phone' => $this->resentative_phone,
             'region_id' => $this->region_id,
@@ -196,7 +201,7 @@ class Index extends Component
         $this->reset([
             'businessId', 'name', 'address', 'description', 'status',
             'whatsapp', 'instagram', 'email', 'website', 'operating_hours',
-            'resentative_name', 'resentative_phone', 'region_id',
+            'resentative_name', 'resentative_phone', 'region_id', 'type',
             'district_id', 'ward_id', 'street_id'
         ]);
         $this->status = 'active';

@@ -49,6 +49,9 @@ class Mybusiness extends Component
     #[Rule('nullable|string|max:100')]
     public $operating_hours = '';
 
+    #[Rule('nullable|string|max:255')]
+    public $type = '';
+
     #[Rule('required|string|max:255')]
     public $resentative_name = '';
 
@@ -127,6 +130,7 @@ class Mybusiness extends Component
         $this->email = $business->email ?? '';
         $this->website = $business->website ?? '';
         $this->operating_hours = $business->operating_hours ?? '';
+        $this->type = $business->type ?? '';
         $this->resentative_name = $business->resentative_name;
         $this->resentative_phone = $business->resentative_phone;
         $this->region_id = $business->region_id;
@@ -158,6 +162,7 @@ class Mybusiness extends Component
             'email' => $this->email ?: null,
             'website' => $this->website ?: null,
             'operating_hours' => $this->operating_hours ?: null,
+            'type' => $this->type ?: null,  
             'resentative_name' => $this->resentative_name,
             'resentative_phone' => $this->resentative_phone,
             'region_id' => $this->region_id,
@@ -190,7 +195,7 @@ class Mybusiness extends Component
         $this->reset([
             'businessId', 'name', 'address', 'description', 'status',
             'whatsapp', 'instagram', 'email', 'website', 'operating_hours',
-            'resentative_name', 'resentative_phone', 'region_id',
+            'resentative_name', 'resentative_phone', 'region_id', 'type',
             'district_id', 'ward_id', 'street_id'
         ]);
         $this->status = 'active';

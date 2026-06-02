@@ -3,38 +3,61 @@
 namespace App\Livewire\Sitepg;
 
 use App\Models\User;
-use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
+use Livewire\Component;
 
 class Register extends Component
 {
-    public $name = '';
-    public $email = '';
-    public $phone = '';
-    public $password = '';
-    public $password_confirmation = '';
+    public string $name = '';
+    public string $email = '';
+    public string $phone = '';
+    public string $password = '';
+    public string $password_confirmation = '';
+    public bool $terms = false;
 
-    protected $rules = [
-        'name' => 'required|min:3',
-        'email' => 'required|email|unique:users,email',
-        'phone' => 'required',
-        'password' => 'required|min:8|confirmed',
+    protected function rules(): array
+    {
+        return [
+            'name' => ['required', 'string', 'min:3', 'max:150'],
+            'email' => ['required', 'email:rfc,dns', 'max:200', 'unique:users,email'],
+            'phone' => ['required', 'string', 'min:7', 'max:25', 'unique:users,phone'],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
+            'terms' => ['accepted'],
+        ];
+    }
+
+    protected $messages = [
+        'terms.accepted' => 'You must agree to the Terms of Service and Privacy Policy.',
+        'email.unique' => 'An account with this email already exists.',
+        'phone.unique' => 'An account with this phone number already exists.',
     ];
+
+    public function updated($field): void
+    {
+        $this->validateOnly($field);
+    }
 
     public function register()
     {
-        $this->validate();
+        $data = $this->validate();
 
         $user = User::create([
-            'name' => $this->name,
-            'email' => $this->email,
-            'password' => Hash::make($this->password),
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'],
+            'password' => Hash::make($data['password']),
+            'role' => 'customer',
+            'status' => 'active',
         ]);
 
         Auth::login($user);
+        session()->regenerate();
 
-        return redirect('/dashboard');
+        session()->flash('success', 'Welcome to CAMS, ' . $user->name . '!');
+
+        return redirect()->route('customer.dashboard');
     }
 
     public function render()

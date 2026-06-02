@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Builder;
 
 class RentPayment extends Model
@@ -48,5 +49,15 @@ class RentPayment extends Model
     public function scopeForMonth(Builder $query, string $yearMonth): Builder
     {
         return $query->whereRaw("DATE_FORMAT(payment_for_month, '%Y-%m') = ?", [$yearMonth]);
+    }
+
+    /**
+     * Mirror record in the unified `payments` ledger.
+     * Uses the literal string 'rent_payment' to match the convention used by
+     * other modules (sale, pos_order, hotel_invoice, folio, bar_tab).
+     */
+    public function payment(): MorphOne
+    {
+        return $this->morphOne(Payment::class, 'payable');
     }
 }
