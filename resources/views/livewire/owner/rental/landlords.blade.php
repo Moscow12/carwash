@@ -291,17 +291,20 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">
-                                    Platform Login
-                                    <small class="text-muted">(optional — link an existing user)</small>
-                                </label>
-                                <select wire:model="user_id" class="form-select @error('user_id') is-invalid @enderror">
-                                    <option value="">— External landlord (no login) —</option>
-                                    @foreach($linkableUsers as $u)
-                                        <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
-                                    @endforeach
-                                </select>
-                                @error('user_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <x-forms.search-picker
+                                    name="user_id"
+                                    label="Platform Login"
+                                    :selected="$selectedUser"
+                                    :items="$userResults"
+                                    :search-value="$userSearch"
+                                    :show-dropdown="$showUserDropdown"
+                                    search-prop="userSearch"
+                                    dropdown-prop="showUserDropdown"
+                                    select-method="selectUser"
+                                    clear-method="clearUser"
+                                    sublabel-key="email"
+                                    search-placeholder="Search user by name or email..."
+                                    empty-text="No matching users — leave blank for external landlord" />
                             </div>
 
                             <div class="col-12">
@@ -311,53 +314,86 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Country</label>
-                                <select wire:model="country_id" class="form-select">
-                                    <option value="">Select country</option>
-                                    @foreach($allCountries as $c)
-                                        <option value="{{ $c->id }}">{{ $c->name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-forms.search-picker
+                                    name="country_id"
+                                    label="Country"
+                                    :selected="$selectedCountry"
+                                    :items="$countryResults"
+                                    :search-value="$countrySearch"
+                                    :show-dropdown="$showCountryDropdown"
+                                    search-prop="countrySearch"
+                                    dropdown-prop="showCountryDropdown"
+                                    select-method="selectCountry"
+                                    clear-method="clearCountry"
+                                    search-placeholder="Search country..." />
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Region</label>
-                                <select wire:model.live="region_id" class="form-select">
-                                    <option value="">Select region</option>
-                                    @foreach($allRegions as $r)
-                                        <option value="{{ $r->id }}">{{ $r->name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-forms.search-picker
+                                    name="region_id"
+                                    label="Region"
+                                    :selected="$selectedRegion"
+                                    :items="$regionResults"
+                                    :search-value="$regionSearch"
+                                    :show-dropdown="$showRegionDropdown"
+                                    search-prop="regionSearch"
+                                    dropdown-prop="showRegionDropdown"
+                                    select-method="selectRegion"
+                                    clear-method="clearRegion"
+                                    :disabled="!$country_id"
+                                    disabled-text="Pick a country first"
+                                    search-placeholder="Search region..." />
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">District</label>
-                                <select wire:model.live="district_id" class="form-select" @disabled(!$region_id)>
-                                    <option value="">Select district</option>
-                                    @foreach($allDistricts as $d)
-                                        <option value="{{ $d->id }}">{{ $d->name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-forms.search-picker
+                                    name="district_id"
+                                    label="District"
+                                    :selected="$selectedDistrict"
+                                    :items="$districtResults"
+                                    :search-value="$districtSearch"
+                                    :show-dropdown="$showDistrictDropdown"
+                                    search-prop="districtSearch"
+                                    dropdown-prop="showDistrictDropdown"
+                                    select-method="selectDistrict"
+                                    clear-method="clearDistrict"
+                                    :disabled="!$region_id"
+                                    disabled-text="Pick a region first"
+                                    search-placeholder="Search district..." />
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Ward</label>
-                                <select wire:model.live="ward_id" class="form-select" @disabled(!$district_id)>
-                                    <option value="">Select ward</option>
-                                    @foreach($allWards as $w)
-                                        <option value="{{ $w->id }}">{{ $w->name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-forms.search-picker
+                                    name="ward_id"
+                                    label="Ward"
+                                    :selected="$selectedWard"
+                                    :items="$wardResults"
+                                    :search-value="$wardSearch"
+                                    :show-dropdown="$showWardDropdown"
+                                    search-prop="wardSearch"
+                                    dropdown-prop="showWardDropdown"
+                                    select-method="selectWard"
+                                    clear-method="clearWard"
+                                    :disabled="!$district_id"
+                                    disabled-text="Pick a district first"
+                                    search-placeholder="Search ward..." />
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Street</label>
-                                <select wire:model="street_id" class="form-select" @disabled(!$ward_id)>
-                                    <option value="">Select street</option>
-                                    @foreach($allStreets as $s)
-                                        <option value="{{ $s->id }}">{{ $s->name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-forms.search-picker
+                                    name="street_id"
+                                    label="Street"
+                                    :selected="$selectedStreet"
+                                    :items="$streetResults"
+                                    :search-value="$streetSearch"
+                                    :show-dropdown="$showStreetDropdown"
+                                    search-prop="streetSearch"
+                                    dropdown-prop="showStreetDropdown"
+                                    select-method="selectStreet"
+                                    clear-method="clearStreet"
+                                    :disabled="!$ward_id"
+                                    disabled-text="Pick a ward first"
+                                    search-placeholder="Search street..." />
                             </div>
 
                             <div class="col-md-6">

@@ -3,11 +3,16 @@
 namespace App\Livewire\Owner\Rental;
 
 use App\Models\Business;
+use App\Models\countries;
 use App\Models\customers;
+use App\Models\districts;
 use App\Models\Landlord;
 use App\Models\Property;
+use App\Models\regions;
 use App\Models\RentalUnit;
+use App\Models\street;
 use App\Models\TenancyAgreement;
+use App\Models\wards;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -60,6 +65,27 @@ class RentalAgreements extends Component
     public $propertyOptions;
     public $unitOptions;
 
+    // ─── Landlord location pickers (country → region → district → ward → street) ──
+    public $country_id = '';
+    public $region_id = '';
+    public $district_id = '';
+    public $ward_id = '';
+    public $street_id = '';
+
+    // Search terms
+    public $countrySearch = '';
+    public $regionSearch = '';
+    public $districtSearch = '';
+    public $wardSearch = '';
+    public $streetSearch = '';
+
+    // Dropdown visibility
+    public $showCountryDropdown = false;
+    public $showRegionDropdown = false;
+    public $showDistrictDropdown = false;
+    public $showWardDropdown = false;
+    public $showStreetDropdown = false;
+
     public function mount(): void
     {
         $this->ownerBusinesses = Business::where('owner_id', Auth::id())
@@ -96,6 +122,9 @@ class RentalAgreements extends Component
         $this->property_id = '';
         $this->rental_unit_id = '';
         $this->unitOptions = collect();
+
+        // Pre-fill the landlord's stored location into the pickers
+        $this->loadLandlordLocation($value ?: null);
     }
 
     public function updatedPropertyId($value): void
@@ -130,6 +159,99 @@ class RentalAgreements extends Component
                 $this->deposit_paid = $unit->deposit_amount;
             }
         }
+    }
+
+    // ─── Landlord location pickers ───────────────────────────────
+
+    public function selectCountry(string $id): void
+    {
+        $this->country_id = $id;
+        $this->countrySearch = '';
+        $this->showCountryDropdown = false;
+        // A new country invalidates everything below it
+        $this->reset(['region_id', 'district_id', 'ward_id', 'street_id']);
+    }
+
+    public function clearCountry(): void
+    {
+        $this->reset([
+            'country_id', 'countrySearch',
+            'region_id', 'district_id', 'ward_id', 'street_id',
+        ]);
+    }
+
+    public function selectRegion(string $id): void
+    {
+        $this->region_id = $id;
+        $this->regionSearch = '';
+        $this->showRegionDropdown = false;
+        $this->reset(['district_id', 'ward_id', 'street_id']);
+    }
+
+    public function clearRegion(): void
+    {
+        $this->reset([
+            'region_id', 'regionSearch',
+            'district_id', 'ward_id', 'street_id',
+        ]);
+    }
+
+    public function selectDistrict(string $id): void
+    {
+        $this->district_id = $id;
+        $this->districtSearch = '';
+        $this->showDistrictDropdown = false;
+        $this->reset(['ward_id', 'street_id']);
+    }
+
+    public function clearDistrict(): void
+    {
+        $this->reset(['district_id', 'districtSearch', 'ward_id', 'street_id']);
+    }
+
+    public function selectWard(string $id): void
+    {
+        $this->ward_id = $id;
+        $this->wardSearch = '';
+        $this->showWardDropdown = false;
+        $this->reset(['street_id']);
+    }
+
+    public function clearWard(): void
+    {
+        $this->reset(['ward_id', 'wardSearch', 'street_id']);
+    }
+
+    public function selectStreet(string $id): void
+    {
+        $this->street_id = $id;
+        $this->streetSearch = '';
+        $this->showStreetDropdown = false;
+    }
+
+    public function clearStreet(): void
+    {
+        $this->reset(['street_id', 'streetSearch']);
+    }
+
+    /** Pre-fill the location pickers from a landlord's stored address. */
+    protected function loadLandlordLocation(?string $landlordId): void
+    {
+        $this->reset([
+            'country_id', 'region_id', 'district_id', 'ward_id', 'street_id',
+            'countrySearch', 'regionSearch', 'districtSearch', 'wardSearch', 'streetSearch',
+        ]);
+
+        if (!$landlordId) return;
+
+        $landlord = Landlord::find($landlordId);
+        if (!$landlord) return;
+
+        $this->country_id = $landlord->country_id ?? '';
+        $this->region_id = $landlord->region_id ?? '';
+        $this->district_id = $landlord->district_id ?? '';
+        $this->ward_id = $landlord->ward_id ?? '';
+        $this->street_id = $landlord->street_id ?? '';
     }
 
     // ─── Modal: open/close ───────────────────────────────────────
@@ -282,10 +404,33 @@ class RentalAgreements extends Component
             'payment_frequency' => 'required|in:monthly,quarterly,semi_annual,annual',
             'agreement_status' => 'required|in:draft,active,terminated,expired,renewed',
             'notes' => 'nullable|string|max:2000',
+            'country_id' => 'nullable|uuid|exists:countries,id',
+            'region_id' => 'nullable|uuid|exists:regions,id',
+            'district_id' => 'nullable|uuid|exists:districts,id',
+            'ward_id' => 'nullable|uuid|exists:wards,id',
+            'street_id' => 'nullable|uuid|exists:streets,id',
         ]);
 
+        // Location is stored against the landlord, not the agreement.
+        $location = array_filter(
+            [
+                'country_id' => $data['country_id'] ?? null,
+                'region_id' => $data['region_id'] ?? null,
+                'district_id' => $data['district_id'] ?? null,
+                'ward_id' => $data['ward_id'] ?? null,
+                'street_id' => $data['street_id'] ?? null,
+            ],
+            fn ($v) => $v !== null && $v !== ''
+        );
+        unset($data['country_id'], $data['region_id'], $data['district_id'], $data['ward_id'], $data['street_id']);
+
         try {
-            DB::transaction(function () use ($data) {
+            DB::transaction(function () use ($data, $location) {
+                // Persist the chosen location onto the landlord record
+                if ($location) {
+                    Landlord::where('id', $data['landlord_id'])->update($location);
+                }
+
                 if ($this->editMode && $this->agreementId) {
                     $agreement = $this->scopedQuery()->find($this->agreementId);
                     if (!$agreement) return;
@@ -423,6 +568,10 @@ class RentalAgreements extends Component
             'landlord_id', 'property_id', 'rental_unit_id', 'customer_id',
             'end_date', 'rent_amount', 'deposit_paid', 'notes',
             'quickTenant', 'qt_name', 'qt_phone', 'qt_email',
+            'country_id', 'region_id', 'district_id', 'ward_id', 'street_id',
+            'countrySearch', 'regionSearch', 'districtSearch', 'wardSearch', 'streetSearch',
+            'showCountryDropdown', 'showRegionDropdown', 'showDistrictDropdown',
+            'showWardDropdown', 'showStreetDropdown',
         ]);
         $this->deposit_paid = 0;
         $this->payment_frequency = 'monthly';
@@ -486,6 +635,43 @@ class RentalAgreements extends Component
             ];
         }
 
+        // ─── Location picker data (selected + cascading search results) ──
+        $selectedCountry = $this->country_id ? countries::find($this->country_id) : null;
+        $selectedRegion = $this->region_id ? regions::find($this->region_id) : null;
+        $selectedDistrict = $this->district_id ? districts::find($this->district_id) : null;
+        $selectedWard = $this->ward_id ? wards::find($this->ward_id) : null;
+        $selectedStreet = $this->street_id ? street::find($this->street_id) : null;
+
+        $countryResults = $this->country_id
+            ? collect()
+            : countries::query()
+                ->when($this->countrySearch, fn ($q) => $q->where('name', 'like', '%' . $this->countrySearch . '%'))
+                ->orderBy('name')->limit(30)->get(['id', 'name']);
+
+        $regionResults = (!$this->country_id || $this->region_id)
+            ? collect()
+            : regions::where('country_id', $this->country_id)
+                ->when($this->regionSearch, fn ($q) => $q->where('name', 'like', '%' . $this->regionSearch . '%'))
+                ->orderBy('name')->limit(30)->get(['id', 'name']);
+
+        $districtResults = (!$this->region_id || $this->district_id)
+            ? collect()
+            : districts::where('region_id', $this->region_id)
+                ->when($this->districtSearch, fn ($q) => $q->where('name', 'like', '%' . $this->districtSearch . '%'))
+                ->orderBy('name')->limit(30)->get(['id', 'name']);
+
+        $wardResults = (!$this->district_id || $this->ward_id)
+            ? collect()
+            : wards::where('district_id', $this->district_id)
+                ->when($this->wardSearch, fn ($q) => $q->where('name', 'like', '%' . $this->wardSearch . '%'))
+                ->orderBy('name')->limit(30)->get(['id', 'name']);
+
+        $streetResults = (!$this->ward_id || $this->street_id)
+            ? collect()
+            : street::where('ward_id', $this->ward_id)
+                ->when($this->streetSearch, fn ($q) => $q->where('name', 'like', '%' . $this->streetSearch . '%'))
+                ->orderBy('name')->limit(30)->get(['id', 'name']);
+
         return view('livewire.owner.rental.rental-agreements', [
             'agreements' => $agreements,
             'stats' => $stats,
@@ -493,6 +679,16 @@ class RentalAgreements extends Component
             'landlords' => $landlords,
             'tenants' => $tenants,
             'filterProperties' => $filterProperties,
+            'selectedCountry' => $selectedCountry,
+            'selectedRegion' => $selectedRegion,
+            'selectedDistrict' => $selectedDistrict,
+            'selectedWard' => $selectedWard,
+            'selectedStreet' => $selectedStreet,
+            'countryResults' => $countryResults,
+            'regionResults' => $regionResults,
+            'districtResults' => $districtResults,
+            'wardResults' => $wardResults,
+            'streetResults' => $streetResults,
         ]);
     }
 }

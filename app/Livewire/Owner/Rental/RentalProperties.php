@@ -52,12 +52,25 @@ class RentalProperties extends Component
     public $description = '';
     public $status = 'active';
 
-    // Cascading location lists for the modal
-    public $allCountries;
-    public $allRegions;
-    public $allDistricts;
-    public $allWards;
-    public $allStreets;
+    // ─── Search-picker state ─────────────────────────────────────
+    // Landlord filter picker (filters bar)
+    public $landlordFilterSearch = '';
+    public $showLandlordFilterDropdown = false;
+
+    // Form pickers (landlord + cascading location)
+    public $landlordSearch = '';
+    public $countrySearch = '';
+    public $regionSearch = '';
+    public $districtSearch = '';
+    public $wardSearch = '';
+    public $streetSearch = '';
+
+    public $showLandlordDropdown = false;
+    public $showCountryDropdown = false;
+    public $showRegionDropdown = false;
+    public $showDistrictDropdown = false;
+    public $showWardDropdown = false;
+    public $showStreetDropdown = false;
 
     public function mount(): void
     {
@@ -69,12 +82,6 @@ class RentalProperties extends Component
         if ($this->ownerBusinesses->isNotEmpty()) {
             $this->selectedBusiness = $this->ownerBusinesses->first()->id;
         }
-
-        $this->allCountries = countries::orderBy('name')->get();
-        $this->allRegions = regions::orderBy('name')->get();
-        $this->allDistricts = collect();
-        $this->allWards = collect();
-        $this->allStreets = collect();
     }
 
     // ─── Reactivity ──────────────────────────────────────────────
@@ -82,36 +89,113 @@ class RentalProperties extends Component
     public function updatingSearch(): void { $this->resetPage(); }
     public function updatingStatusFilter(): void { $this->resetPage(); }
     public function updatingTypeFilter(): void { $this->resetPage(); }
-    public function updatingLandlordFilter(): void { $this->resetPage(); }
 
     public function updatedSelectedBusiness(): void
     {
-        $this->reset(['landlordFilter']);
+        $this->reset(['landlordFilter', 'landlordFilterSearch']);
         $this->resetPage();
     }
 
-    public function updatedRegionId($value): void
+    // ─── Landlord filter picker (filters bar) ────────────────────
+
+    public function selectLandlordFilter(string $id): void
     {
-        $this->allDistricts = $value ? districts::where('region_id', $value)->orderBy('name')->get() : collect();
-        $this->district_id = '';
-        $this->ward_id = '';
-        $this->street_id = '';
-        $this->allWards = collect();
-        $this->allStreets = collect();
+        $this->landlordFilter = $id;
+        $this->landlordFilterSearch = '';
+        $this->showLandlordFilterDropdown = false;
+        $this->resetPage();
     }
 
-    public function updatedDistrictId($value): void
+    public function clearLandlordFilter(): void
     {
-        $this->allWards = $value ? wards::where('district_id', $value)->orderBy('name')->get() : collect();
-        $this->ward_id = '';
-        $this->street_id = '';
-        $this->allStreets = collect();
+        $this->reset(['landlordFilter', 'landlordFilterSearch']);
+        $this->resetPage();
     }
 
-    public function updatedWardId($value): void
+    // ─── Landlord form picker ────────────────────────────────────
+
+    public function selectLandlord(string $id): void
     {
-        $this->allStreets = $value ? street::where('ward_id', $value)->orderBy('name')->get() : collect();
-        $this->street_id = '';
+        $this->landlord_id = $id;
+        $this->landlordSearch = '';
+        $this->showLandlordDropdown = false;
+    }
+
+    public function clearLandlord(): void
+    {
+        $this->reset(['landlord_id', 'landlordSearch']);
+    }
+
+    // ─── Cascading location pickers ──────────────────────────────
+
+    public function selectCountry(string $id): void
+    {
+        $this->country_id = $id;
+        $this->countrySearch = '';
+        $this->showCountryDropdown = false;
+        $this->reset(['region_id', 'district_id', 'ward_id', 'street_id']);
+    }
+
+    public function clearCountry(): void
+    {
+        $this->reset([
+            'country_id', 'countrySearch',
+            'region_id', 'district_id', 'ward_id', 'street_id',
+        ]);
+    }
+
+    public function selectRegion(string $id): void
+    {
+        $this->region_id = $id;
+        $this->regionSearch = '';
+        $this->showRegionDropdown = false;
+        $this->reset(['district_id', 'ward_id', 'street_id']);
+    }
+
+    public function clearRegion(): void
+    {
+        $this->reset([
+            'region_id', 'regionSearch',
+            'district_id', 'ward_id', 'street_id',
+        ]);
+    }
+
+    public function selectDistrict(string $id): void
+    {
+        $this->district_id = $id;
+        $this->districtSearch = '';
+        $this->showDistrictDropdown = false;
+        $this->reset(['ward_id', 'street_id']);
+    }
+
+    public function clearDistrict(): void
+    {
+        $this->reset(['district_id', 'districtSearch', 'ward_id', 'street_id']);
+    }
+
+    public function selectWard(string $id): void
+    {
+        $this->ward_id = $id;
+        $this->wardSearch = '';
+        $this->showWardDropdown = false;
+        $this->reset(['street_id']);
+    }
+
+    public function clearWard(): void
+    {
+        $this->reset(['ward_id', 'wardSearch', 'street_id']);
+    }
+
+    public function selectStreet(string $id): void
+    {
+        $this->street_id = $id;
+        $this->streetSearch = '';
+        $this->showStreetDropdown = false;
+    }
+
+    public function clearStreet(): void
+    {
+        $this->reset(['street_id', 'streetSearch']);
     }
 
     // ─── Modal: Add ──────────────────────────────────────────────
@@ -144,16 +228,16 @@ class RentalProperties extends Component
         $this->description = $property->description ?: '';
         $this->status = $property->status;
 
-        // Hydrate cascade lists so the edit modal selects render correctly
-        $this->allDistricts = $this->region_id
-            ? districts::where('region_id', $this->region_id)->orderBy('name')->get()
-            : collect();
-        $this->allWards = $this->district_id
-            ? wards::where('district_id', $this->district_id)->orderBy('name')->get()
-            : collect();
-        $this->allStreets = $this->ward_id
-            ? street::where('ward_id', $this->ward_id)->orderBy('name')->get()
-            : collect();
+        // Older records may hold a region without a country — backfill so the
+        // cascade displays correctly (the country picker drives the region list).
+        if (!$this->country_id && $this->region_id) {
+            $this->country_id = regions::find($this->region_id)?->country_id ?: '';
+        }
+
+        $this->reset([
+            'landlordSearch', 'countrySearch', 'regionSearch',
+            'districtSearch', 'wardSearch', 'streetSearch',
+        ]);
 
         $this->editMode = true;
         $this->showModal = true;
@@ -303,22 +387,83 @@ class RentalProperties extends Component
             'landlord_id', 'property_name',
             'country_id', 'region_id', 'district_id', 'ward_id', 'street_id',
             'postal_address', 'description',
+            'landlordSearch', 'countrySearch', 'regionSearch',
+            'districtSearch', 'wardSearch', 'streetSearch',
+            'showLandlordDropdown', 'showCountryDropdown', 'showRegionDropdown',
+            'showDistrictDropdown', 'showWardDropdown', 'showStreetDropdown',
         ]);
         $this->property_type = 'apartment';
         $this->status = 'active';
-        $this->allDistricts = collect();
-        $this->allWards = collect();
-        $this->allStreets = collect();
         $this->resetValidation();
     }
 
     // ─── Render ──────────────────────────────────────────────────
 
+    /** Base query for landlords selectable in this business. */
+    protected function landlordPool()
+    {
+        return Landlord::where('business_id', $this->selectedBusiness)->active();
+    }
+
     public function render()
     {
-        $landlords = $this->selectedBusiness
-            ? Landlord::where('business_id', $this->selectedBusiness)->active()->orderBy('name')->get()
+        $landlordCount = $this->selectedBusiness ? $this->landlordPool()->count() : 0;
+
+        // ─── Landlord pickers (form + filter) ──
+        $selectedFormLandlord = $this->landlord_id ? Landlord::find($this->landlord_id) : null;
+        $landlordResults = ($this->selectedBusiness && !$this->landlord_id)
+            ? $this->landlordPool()
+                ->when($this->landlordSearch, fn ($q) => $q->where(fn ($qq) => $qq
+                    ->where('name', 'like', '%' . $this->landlordSearch . '%')
+                    ->orWhere('phone', 'like', '%' . $this->landlordSearch . '%')))
+                ->orderBy('name')->limit(30)->get(['id', 'name', 'phone'])
             : collect();
+
+        $selectedFilterLandlord = $this->landlordFilter ? Landlord::find($this->landlordFilter) : null;
+        $landlordFilterResults = ($this->selectedBusiness && !$this->landlordFilter)
+            ? $this->landlordPool()
+                ->when($this->landlordFilterSearch, fn ($q) => $q->where(fn ($qq) => $qq
+                    ->where('name', 'like', '%' . $this->landlordFilterSearch . '%')
+                    ->orWhere('phone', 'like', '%' . $this->landlordFilterSearch . '%')))
+                ->orderBy('name')->limit(30)->get(['id', 'name', 'phone'])
+            : collect();
+
+        // ─── Cascading location picker data ──
+        $selectedCountry = $this->country_id ? countries::find($this->country_id) : null;
+        $selectedRegion = $this->region_id ? regions::find($this->region_id) : null;
+        $selectedDistrict = $this->district_id ? districts::find($this->district_id) : null;
+        $selectedWard = $this->ward_id ? wards::find($this->ward_id) : null;
+        $selectedStreet = $this->street_id ? street::find($this->street_id) : null;
+
+        $countryResults = $this->country_id
+            ? collect()
+            : countries::query()
+                ->when($this->countrySearch, fn ($q) => $q->where('name', 'like', '%' . $this->countrySearch . '%'))
+                ->orderBy('name')->limit(30)->get(['id', 'name']);
+
+        $regionResults = (!$this->country_id || $this->region_id)
+            ? collect()
+            : regions::where('country_id', $this->country_id)
+                ->when($this->regionSearch, fn ($q) => $q->where('name', 'like', '%' . $this->regionSearch . '%'))
+                ->orderBy('name')->limit(30)->get(['id', 'name']);
+
+        $districtResults = (!$this->region_id || $this->district_id)
+            ? collect()
+            : districts::where('region_id', $this->region_id)
+                ->when($this->districtSearch, fn ($q) => $q->where('name', 'like', '%' . $this->districtSearch . '%'))
+                ->orderBy('name')->limit(30)->get(['id', 'name']);
+
+        $wardResults = (!$this->district_id || $this->ward_id)
+            ? collect()
+            : wards::where('district_id', $this->district_id)
+                ->when($this->wardSearch, fn ($q) => $q->where('name', 'like', '%' . $this->wardSearch . '%'))
+                ->orderBy('name')->limit(30)->get(['id', 'name']);
+
+        $streetResults = (!$this->ward_id || $this->street_id)
+            ? collect()
+            : street::where('ward_id', $this->ward_id)
+                ->when($this->streetSearch, fn ($q) => $q->where('name', 'like', '%' . $this->streetSearch . '%'))
+                ->orderBy('name')->limit(30)->get(['id', 'name']);
 
         if (!$this->selectedBusiness) {
             $properties = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 12);
@@ -353,7 +498,21 @@ class RentalProperties extends Component
             'properties' => $properties,
             'stats' => $stats,
             'businesses' => $this->ownerBusinesses,
-            'landlords' => $landlords,
+            'landlordCount' => $landlordCount,
+            'selectedFormLandlord' => $selectedFormLandlord,
+            'landlordResults' => $landlordResults,
+            'selectedFilterLandlord' => $selectedFilterLandlord,
+            'landlordFilterResults' => $landlordFilterResults,
+            'selectedCountry' => $selectedCountry,
+            'selectedRegion' => $selectedRegion,
+            'selectedDistrict' => $selectedDistrict,
+            'selectedWard' => $selectedWard,
+            'selectedStreet' => $selectedStreet,
+            'countryResults' => $countryResults,
+            'regionResults' => $regionResults,
+            'districtResults' => $districtResults,
+            'wardResults' => $wardResults,
+            'streetResults' => $streetResults,
         ]);
     }
 }

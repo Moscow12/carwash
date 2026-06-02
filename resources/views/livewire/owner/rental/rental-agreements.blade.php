@@ -323,6 +323,91 @@
                             </div>
                         </div>
 
+                        @if($landlord_id)
+                        <h6 class="text-muted small mb-2"><i class="ti ti-map-pin me-1"></i> LANDLORD LOCATION</h6>
+                        <p class="text-muted small mb-2">Refine the landlord's address — saved against the landlord.</p>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <x-forms.search-picker
+                                    name="country_id"
+                                    label="Country"
+                                    :selected="$selectedCountry"
+                                    :items="$countryResults"
+                                    :search-value="$countrySearch"
+                                    :show-dropdown="$showCountryDropdown"
+                                    search-prop="countrySearch"
+                                    dropdown-prop="showCountryDropdown"
+                                    select-method="selectCountry"
+                                    clear-method="clearCountry"
+                                    search-placeholder="Search country..." />
+                            </div>
+                            <div class="col-md-4">
+                                <x-forms.search-picker
+                                    name="region_id"
+                                    label="Region"
+                                    :selected="$selectedRegion"
+                                    :items="$regionResults"
+                                    :search-value="$regionSearch"
+                                    :show-dropdown="$showRegionDropdown"
+                                    search-prop="regionSearch"
+                                    dropdown-prop="showRegionDropdown"
+                                    select-method="selectRegion"
+                                    clear-method="clearRegion"
+                                    :disabled="!$country_id"
+                                    disabled-text="Pick a country first"
+                                    search-placeholder="Search region..." />
+                            </div>
+                            <div class="col-md-4">
+                                <x-forms.search-picker
+                                    name="district_id"
+                                    label="District"
+                                    :selected="$selectedDistrict"
+                                    :items="$districtResults"
+                                    :search-value="$districtSearch"
+                                    :show-dropdown="$showDistrictDropdown"
+                                    search-prop="districtSearch"
+                                    dropdown-prop="showDistrictDropdown"
+                                    select-method="selectDistrict"
+                                    clear-method="clearDistrict"
+                                    :disabled="!$region_id"
+                                    disabled-text="Pick a region first"
+                                    search-placeholder="Search district..." />
+                            </div>
+                            <div class="col-md-6">
+                                <x-forms.search-picker
+                                    name="ward_id"
+                                    label="Ward"
+                                    :selected="$selectedWard"
+                                    :items="$wardResults"
+                                    :search-value="$wardSearch"
+                                    :show-dropdown="$showWardDropdown"
+                                    search-prop="wardSearch"
+                                    dropdown-prop="showWardDropdown"
+                                    select-method="selectWard"
+                                    clear-method="clearWard"
+                                    :disabled="!$district_id"
+                                    disabled-text="Pick a district first"
+                                    search-placeholder="Search ward..." />
+                            </div>
+                            <div class="col-md-6">
+                                <x-forms.search-picker
+                                    name="street_id"
+                                    label="Street"
+                                    :selected="$selectedStreet"
+                                    :items="$streetResults"
+                                    :search-value="$streetSearch"
+                                    :show-dropdown="$showStreetDropdown"
+                                    search-prop="streetSearch"
+                                    dropdown-prop="showStreetDropdown"
+                                    select-method="selectStreet"
+                                    clear-method="clearStreet"
+                                    :disabled="!$ward_id"
+                                    disabled-text="Pick a ward first"
+                                    search-placeholder="Search street..." />
+                            </div>
+                        </div>
+                        @endif
+
                         <h6 class="text-muted small mb-2"><i class="ti ti-user me-1"></i> WHO</h6>
                         <div class="row g-3 mb-3">
                             <div class="col-12">
