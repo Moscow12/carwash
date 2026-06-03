@@ -154,13 +154,70 @@
                                                 </div>
                                             </div>
 
+                                            <!-- Register a business toggle -->
                                             <div class="col-12">
-                                                <div class="form-check">
+                                                <div class="form-check form-switch p-3 rounded border bg-light d-flex align-items-center" style="padding-left: 3.5rem !important;">
+                                                    <input type="checkbox"
+                                                           class="form-check-input mt-0"
+                                                           id="registerBusiness"
+                                                           role="switch"
+                                                           style="cursor: pointer; width: 2.75em; height: 1.5em;"
+                                                           wire:model.live="registerBusiness">
+                                                    <label class="form-check-label fw-semibold ms-2 mb-0" for="registerBusiness" style="cursor: pointer;">
+                                                        <i class="fas fa-store text-info me-1"></i>
+                                                        I want to register my business
+                                                        <small class="d-block text-muted fw-normal">Set up a business account and access the owner dashboard.</small>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            @if($registerBusiness)
+                                            <div class="col-md-6">
+                                                <label for="reg-business-name" class="form-label fw-semibold">Business Name</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light border-end-0">
+                                                        <i class="fas fa-briefcase text-muted"></i>
+                                                    </span>
+                                                    <input type="text"
+                                                           id="reg-business-name"
+                                                           wire:model.blur="business_name"
+                                                           class="form-control form-control-site border-start-0 ps-0 @error('business_name') is-invalid @enderror"
+                                                           placeholder="e.g. Sparkle Carwash">
+                                                </div>
+                                                @error('business_name')
+                                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label for="reg-business-type" class="form-label fw-semibold">Business Type</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light border-end-0">
+                                                        <i class="fas fa-tags text-muted"></i>
+                                                    </span>
+                                                    <select id="reg-business-type"
+                                                            wire:model="business_type"
+                                                            class="form-select form-control-site border-start-0 ps-0 @error('business_type') is-invalid @enderror">
+                                                        <option value="">Choose business type...</option>
+                                                        @foreach($businessTypes as $value => $label)
+                                                            <option value="{{ $value }}">{{ $label }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                @error('business_type')
+                                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                            @endif
+
+                                            <div class="col-12">
+                                                <div class="form-check d-flex align-items-center">
                                                     <input type="checkbox"
                                                            class="form-check-input @error('terms') is-invalid @enderror"
                                                            id="terms"
+                                                           style="cursor: pointer; width: 1.25em; height: 1.25em;"
                                                            wire:model="terms">
-                                                    <label class="form-check-label text-muted" for="terms">
+                                                    <label class="form-check-label text-muted ms-2 mb-0" for="terms" style="cursor: pointer;">
                                                         I agree to the <a href="#" class="text-info">Terms of Service</a>
                                                         and <a href="#" class="text-info">Privacy Policy</a>
                                                     </label>
@@ -176,7 +233,7 @@
                                                         wire:loading.attr="disabled"
                                                         wire:target="register">
                                                     <span wire:loading.remove wire:target="register">
-                                                        <i class="fas fa-user-plus me-2"></i>Create Account
+                                                        <i class="fas fa-user-plus me-2"></i>{{ $registerBusiness ? 'Create Business Account' : 'Create Account' }}
                                                     </span>
                                                     <span wire:loading wire:target="register">
                                                         <i class="fas fa-spinner fa-spin me-2"></i>Creating account...

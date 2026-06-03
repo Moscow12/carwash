@@ -181,6 +181,7 @@
                                     <option value="rental">Rental</option>
                                     <option value="pos">POS</option>
                                     <option value="other">Other</option>
+                                    <option value="carwash">Carwash</option>
                                 </select>
                             </div>
                         </div>
