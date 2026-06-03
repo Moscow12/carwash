@@ -418,14 +418,17 @@ class RentPayments extends Component
         // Active agreements per business are bounded, so in-memory roll-up is fine.
         $allRows = $agreementQuery->orderBy('start_date', 'desc')->get()
             ->filter(fn ($a) => $a->isDueInMonth($month))   // only bill months that fall due
-            ->map(function ($a) use ($monthKey) {
-                $due = (float) $a->rent_amount;
+            ->map(function ($a) use ($month, $monthKey) {
+                // Charge for this billing period: monthly rent × the period length
+                // (3 for quarterly, 6 for semi-annual, 12 for annual; truncated at term end).
+                $due = $a->periodChargeForMonth($month);
                 $paid = (float) $a->rentPayments()->forMonth($monthKey)->sum('amount_paid');
                 $remaining = max(0, $due - $paid);
 
                 return [
                     'agreement' => $a,
                     'due' => $due,
+                    'period_months' => $a->frequencyIntervalMonths(),
                     'paid' => $paid,
                     'remaining' => $remaining,
                     'status' => $paid <= 0 ? 'unpaid' : ($remaining > 0 ? 'partial' : 'paid'),

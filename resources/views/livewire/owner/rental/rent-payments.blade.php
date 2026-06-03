@@ -154,7 +154,8 @@
                     <tr>
                         <th class="ps-3">Tenant</th>
                         <th>Unit</th>
-                        <th class="text-end">Rent Due</th>
+                        <th>Billing</th>
+                        <th class="text-end">Period Due</th>
                         <th class="text-end">Paid</th>
                         <th class="text-end">Balance</th>
                         <th>Status</th>
@@ -186,6 +187,12 @@
                             <small>{{ $a->unit?->property?->property_name }}</small><br>
                             <small class="text-muted">Unit {{ $a->unit?->unit_number ?? '—' }}</small>
                         </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ ucwords(str_replace('_',' ', $a->payment_frequency)) }}</span>
+                            @if(($row['period_months'] ?? 1) > 1)
+                                <div><small class="text-muted">{{ $row['period_months'] }} mo × TZS {{ number_format($a->rent_amount, 0) }}</small></div>
+                            @endif
+                        </td>
                         <td class="text-end">TZS {{ number_format($row['due'], 0) }}</td>
                         <td class="text-end text-success">TZS {{ number_format($row['paid'], 0) }}</td>
                         <td class="text-end fw-bold {{ $row['remaining'] > 0 ? 'text-danger' : 'text-muted' }}">
@@ -206,7 +213,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
+                        <td colspan="8" class="text-center py-5 text-muted">
                             <div class="avatar avatar-lg bg-light text-muted rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width:56px;height:56px;">
                                 <i class="ti ti-home-2 fs-2"></i>
                             </div>

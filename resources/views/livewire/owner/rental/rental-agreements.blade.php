@@ -458,34 +458,65 @@
                         <div class="row g-3">
                             <div class="col-md-3">
                                 <label class="form-label">Start Date <span class="text-danger">*</span></label>
-                                <input type="date" wire:model="start_date" class="form-control @error('start_date') is-invalid @enderror">
+                                <input type="date" wire:model.live="start_date" class="form-control @error('start_date') is-invalid @enderror">
                                 @error('start_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">End Date</label>
-                                <input type="date" wire:model="end_date" class="form-control @error('end_date') is-invalid @enderror">
-                                @error('end_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <label class="form-label">Duration (months)</label>
+                                <input type="number" min="1" max="600" step="1" wire:model.live.debounce.400ms="duration_months" class="form-control @error('duration_months') is-invalid @enderror" placeholder="e.g. 12">
+                                @error('duration_months') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <small class="text-muted">Sets the end date automatically.</small>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Rent <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" min="0" wire:model="rent_amount" class="form-control @error('rent_amount') is-invalid @enderror" placeholder="0.00">
+                                <label class="form-label">End Date</label>
+                                <input type="date" wire:model="end_date" class="form-control bg-light @error('end_date') is-invalid @enderror" readonly>
+                                @error('end_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <small class="text-muted">Computed from duration.</small>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Rent (monthly) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" min="0" wire:model.live.debounce.400ms="rent_amount" class="form-control @error('rent_amount') is-invalid @enderror" placeholder="0.00">
                                 @error('rent_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
+
                             <div class="col-md-3">
                                 <label class="form-label">Deposit Paid</label>
                                 <input type="number" step="0.01" min="0" wire:model="deposit_paid" class="form-control @error('deposit_paid') is-invalid @enderror" placeholder="0.00">
                                 @error('deposit_paid') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <label class="form-label">Payment Frequency <span class="text-danger">*</span></label>
-                                <select wire:model="payment_frequency" class="form-select @error('payment_frequency') is-invalid @enderror">
+                                <select wire:model.live="payment_frequency" class="form-select @error('payment_frequency') is-invalid @enderror">
                                     <option value="monthly">Monthly</option>
                                     <option value="quarterly">Quarterly</option>
                                     <option value="semi_annual">Semi-annual</option>
                                     <option value="annual">Annual</option>
                                 </select>
                                 @error('payment_frequency') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+
+                            {{-- Live term summary --}}
+                            <div class="col-md-6">
+                                <label class="form-label">Contract Summary</label>
+                                <div class="border rounded p-2 bg-light h-100 d-flex flex-column justify-content-center">
+                                    @if($termSummary['months'] > 0 && $termSummary['total'] > 0)
+                                        <div class="d-flex justify-content-between small">
+                                            <span class="text-muted">{{ $termSummary['months'] }} month(s) · {{ $termSummary['periods'] }} {{ Str::plural('payment', $termSummary['periods']) }}</span>
+                                            <span>{{ ucwords(str_replace('_',' ',$payment_frequency)) }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between small">
+                                            <span class="text-muted">Per {{ str_replace('_',' ',$payment_frequency) }} charge</span>
+                                            <span class="fw-medium">TZS {{ number_format($termSummary['period_charge'], 0) }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between border-top pt-1 mt-1">
+                                            <span class="fw-semibold">Total contract</span>
+                                            <span class="fw-bold text-primary">TZS {{ number_format($termSummary['total'], 0) }}</span>
+                                        </div>
+                                    @else
+                                        <small class="text-muted">Enter rent &amp; duration to see the contract total.</small>
+                                    @endif
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Status <span class="text-danger">*</span></label>
@@ -569,10 +600,22 @@
                             <span class="fw-medium">{{ $viewAgreement->end_date->format('M d, Y') }}</span>
                         </div>
                         @endif
+                        @if($viewAgreement->durationInMonths())
+                        <div class="list-group-item d-flex justify-content-between px-0">
+                            <span class="text-muted"><i class="ti ti-clock me-2"></i>Duration</span>
+                            <span class="fw-medium">{{ $viewAgreement->durationInMonths() }} month(s)</span>
+                        </div>
+                        @endif
                         <div class="list-group-item d-flex justify-content-between px-0">
                             <span class="text-muted"><i class="ti ti-cash me-2"></i>Rent</span>
                             <span class="fw-medium">TZS {{ number_format($viewAgreement->rent_amount, 0) }} / {{ str_replace('_',' ',$viewAgreement->payment_frequency) }}</span>
                         </div>
+                        @if($viewAgreement->totalContractAmount())
+                        <div class="list-group-item d-flex justify-content-between px-0">
+                            <span class="text-muted"><i class="ti ti-receipt-2 me-2"></i>Total Contract</span>
+                            <span class="fw-bold text-primary">TZS {{ number_format($viewAgreement->totalContractAmount(), 0) }}</span>
+                        </div>
+                        @endif
                         <div class="list-group-item d-flex justify-content-between px-0">
                             <span class="text-muted"><i class="ti ti-coin me-2"></i>Deposit Paid</span>
                             <span class="fw-medium">TZS {{ number_format($viewAgreement->deposit_paid, 0) }}</span>

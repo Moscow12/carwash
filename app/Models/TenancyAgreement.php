@@ -21,6 +21,7 @@ class TenancyAgreement extends Model
         'rental_unit_id',
         'start_date',
         'end_date',
+        'duration_months',
         'rent_amount',
         'deposit_paid',
         'payment_frequency',
@@ -32,6 +33,7 @@ class TenancyAgreement extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'duration_months' => 'integer',
         'rent_amount' => 'decimal:2',
         'deposit_paid' => 'decimal:2',
     ];
@@ -156,12 +158,70 @@ class TenancyAgreement extends Model
     }
 
     /**
-     * Amount owed for the given month: the full rent on a due month, otherwise 0.
+     * Total number of months the contract runs.
+     * Prefers the stored duration_months; otherwise derives from start → end.
+     */
+    public function durationInMonths(): ?int
+    {
+        if ($this->duration_months) {
+            return (int) $this->duration_months;
+        }
+
+        if ($this->start_date && $this->end_date) {
+            // +1 so an agreement Jan 1 → Dec 31 counts as 12 months, not 11.
+            return $this->start_date->copy()->startOfMonth()
+                ->diffInMonths($this->end_date->copy()->startOfMonth()) + 1;
+        }
+
+        return null;
+    }
+
+    /**
+     * The amount charged on a given due month — rent_amount (a monthly rate) times the
+     * number of months that period covers. A full period is frequencyIntervalMonths(),
+     * but the final period is truncated to whatever months remain before the term ends.
+     *
+     * @param  \Carbon\Carbon  $month
+     */
+    public function periodChargeForMonth(\Carbon\Carbon $month): float
+    {
+        if (!$this->isDueInMonth($month)) {
+            return 0.0;
+        }
+
+        $interval = $this->frequencyIntervalMonths();
+        $monthsThisPeriod = $interval;
+
+        // Truncate the last period to the months remaining within the term.
+        $lastDue = $this->lastDueMonth();
+        if ($lastDue) {
+            $target = $month->copy()->startOfMonth();
+            $remaining = $target->diffInMonths($lastDue->copy()->startOfMonth()) + 1; // inclusive
+            $monthsThisPeriod = min($interval, max(1, $remaining));
+        }
+
+        return round((float) $this->rent_amount * $monthsThisPeriod, 2);
+    }
+
+    /**
+     * Amount owed for the given month: the period charge on a due month, otherwise 0.
+     * Alias kept for backward compatibility with existing callers.
      *
      * @param  \Carbon\Carbon  $month
      */
     public function dueAmountForMonth(\Carbon\Carbon $month): float
     {
-        return $this->isDueInMonth($month) ? (float) $this->rent_amount : 0.0;
+        return $this->periodChargeForMonth($month);
+    }
+
+    /**
+     * The total value of the contract over its full term: monthly rent × duration.
+     * Null when the duration is unknown (no duration_months and no end_date).
+     */
+    public function totalContractAmount(): ?float
+    {
+        $months = $this->durationInMonths();
+
+        return $months !== null ? round((float) $this->rent_amount * $months, 2) : null;
     }
 }

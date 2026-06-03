@@ -13,6 +13,7 @@ use App\Models\RentalUnit;
 use App\Models\street;
 use App\Models\TenancyAgreement;
 use App\Models\wards;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -49,6 +50,7 @@ class RentalAgreements extends Component
     public $customer_id = '';
     public $start_date = '';
     public $end_date = '';
+    public $duration_months = '';
     public $rent_amount = '';
     public $deposit_paid = 0;
     public $payment_frequency = 'monthly';
@@ -158,6 +160,32 @@ class RentalAgreements extends Component
             if ((float)$this->deposit_paid === 0.0) {
                 $this->deposit_paid = $unit->deposit_amount;
             }
+        }
+    }
+
+    // ─── Term: duration drives end date ──────────────────────────
+
+    public function updatedDurationMonths(): void { $this->recalcEndDate(); }
+    public function updatedStartDate(): void { $this->recalcEndDate(); }
+
+    /**
+     * Given a start date and a whole-month duration, compute the end date as the
+     * last day before the term rolls over (start + N months − 1 day).
+     */
+    protected function recalcEndDate(): void
+    {
+        $months = (int) $this->duration_months;
+        if (!$this->start_date || $months < 1) {
+            return;
+        }
+
+        try {
+            $this->end_date = Carbon::parse($this->start_date)
+                ->addMonths($months)
+                ->subDay()
+                ->toDateString();
+        } catch (\Throwable) {
+            // leave end_date untouched on an unparseable start date
         }
     }
 
@@ -280,6 +308,7 @@ class RentalAgreements extends Component
         $this->customer_id = $agreement->customer_id;
         $this->start_date = $agreement->start_date?->toDateString();
         $this->end_date = $agreement->end_date?->toDateString();
+        $this->duration_months = $agreement->durationInMonths() ?: '';
         $this->rent_amount = $agreement->rent_amount;
         $this->deposit_paid = $agreement->deposit_paid;
         $this->payment_frequency = $agreement->payment_frequency;
@@ -329,8 +358,13 @@ class RentalAgreements extends Component
     {
         if (!$this->ensureBusinessSelected()) return;
 
+        // If a duration was entered, derive end_date from it so the two always agree.
+        if ($this->duration_months !== '' && $this->duration_months !== null) {
+            $this->recalcEndDate();
+        }
+
         // Empty → null for nullable fields
-        foreach (['end_date', 'notes'] as $opt) {
+        foreach (['end_date', 'duration_months', 'notes'] as $opt) {
             if ($this->$opt === '') {
                 $this->$opt = null;
             }
@@ -398,6 +432,7 @@ class RentalAgreements extends Component
             'rental_unit_id' => ['required', 'uuid', $unitScope],
             'customer_id' => ['required', 'uuid', $customerScope],
             'start_date' => 'required|date',
+            'duration_months' => 'nullable|integer|min:1|max:600',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'rent_amount' => 'required|numeric|min:0.01',
             'deposit_paid' => 'required|numeric|min:0',
@@ -566,7 +601,7 @@ class RentalAgreements extends Component
         $this->reset([
             'agreementId', 'editMode',
             'landlord_id', 'property_id', 'rental_unit_id', 'customer_id',
-            'end_date', 'rent_amount', 'deposit_paid', 'notes',
+            'end_date', 'duration_months', 'rent_amount', 'deposit_paid', 'notes',
             'quickTenant', 'qt_name', 'qt_phone', 'qt_email',
             'country_id', 'region_id', 'district_id', 'ward_id', 'street_id',
             'countrySearch', 'regionSearch', 'districtSearch', 'wardSearch', 'streetSearch',
@@ -672,6 +707,20 @@ class RentalAgreements extends Component
                 ->when($this->streetSearch, fn ($q) => $q->where('name', 'like', '%' . $this->streetSearch . '%'))
                 ->orderBy('name')->limit(30)->get(['id', 'name']);
 
+        // ─── Live term summary for the form ──────────────────────
+        // total contract = monthly rent × duration; per-period charge = rent × interval
+        $months = (int) $this->duration_months;
+        $rent = (float) ($this->rent_amount ?: 0);
+        $interval = match ($this->payment_frequency) {
+            'quarterly' => 3, 'semi_annual' => 6, 'annual' => 12, default => 1,
+        };
+        $termSummary = [
+            'months' => $months,
+            'periods' => $months > 0 ? (int) ceil($months / $interval) : 0,
+            'period_charge' => $rent * $interval,
+            'total' => $months > 0 ? $rent * $months : 0,
+        ];
+
         return view('livewire.owner.rental.rental-agreements', [
             'agreements' => $agreements,
             'stats' => $stats,
@@ -679,6 +728,7 @@ class RentalAgreements extends Component
             'landlords' => $landlords,
             'tenants' => $tenants,
             'filterProperties' => $filterProperties,
+            'termSummary' => $termSummary,
             'selectedCountry' => $selectedCountry,
             'selectedRegion' => $selectedRegion,
             'selectedDistrict' => $selectedDistrict,
