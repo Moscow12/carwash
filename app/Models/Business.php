@@ -220,6 +220,43 @@ class Business extends Model
         return $this->hasMany(VoidLog::class, 'business_id');
     }
 
+    // ─── Modules (admin-managed access) ──────────────────────────
+    public function modules(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Module::class, 'business_modules')
+            ->withPivot('is_active')
+            ->withTimestamps();
+    }
+
+    /** Active module keys this business has access to. */
+    public function activeModuleKeys(): \Illuminate\Support\Collection
+    {
+        return $this->modules
+            ->filter(fn ($m) => (bool) ($m->pivot->is_active ?? true))
+            ->pluck('key');
+    }
+
+    public function hasModule(string $key): bool
+    {
+        return $this->activeModuleKeys()->contains($key);
+    }
+
+    /**
+     * Grant this business the module that matches its type (idempotent).
+     * Called on registration / business creation.
+     */
+    public function assignModuleForType(): void
+    {
+        $key = Module::keyForBusinessType($this->type);
+        $module = Module::where('key', $key)->first();
+
+        if ($module) {
+            $this->modules()->syncWithoutDetaching([
+                $module->id => ['is_active' => true],
+            ]);
+        }
+    }
+
     // Rental module relationships
     public function landlords(): HasMany
     {

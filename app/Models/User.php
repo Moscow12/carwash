@@ -155,6 +155,29 @@ class User extends Authenticatable
     }
 
     /**
+     * Distinct module keys this user can access across all their businesses.
+     * Admins implicitly get every module.
+     */
+    public function accessibleModuleKeys(): \Illuminate\Support\Collection
+    {
+        if ($this->role === 'admin') {
+            return \App\Models\Module::where('is_active', true)->pluck('key');
+        }
+
+        return $this->assignedBusinesses()
+            ->with('modules')
+            ->get()
+            ->flatMap(fn ($b) => $b->activeModuleKeys())
+            ->unique()
+            ->values();
+    }
+
+    public function canAccessModule(string $key): bool
+    {
+        return $this->accessibleModuleKeys()->contains($key);
+    }
+
+    /**
      * Get businesses this user is assigned to (for staff)
      */
     public function assignedBusinesses()

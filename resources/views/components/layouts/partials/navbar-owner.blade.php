@@ -1,3 +1,7 @@
+@php
+    // Modules this owner/staff can access (admin sees all). Computed once for the sidebar.
+    $moduleKeys = auth()->check() ? auth()->user()->accessibleModuleKeys() : collect();
+@endphp
 <ul class="navbar-nav flex-column" id="miniSidebarNav">
   <!-- Dashboard -->
     <li class="nav-item">
@@ -6,6 +10,7 @@
             <span class="text">Dashboard</span>
           </a>
     </li>
+  @if($moduleKeys->contains('pos'))
   <!-- POS Management -->
   <li class="nav-item dropdown" id="posManagementMenu">
     <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.sales.dashboard') || request()->routeIs('owner.posscreen') || request()->routeIs('owner.sales') ? 'active' : '' }}"
@@ -34,6 +39,8 @@
       </li>
     </ul>
   </li>
+  @endif
+@if($moduleKeys->contains('rental'))
 <!-- rental management -->
 <li class="nav-item dropdown" id="rentalManagementMenu">
   <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.rental*') ? 'active' : '' }}"
@@ -95,6 +102,8 @@
     </li>
   </ul>
 </li>
+@endif
+@if($moduleKeys->contains('hotel'))
 <!-- Hotel Management -->
 <li class="nav-item dropdown" id="hotelManagementMenu">
   <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.hotel*') ? 'active' : '' }}"
@@ -359,6 +368,8 @@
     </li>
   </ul>
 </li>
+@endif
+@if($moduleKeys->contains('bar'))
 <!-- Bar Management -->
 <li class="nav-item dropdown" id="barManagementMenu">
   <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.bar.*') ? 'active' : '' }}"
@@ -408,7 +419,8 @@
     </li>
   </ul>
 </li>
-
+@endif
+@if($moduleKeys->contains('restaurant'))
 <!-- Restaurant Management -->
 <li class="nav-item dropdown" id="restaurantManagementMenu">
   <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.restaurant*') ? 'active' : '' }}"
@@ -457,6 +469,7 @@
     </li>
   </ul>
 </li>
+@endif
 
 
 <!-- Items & Services Dropdown -->

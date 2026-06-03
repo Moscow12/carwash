@@ -177,7 +177,8 @@ class Mybusiness extends Component
             session()->flash('message', 'Business updated successfully.');
         } else {
             $data['owner_id'] = Auth::id();
-            Business::create($data);
+            $business = Business::create($data);
+            $business->assignModuleForType();
             session()->flash('message', 'Business created successfully.');
         }
 

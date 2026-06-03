@@ -85,7 +85,7 @@ class Register extends Component
             ]);
 
             if ($this->registerBusiness) {
-                Business::create([
+                $business = Business::create([
                     'name' => $data['business_name'],
                     'type' => $data['business_type'],
                     'owner_id' => $user->id,
@@ -94,6 +94,9 @@ class Register extends Component
                     'resentative_phone' => $data['phone'],
                     'status' => 'active',
                 ]);
+
+                // Auto-assign the module matching the chosen business type.
+                $business->assignModuleForType();
             }
 
             return $user;
