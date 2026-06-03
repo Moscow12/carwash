@@ -30,6 +30,7 @@ use App\Livewire\Owner\Items\Index as OwnerItems;
 use App\Livewire\Owner\Staffs\Index as OwnerStaffs;
 use App\Livewire\Owner\Customers\Index as OwnerCustomers;
 use App\Livewire\Owner\Sales\Index as OwnerSales;
+use App\Livewire\Owner\Sales\Dashboard as OwnerSalesDashboard;
 use App\Livewire\Owner\Purchases\Index as OwnerPurchases;
 use App\Livewire\Owner\Stocktaking\Index as OwnerStocktaking;
 use App\Livewire\Owner\Suppliers\Index as OwnerSuppliers;
@@ -134,6 +135,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 // Owner Dashboard (Protected Routes - Owner and Staff)
 Route::middleware(['auth', 'role:owner,staff'])->prefix('owner')->group(function () {
     Route::get('/', OwnerDashboard::class)->name('owner.dashboard');
+    Route::get('/sales/dashboard', OwnerSalesDashboard::class)->name('owner.sales.dashboard');
     Route::get('/businesses', OwnerBusinesses::class)->name('owner.businesses');
     Route::get('/items', OwnerItems::class)->name('owner.items');
     Route::get('/items/edit/{itemId}', Edititems::class)->name('owner.items.edit');
