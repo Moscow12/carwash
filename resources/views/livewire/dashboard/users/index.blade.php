@@ -46,6 +46,8 @@
                             <th class="px-4 py-3">#</th>
                             <th class="py-3">Name</th>
                             <th class="py-3">Email</th>
+                            <th class="py-3">Role</th>
+                            <th class="py-3">Business(es)</th>
                             <th class="py-3">Created At</th>
                             <th class="py-3 text-end px-4">Actions</th>
                         </tr>
@@ -63,6 +65,33 @@
                                     </div>
                                 </td>
                                 <td>{{ $user->email }}</td>
+                                <td>
+                                    @php
+                                        $roleColor = match($user->role) {
+                                            'admin' => 'danger',
+                                            'owner' => 'primary',
+                                            'staff' => 'info',
+                                            'customer' => 'secondary',
+                                            default => 'secondary',
+                                        };
+                                    @endphp
+                                    <span class="badge bg-{{ $roleColor }}-subtle text-{{ $roleColor }}">{{ ucfirst($user->role ?? '—') }}</span>
+                                </td>
+                                <td>
+                                    @php $businesses = $user->belongs_to_businesses; @endphp
+                                    @forelse ($businesses as $business)
+                                        <span class="badge bg-light text-dark border me-1 mb-1" title="{{ ucfirst($business->type) }}">
+                                            <i class="ti ti-building me-1"></i>{{ $business->name }}
+                                            @if($business->owner_id === $user->id)
+                                                <span class="text-primary">· owner</span>
+                                            @else
+                                                <span class="text-muted">· staff</span>
+                                            @endif
+                                        </span>
+                                    @empty
+                                        <span class="text-muted small">—</span>
+                                    @endforelse
+                                </td>
                                 <td>{{ $user->created_at->format('M d, Y') }}</td>
                                 <td class="text-end px-4">
                                     <button wire:click="edit('{{ $user->id }}')" class="btn btn-sm btn-outline-primary me-1">
@@ -75,7 +104,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">
+                                <td colspan="7" class="text-center py-4 text-muted">
                                     <i class="ti ti-users-minus fs-1 d-block mb-2"></i>
                                     No users found
                                 </td>

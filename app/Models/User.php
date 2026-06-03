@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -126,6 +127,31 @@ class User extends Authenticatable
     public function businessRoles(): HasMany
     {
         return $this->hasMany(UserBusinessRole::class);
+    }
+
+    /**
+     * Businesses this user is assigned to as staff (active assignments), via user_business_roles.
+     */
+    public function staffBusinesses(): BelongsToMany
+    {
+        return $this->belongsToMany(Business::class, 'user_business_roles', 'user_id', 'business_id')
+            ->withPivot('is_active')
+            ->wherePivot('is_active', true);
+    }
+
+    /**
+     * All businesses this user belongs to — owned + staff-assigned, de-duplicated.
+     * Owned takes priority over staff when the user has both on the same business,
+     * so the owned copy (which carries owner_id) survives the dedup.
+     * Use after eager-loading `ownedBusinesses` and `staffBusinesses` to avoid N+1.
+     */
+    public function getBelongsToBusinessesAttribute(): \Illuminate\Support\Collection
+    {
+        $ownedIds = $this->ownedBusinesses->pluck('id');
+
+        return $this->ownedBusinesses
+            ->concat($this->staffBusinesses->reject(fn ($b) => $ownedIds->contains($b->id)))
+            ->values();
     }
 
     /**

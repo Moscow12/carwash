@@ -107,8 +107,17 @@ class Index extends Component
 
     public function render()
     {
-        $users = User::where('name', 'like', '%' . $this->search . '%')
-            ->orWhere('email', 'like', '%' . $this->search . '%')
+        $users = User::query()
+            ->with([
+                'ownedBusinesses:id,name,type,owner_id',
+                'staffBusinesses:id,name,type',
+            ])
+            ->when($this->search, function ($q) {
+                $q->where(function ($qq) {
+                    $qq->where('name', 'like', '%' . $this->search . '%')
+                       ->orWhere('email', 'like', '%' . $this->search . '%');
+                });
+            })
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
