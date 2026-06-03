@@ -1,4 +1,11 @@
 <div>
+    @if (session()->has('error'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="ti ti-alert-triangle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>

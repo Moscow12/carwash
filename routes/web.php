@@ -141,7 +141,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 // Owner Dashboard (Protected Routes - Owner and Staff)
 Route::middleware(['auth', 'role:owner,staff'])->prefix('owner')->group(function () {
     Route::get('/', OwnerDashboard::class)->name('owner.dashboard');
-    Route::get('/sales/dashboard', OwnerSalesDashboard::class)->name('owner.sales.dashboard');
+    Route::get('/sales/dashboard', OwnerSalesDashboard::class)->middleware('module:pos')->name('owner.sales.dashboard');
     Route::get('/businesses', OwnerBusinesses::class)->name('owner.businesses');
     Route::get('/items', OwnerItems::class)->name('owner.items');
     Route::get('/items/edit/{itemId}', Edititems::class)->name('owner.items.edit');
@@ -151,7 +151,7 @@ Route::middleware(['auth', 'role:owner,staff'])->prefix('owner')->group(function
     Route::get('/roles/create', \App\Livewire\Owner\Staffs\CreateRole::class)->name('owner.people.roles.create');
     Route::get('/roles/edit/{roleId}', \App\Livewire\Owner\Staffs\EditRole::class)->name('owner.people.roles.edit');
     Route::get('/customers', OwnerCustomers::class)->name('owner.people.customers');
-    Route::get('/sales', OwnerSales::class)->name('owner.sales');
+    Route::get('/sales', OwnerSales::class)->middleware('module:pos')->name('owner.sales');
     Route::get('/purchases', OwnerPurchases::class)->name('owner.purchases');
     Route::get('/stocktaking', OwnerStocktaking::class)->name('owner.stocktaking');
     Route::get('/suppliers', OwnerSuppliers::class)->name('owner.people.suppliers');
@@ -160,11 +160,12 @@ Route::middleware(['auth', 'role:owner,staff'])->prefix('owner')->group(function
     Route::get('/categories', Categories::class)->name('owner.categories');
     Route::get('/item-register', Itemregister::class)->name('owner.itemregister');
     Route::get('/upload-items', Uploaditems::class)->name('owner.uploaditems');
-    Route::get('/pos-screen', Posscreen::class)->name('owner.posscreen');
+    Route::get('/pos-screen', Posscreen::class)->middleware('module:pos')->name('owner.posscreen');
     Route::get('/settings', OwnerSettings::class)->name('owner.settings');
     Route::get('/settings/hotel', Hotelsettings::class)->name('owner.settings.hotel');
 
     // Hotel Management Routes
+    Route::middleware('module:hotel')->group(function () {
     Route::get('/hotels', Addhotel::class)->name('owner.hotels');
     Route::get('/hotel/addhotel', Addhotel::class)->name('owner.hotel.list');
 
@@ -218,6 +219,7 @@ Route::middleware(['auth', 'role:owner,staff'])->prefix('owner')->group(function
     // Channels & Integrations
     Route::get('/hotel/booking-sources', BookingSources::class)->name('owner.hotel.booking-sources');
     Route::get('/hotel/channel-mapping', ChannelMapping::class)->name('owner.hotel.channel-mapping');
+    });
 
     Route::get('/expenses/categories', Category::class)->name('owner.expenses.categories');
     Route::get('/expenses', Expenses::class)->name('owner.expenses');
@@ -233,26 +235,32 @@ Route::middleware(['auth', 'role:owner,staff'])->prefix('owner')->group(function
         return redirect()->route('owner.bar.dashboard');
     })->name('owner.barmanagement'); // Backward compatibility redirect
 
-    Route::get('/bar/dashboard', \App\Livewire\Owner\Bar\BarDashboard::class)->name('owner.bar.dashboard');
-    Route::get('/bar/pos', \App\Livewire\Owner\Bar\BarPOS::class)->name('owner.bar.pos');
-    Route::get('/bar/menu-items', \App\Livewire\Owner\Bar\BarMenuItems::class)->name('owner.bar.menu');
-    Route::get('/bar/tabs', \App\Livewire\Owner\Bar\BarTabs::class)->name('owner.bar.tabs');
-    Route::get('/bar/stock', \App\Livewire\Owner\Bar\BarStock::class)->name('owner.bar.stock');
-    Route::get('/bar/reports', \App\Livewire\Owner\Bar\BarReports::class)->name('owner.bar.reports');
+    Route::middleware('module:bar')->group(function () {
+        Route::get('/bar/dashboard', \App\Livewire\Owner\Bar\BarDashboard::class)->name('owner.bar.dashboard');
+        Route::get('/bar/pos', \App\Livewire\Owner\Bar\BarPOS::class)->name('owner.bar.pos');
+        Route::get('/bar/menu-items', \App\Livewire\Owner\Bar\BarMenuItems::class)->name('owner.bar.menu');
+        Route::get('/bar/tabs', \App\Livewire\Owner\Bar\BarTabs::class)->name('owner.bar.tabs');
+        Route::get('/bar/stock', \App\Livewire\Owner\Bar\BarStock::class)->name('owner.bar.stock');
+        Route::get('/bar/reports', \App\Livewire\Owner\Bar\BarReports::class)->name('owner.bar.reports');
+    });
 
     // Restaurant Management
-    Route::get('/restaurant/dashboard', \App\Livewire\Owner\Restaurant\Dashboard::class)->name('owner.restaurant.dashboard');
-    Route::get('/restaurant/reservations', \App\Livewire\Owner\Restaurant\TableReservations::class)->name('owner.restaurant.reservations');
-    Route::get('/restaurant/waiters', \App\Livewire\Owner\Restaurant\WaiterManagement::class)->name('owner.restaurant.waiters');
-    Route::get('/restaurant/recipes', \App\Livewire\Owner\Restaurant\MenuRecipes::class)->name('owner.restaurant.recipes');
-    Route::get('/restaurant/restaurant-pos', \App\Livewire\Owner\Restaurant\RestaurantPOS::class)->name('owner.restaurant.pos');
-    Route::get('/restaurant/kitchenscreen', \App\Livewire\Owner\Restaurant\KitchenScreen::class)->name('owner.restaurant.kitchenscreen');
-    Route::get('restaurant/settings', \App\Livewire\Owner\Restaurant\RestaurantSettings::class)->name('owner.restaurant.settings');
+    Route::middleware('module:restaurant')->group(function () {
+        Route::get('/restaurant/dashboard', \App\Livewire\Owner\Restaurant\Dashboard::class)->name('owner.restaurant.dashboard');
+        Route::get('/restaurant/reservations', \App\Livewire\Owner\Restaurant\TableReservations::class)->name('owner.restaurant.reservations');
+        Route::get('/restaurant/waiters', \App\Livewire\Owner\Restaurant\WaiterManagement::class)->name('owner.restaurant.waiters');
+        Route::get('/restaurant/recipes', \App\Livewire\Owner\Restaurant\MenuRecipes::class)->name('owner.restaurant.recipes');
+        Route::get('/restaurant/restaurant-pos', \App\Livewire\Owner\Restaurant\RestaurantPOS::class)->name('owner.restaurant.pos');
+        Route::get('/restaurant/kitchenscreen', \App\Livewire\Owner\Restaurant\KitchenScreen::class)->name('owner.restaurant.kitchenscreen');
+        Route::get('restaurant/settings', \App\Livewire\Owner\Restaurant\RestaurantSettings::class)->name('owner.restaurant.settings');
+    });
 
     // Hotel Guest Services
-    Route::get('/hotel/amenity-requests', \App\Livewire\Owner\Hotel\AmenityRequests::class)->name('owner.hotel.amenity-requests');
-    Route::get('/hotel/wakeup-calls', \App\Livewire\Owner\Hotel\WakeupCalls::class)->name('owner.hotel.wakeup-calls');
-    Route::get('/hotel/laundry-orders', \App\Livewire\Owner\Hotel\LaundryManagement::class)->name('owner.hotel.laundry-orders');
+    Route::middleware('module:hotel')->group(function () {
+        Route::get('/hotel/amenity-requests', \App\Livewire\Owner\Hotel\AmenityRequests::class)->name('owner.hotel.amenity-requests');
+        Route::get('/hotel/wakeup-calls', \App\Livewire\Owner\Hotel\WakeupCalls::class)->name('owner.hotel.wakeup-calls');
+        Route::get('/hotel/laundry-orders', \App\Livewire\Owner\Hotel\LaundryManagement::class)->name('owner.hotel.laundry-orders');
+    });
 
     // Inventory & Purchase Management
     Route::get('/inventory/purchases', \App\Livewire\Owner\Inventory\PurchaseManagement::class)->name('owner.inventory.purchases');
@@ -260,14 +268,16 @@ Route::middleware(['auth', 'role:owner,staff'])->prefix('owner')->group(function
     Route::get('/inventory/stocktransfers', \App\Livewire\Owner\Inventory\StockTransferManagement::class)->name('owner.inventory.stocktransfers');
 
     // rental management
-    Route::get('/rental/dashboard', \App\Livewire\Owner\Rental\RentalDashboard::class)->name('owner.rental.dashboard');
-    Route::get('/rental/landlords', \App\Livewire\Owner\Rental\Landlords::class)->name('owner.rental.landlords');
-    Route::get('/rental/properties', \App\Livewire\Owner\Rental\RentalProperties::class)->name('owner.rental.properties');
-    Route::get('/rental/units', \App\Livewire\Owner\Rental\RentalUnits::class)->name('owner.rental.units');
-    Route::get('/rental/rental-agreements', \App\Livewire\Owner\Rental\RentalAgreements::class)->name('owner.rental.agreements');
-    Route::get('/rental/rent-payments', \App\Livewire\Owner\Rental\RentPayments::class)->name('owner.rental.rent-payments');
-    Route::get('/rental/utility-bills', \App\Livewire\Owner\Rental\UtilityBills::class)->name('owner.rental.utility-bills');
-    Route::get('/rental/maintenance', \App\Livewire\Owner\Rental\MaintenanceRequests::class)->name('owner.rental.maintenance');
+    Route::middleware('module:rental')->group(function () {
+        Route::get('/rental/dashboard', \App\Livewire\Owner\Rental\RentalDashboard::class)->name('owner.rental.dashboard');
+        Route::get('/rental/landlords', \App\Livewire\Owner\Rental\Landlords::class)->name('owner.rental.landlords');
+        Route::get('/rental/properties', \App\Livewire\Owner\Rental\RentalProperties::class)->name('owner.rental.properties');
+        Route::get('/rental/units', \App\Livewire\Owner\Rental\RentalUnits::class)->name('owner.rental.units');
+        Route::get('/rental/rental-agreements', \App\Livewire\Owner\Rental\RentalAgreements::class)->name('owner.rental.agreements');
+        Route::get('/rental/rent-payments', \App\Livewire\Owner\Rental\RentPayments::class)->name('owner.rental.rent-payments');
+        Route::get('/rental/utility-bills', \App\Livewire\Owner\Rental\UtilityBills::class)->name('owner.rental.utility-bills');
+        Route::get('/rental/maintenance', \App\Livewire\Owner\Rental\MaintenanceRequests::class)->name('owner.rental.maintenance');
+    });
 
 });
 

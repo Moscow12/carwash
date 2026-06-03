@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'business.access' => \App\Http\Middleware\BusinessAccessMiddleware::class,
+            'module' => \App\Http\Middleware\EnsureModuleAccess::class,
         ]);
 
         // Trust all proxies (needed for cPanel/shared hosting)
