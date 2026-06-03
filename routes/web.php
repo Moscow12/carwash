@@ -10,6 +10,8 @@ use App\Livewire\Sitepg\Services;
 use App\Livewire\Sitepg\Contact;
 use App\Livewire\Sitepg\Login;
 use App\Livewire\Sitepg\Register;
+use App\Livewire\Sitepg\ForgotPassword;
+use App\Livewire\Sitepg\ResetPassword;
 
 // Dashboard Pages (Admin)
 use App\Livewire\Dashboard\Auth\Login as AdminLogin;
@@ -53,6 +55,10 @@ Route::get('/services', Services::class)->name('site.services');
 Route::get('/contact', Contact::class)->name('site.contact');
 Route::get('/login', Login::class)->name('site.login');
 Route::get('/register', Register::class)->name('site.register');
+
+// Password reset (guest only)
+Route::get('/forgot-password', ForgotPassword::class)->name('password.request');
+Route::get('/reset-password/{token}', ResetPassword::class)->name('password.reset');
 
 // Admin Authentication
 use App\Http\Controllers\Auth\LoginController;

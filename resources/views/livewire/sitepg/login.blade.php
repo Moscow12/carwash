@@ -49,15 +49,25 @@
                                         <p class="text-muted">Enter your credentials to access your account</p>
                                     </div>
 
-                                    <form wire:submit.prevent="login">
+                                    @if (session('success'))
+                                        <div class="alert alert-success" role="alert">
+                                            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                                        </div>
+                                    @endif
+
+                                    <form wire:submit.prevent="login" x-data="{ showPassword: false }">
                                         <div class="mb-4">
-                                            <label class="form-label fw-semibold">Email Address</label>
+                                            <label for="login-email" class="form-label fw-semibold">Email Address</label>
                                             <div class="input-group">
                                                 <span class="input-group-text bg-light border-end-0">
                                                     <i class="fas fa-envelope text-muted"></i>
                                                 </span>
                                                 <input type="email"
-                                                       wire:model="email"
+                                                       id="login-email"
+                                                       name="email"
+                                                       autocomplete="email"
+                                                       autofocus
+                                                       wire:model.blur="email"
                                                        class="form-control form-control-site border-start-0 ps-0 @error('email') is-invalid @enderror"
                                                        placeholder="Enter your email">
                                             </div>
@@ -68,17 +78,28 @@
 
                                         <div class="mb-4">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <label class="form-label fw-semibold mb-0">Password</label>
-                                                <a href="#" class="text-info text-decoration-none small">Forgot password?</a>
+                                                <label for="login-password" class="form-label fw-semibold mb-0">Password</label>
+                                                <a href="{{ route('password.request') }}" class="text-info text-decoration-none small">Forgot password?</a>
                                             </div>
                                             <div class="input-group">
                                                 <span class="input-group-text bg-light border-end-0">
                                                     <i class="fas fa-lock text-muted"></i>
                                                 </span>
-                                                <input type="password"
-                                                       wire:model="password"
+                                                <input :type="showPassword ? 'text' : 'password'"
+                                                       id="login-password"
+                                                       name="password"
+                                                       autocomplete="current-password"
+                                                       wire:model.blur="password"
+                                                       wire:keydown.enter="login"
                                                        class="form-control form-control-site border-start-0 ps-0 @error('password') is-invalid @enderror"
                                                        placeholder="Enter your password">
+                                                <button type="button"
+                                                        class="input-group-text bg-light border-start-0"
+                                                        style="cursor: pointer;"
+                                                        @click="showPassword = !showPassword"
+                                                        tabindex="-1">
+                                                    <i class="fas" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                                </button>
                                             </div>
                                             @error('password')
                                                 <div class="text-danger small mt-1">{{ $message }}</div>
@@ -86,18 +107,20 @@
                                         </div>
 
                                         <div class="mb-4">
-                                            <div class="form-check">
+                                            <div class="form-check d-flex align-items-center">
                                                 <input type="checkbox"
                                                        wire:model="remember"
                                                        class="form-check-input"
-                                                       id="remember">
-                                                <label class="form-check-label text-muted" for="remember">
+                                                       id="remember"
+                                                       style="cursor: pointer; width: 1.25em; height: 1.25em;">
+                                                <label class="form-check-label text-muted ms-2 mb-0" for="remember" style="cursor: pointer;">
                                                     Remember me
                                                 </label>
                                             </div>
                                         </div>
 
-                                        <button type="submit" class="btn btn-cams btn-lg w-100 mb-4">
+                                        <button type="submit" class="btn btn-cams btn-lg w-100 mb-4"
+                                                wire:loading.attr="disabled" wire:target="login">
                                             <span wire:loading.remove wire:target="login">
                                                 <i class="fas fa-sign-in-alt me-2"></i>Sign In
                                             </span>
