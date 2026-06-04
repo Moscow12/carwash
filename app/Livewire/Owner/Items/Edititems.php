@@ -56,6 +56,9 @@ class Edititems extends Component
     #[Rule('required|in:active,inactive')]
     public $status = 'active';
 
+    #[Rule('boolean')]
+    public $is_published = false;
+
     #[Rule('required|exists:businesses,id')]
     public $business_id = '';
 
@@ -114,6 +117,7 @@ class Edititems extends Component
         $this->commission = $this->item->commission ?? '';
         $this->commission_type = $this->item->commission_type ?? '';
         $this->status = $this->item->status;
+        $this->is_published = (bool) $this->item->is_published;
         $this->business_id = $this->item->business_id;
         $this->category_id = $this->item->category_id;
         $this->unit_id = $this->item->unit_id;
@@ -203,6 +207,7 @@ class Edititems extends Component
             'commission' => $this->commission ?: null,
             'commission_type' => $this->commission ? $this->commission_type : null,
             'status' => $this->status,
+            'is_published' => (bool) $this->is_published,
             'business_id' => $this->business_id,
             'category_id' => $this->category_id,
             'unit_id' => $this->unit_id,

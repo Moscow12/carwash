@@ -232,6 +232,9 @@
                     <a href="{{ route('site.register') }}" class="btn btn-cams btn-lg">
                         Start Free Trial <i class="fas fa-arrow-right ms-2"></i>
                     </a>
+                    <a href="{{ route('site.marketplace') }}" class="btn btn-outline-light btn-lg">
+                        Visit the Marketplace
+                    </a>
                     <a href="{{ route('site.contact') }}" class="btn btn-outline-light btn-lg">
                         Contact Us
                     </a>

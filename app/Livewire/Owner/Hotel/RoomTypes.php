@@ -5,15 +5,17 @@ namespace App\Livewire\Owner\Hotel;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Rule;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Business;
 use App\Models\RoomType;
 
 #[Layout('components.layouts.app-owner')]
 class RoomTypes extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
     public $search = '';
     public $selectedHotel = null;
@@ -41,6 +43,14 @@ class RoomTypes extends Component
 
     #[Rule('required|in:active,inactive')]
     public $status = 'active';
+
+    #[Rule('boolean')]
+    public $is_published = false;
+
+    #[Rule('nullable')]
+    public $newImages = [];
+
+    public $existingImages = [];
 
     public $selectedAmenities = [];
     public $availableAmenities = [
@@ -101,15 +111,42 @@ class RoomTypes extends Component
         $this->base_price = $roomType->base_price;
         $this->weekend_price = $roomType->weekend_price ?? 0;
         $this->status = $roomType->status;
+        $this->is_published = (bool) $roomType->is_published;
         $this->selectedAmenities = $roomType->amenities ?? [];
+        $this->existingImages = $roomType->images ?? [];
+        $this->newImages = [];
 
         $this->editMode = true;
         $this->showModal = true;
     }
 
+    public function removeExistingImage($path)
+    {
+        Storage::disk('public')->delete($path);
+        $this->existingImages = array_values(array_filter(
+            $this->existingImages,
+            fn ($p) => $p !== $path
+        ));
+
+        // Persist immediately when editing an existing room type.
+        if ($this->editMode && $this->roomTypeId) {
+            RoomType::whereKey($this->roomTypeId)->update(['images' => $this->existingImages]);
+        }
+    }
+
     public function save()
     {
-        $this->validate();
+        $this->validate([
+            'newImages.*' => 'nullable|image|max:4096',
+        ]);
+
+        // Store any newly uploaded photos and merge with the kept existing ones.
+        $imagePaths = $this->existingImages;
+        foreach ($this->newImages as $img) {
+            if ($img) {
+                $imagePaths[] = $img->store('room-types', 'public');
+            }
+        }
 
         $data = [
             'business_id' => $this->selectedHotel,
@@ -120,7 +157,9 @@ class RoomTypes extends Component
             'base_price' => $this->base_price,
             'weekend_price' => $this->weekend_price ?: null,
             'status' => $this->status,
+            'is_published' => (bool) $this->is_published,
             'amenities' => $this->selectedAmenities,
+            'images' => array_values($imagePaths),
         ];
 
         if ($this->editMode) {
@@ -158,6 +197,15 @@ class RoomTypes extends Component
         session()->flash('message', 'Room type status updated successfully.');
     }
 
+    public function togglePublish($id)
+    {
+        $roomType = RoomType::findOrFail($id);
+        $roomType->update(['is_published' => ! $roomType->is_published]);
+        session()->flash('message', $roomType->is_published
+            ? 'Room type published to the marketplace.'
+            : 'Room type unpublished from the marketplace.');
+    }
+
     public function closeModal()
     {
         $this->showModal = false;
@@ -168,11 +216,13 @@ class RoomTypes extends Component
     {
         $this->reset([
             'roomTypeId', 'name', 'description', 'max_adults', 'max_children',
-            'base_price', 'weekend_price', 'status', 'selectedAmenities'
+            'base_price', 'weekend_price', 'status', 'is_published',
+            'selectedAmenities', 'newImages', 'existingImages',
         ]);
         $this->max_adults = 2;
         $this->max_children = 2;
         $this->status = 'active';
+        $this->is_published = false;
         $this->resetValidation();
     }
 

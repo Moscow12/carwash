@@ -4,9 +4,11 @@ namespace App\Livewire\Owner\Bar;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Business;
 use App\Models\PosOutlet;
 use App\Models\MenuItem;
@@ -18,7 +20,7 @@ use App\Models\item_balance;
 #[Layout('components.layouts.app-owner')]
 class BarMenuItems extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
     public $selectedBusiness = null;
     public $selectedOutlet = null;
@@ -64,6 +66,8 @@ class BarMenuItems extends Component
     public $createIsVegetarian = false;
     public $createIsVegan = false;
     public $createPrepTimeMins = null;
+    public $createImage;
+    public $createIsPublished = false;
 
     // Edit form properties
     public $editName = '';
@@ -76,6 +80,9 @@ class BarMenuItems extends Component
     public $editIsVegetarian = false;
     public $editIsVegan = false;
     public $editPrepTimeMins = null;
+    public $editImage;
+    public $editExistingImage = null;
+    public $editIsPublished = false;
 
     public function mount()
     {
@@ -137,6 +144,8 @@ class BarMenuItems extends Component
         $this->createIsVegetarian = false;
         $this->createIsVegan = false;
         $this->createPrepTimeMins = null;
+        $this->createImage = null;
+        $this->createIsPublished = false;
     }
 
     public function createMenuItem()
@@ -153,6 +162,7 @@ class BarMenuItems extends Component
             'createCostPrice' => 'nullable|numeric|min:0',
             'createItemId' => 'nullable|exists:items,id',
             'createPrepTimeMins' => 'nullable|integer|min:1|max:999',
+            'createImage' => 'nullable|image|max:4096',
         ], [
             'createName.required' => 'Menu item name is required.',
             'createCategoryId.required' => 'Category is required.',
@@ -173,6 +183,8 @@ class BarMenuItems extends Component
                 'is_vegetarian' => $this->createIsVegetarian,
                 'is_vegan' => $this->createIsVegan,
                 'prep_time_mins' => $this->createPrepTimeMins,
+                'image' => $this->createImage ? $this->createImage->store('menu-items', 'public') : null,
+                'is_published' => (bool) $this->createIsPublished,
                 'status' => 'active', // New items are active by default
             ]);
 
@@ -205,6 +217,9 @@ class BarMenuItems extends Component
         $this->editIsVegetarian = $item->is_vegetarian;
         $this->editIsVegan = $item->is_vegan;
         $this->editPrepTimeMins = $item->prep_time_mins;
+        $this->editExistingImage = $item->image;
+        $this->editImage = null;
+        $this->editIsPublished = (bool) $item->is_published;
 
         $this->showEditModal = true;
     }
@@ -224,6 +239,9 @@ class BarMenuItems extends Component
             'editIsVegetarian',
             'editIsVegan',
             'editPrepTimeMins',
+            'editImage',
+            'editExistingImage',
+            'editIsPublished',
         ]);
     }
 
@@ -236,6 +254,7 @@ class BarMenuItems extends Component
             'editCostPrice' => 'nullable|numeric|min:0',
             'editItemId' => 'nullable|exists:items,id',
             'editPrepTimeMins' => 'nullable|integer|min:1|max:999',
+            'editImage' => 'nullable|image|max:4096',
         ], [
             'editName.required' => 'Menu item name is required.',
             'editCategoryId.required' => 'Category is required.',
@@ -244,7 +263,7 @@ class BarMenuItems extends Component
         ]);
 
         try {
-            $this->editingItem->update([
+            $payload = [
                 'name' => $this->editName,
                 'description' => $this->editDescription,
                 'category_id' => $this->editCategoryId,
@@ -255,7 +274,18 @@ class BarMenuItems extends Component
                 'is_vegetarian' => $this->editIsVegetarian,
                 'is_vegan' => $this->editIsVegan,
                 'prep_time_mins' => $this->editPrepTimeMins,
-            ]);
+                'is_published' => (bool) $this->editIsPublished,
+            ];
+
+            // Replace photo if a new one was uploaded.
+            if ($this->editImage) {
+                if ($this->editExistingImage) {
+                    Storage::disk('public')->delete($this->editExistingImage);
+                }
+                $payload['image'] = $this->editImage->store('menu-items', 'public');
+            }
+
+            $this->editingItem->update($payload);
 
             session()->flash('message', 'Menu item updated successfully.');
             $this->closeEditModal();
@@ -281,6 +311,21 @@ class BarMenuItems extends Component
         } catch (\Exception $e) {
             session()->flash('error', 'Error updating status: ' . $e->getMessage());
         }
+    }
+
+    public function togglePublish($itemId)
+    {
+        $item = MenuItem::find($itemId);
+
+        if (!$item) {
+            session()->flash('error', 'Menu item not found.');
+            return;
+        }
+
+        $item->update(['is_published' => ! $item->is_published]);
+        session()->flash('message', $item->is_published
+            ? 'Menu item published to the marketplace.'
+            : 'Menu item unpublished from the marketplace.');
     }
 
     public function openDeleteModal($itemId)

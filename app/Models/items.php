@@ -30,6 +30,7 @@ class items extends Model
         'require_plate_number',
         'unit_id',
         'status',
+        'is_published',
         'category_id',
         'business_id',
         'outlet_id',
@@ -40,6 +41,7 @@ class items extends Model
         'selling_price' => 'decimal:2',
         'market_price' => 'decimal:2',
         'commission' => 'decimal:2',
+        'is_published' => 'boolean',
     ];
 
     // Relationships
@@ -166,5 +168,29 @@ class items extends Model
     public function getFormattedSellingPriceAttribute(): string
     {
         return 'TZS ' . number_format($this->selling_price, 0);
+    }
+
+    /**
+     * Normalized card for the public marketplace.
+     * @return array<string,mixed>
+     */
+    public function toListingCard(): array
+    {
+        $isService = $this->type === 'Service';
+        $price = $this->selling_price !== null ? (float) $this->selling_price : null;
+
+        return [
+            'id' => $this->id,
+            'type' => $isService ? 'service' : 'item',
+            'type_label' => $isService ? 'Service' : 'Shop',
+            'title' => $this->name,
+            'price' => $price,
+            'price_label' => $price !== null ? 'TZS ' . number_format($price, 0) : null,
+            'image_url' => $this->image ? asset('storage/' . $this->image) : null,
+            'description' => $this->description,
+            'business' => $this->business,
+            'shop_url' => $this->business ? route('site.shop', $this->business->id, false) : null,
+            'created_at' => $this->created_at,
+        ];
     }
 }

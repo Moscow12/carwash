@@ -461,6 +461,28 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Photo</label>
+                                    <input type="file" wire:model="createImage" class="form-control @error('createImage') is-invalid @enderror" accept="image/*">
+                                    @error('createImage') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                    <div wire:loading wire:target="createImage" class="form-text">Uploading…</div>
+                                    @if($createImage)
+                                        <img src="{{ $createImage->temporaryUrl() }}" class="rounded border mt-2" style="width:80px;height:80px;object-fit:cover;">
+                                    @endif
+                                </div>
+
+                                <div class="col-md-12">
+                                    <div class="form-check form-switch p-2 rounded border bg-light" style="padding-left: 3rem !important;">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                               id="createMenuPublish" style="cursor:pointer;width:2.5em;height:1.4em;"
+                                               wire:model="createIsPublished">
+                                        <label class="form-check-label ms-2 fw-medium" for="createMenuPublish" style="cursor:pointer;">
+                                            <i class="ti ti-world me-1 text-info"></i>Publish to public marketplace
+                                            <small class="d-block text-muted fw-normal">Visible to everyone on the public site (add a photo for best results).</small>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -577,6 +599,32 @@
                                                 </label>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Photo</label>
+                                    <input type="file" wire:model="editImage" class="form-control @error('editImage') is-invalid @enderror" accept="image/*">
+                                    @error('editImage') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                    <div wire:loading wire:target="editImage" class="form-text">Uploading…</div>
+                                    <div class="d-flex gap-2 mt-2">
+                                        @if($editImage)
+                                            <img src="{{ $editImage->temporaryUrl() }}" class="rounded border" style="width:80px;height:80px;object-fit:cover;">
+                                        @elseif($editExistingImage)
+                                            <img src="{{ asset('storage/' . $editExistingImage) }}" class="rounded border" style="width:80px;height:80px;object-fit:cover;">
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <div class="form-check form-switch p-2 rounded border bg-light" style="padding-left: 3rem !important;">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                               id="editMenuPublish" style="cursor:pointer;width:2.5em;height:1.4em;"
+                                               wire:model="editIsPublished">
+                                        <label class="form-check-label ms-2 fw-medium" for="editMenuPublish" style="cursor:pointer;">
+                                            <i class="ti ti-world me-1 text-info"></i>Publish to public marketplace
+                                            <small class="d-block text-muted fw-normal">Visible to everyone on the public site (add a photo for best results).</small>
+                                        </label>
                                     </div>
                                 </div>
                             </div>

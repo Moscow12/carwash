@@ -68,6 +68,9 @@ class Itemregister extends Component
     #[Rule('required|in:active,inactive')]
     public $status = 'active';
 
+    #[Rule('boolean')]
+    public $is_published = false;
+
     #[Rule('required|exists:businesses,id')]
     public $business_id = '';
 
@@ -150,6 +153,7 @@ class Itemregister extends Component
         $this->commission = $item->commission ?? '';
         $this->commission_type = $item->commission_type ?? '';
         $this->status = $item->status;
+        $this->is_published = (bool) $item->is_published;
         $this->business_id = $item->business_id;
         $this->category_id = $item->category_id;
         $this->unit_id = $item->unit_id;
@@ -208,6 +212,24 @@ class Itemregister extends Component
         session()->flash('message', 'Item status updated successfully.');
     }
 
+    public function togglePublish($id)
+    {
+        $item = items::findOrFail($id);
+
+        // Verify ownership
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
+        if (!$businessIds->contains($item->business_id)) {
+            session()->flash('error', 'Unauthorized action.');
+            return;
+        }
+
+        $item->update(['is_published' => ! $item->is_published]);
+
+        session()->flash('message', $item->is_published
+            ? 'Item published to the marketplace.'
+            : 'Item unpublished from the marketplace.');
+    }
+
     public function save()
     {
         $this->validate();
@@ -247,6 +269,7 @@ class Itemregister extends Component
             'commission' => $this->commission ?: null,
             'commission_type' => $this->commission ? $this->commission_type : null,
             'status' => $this->status,
+            'is_published' => (bool) $this->is_published,
             'business_id' => $this->business_id,
             'category_id' => $this->category_id,
             'unit_id' => $this->unit_id,
@@ -306,7 +329,7 @@ class Itemregister extends Component
         $this->reset([
             'itemId', 'name', 'barcode', 'description', 'cost_price', 'selling_price',
             'market_price', 'type', 'product_stock', 'require_plate_number',
-            'commission', 'commission_type', 'status', 'category_id', 'unit_id',
+            'commission', 'commission_type', 'status', 'is_published', 'category_id', 'unit_id',
             'image', 'existingImage', 'showScannerModal'
         ]);
 
@@ -314,6 +337,7 @@ class Itemregister extends Component
         $this->product_stock = 'no';
         $this->require_plate_number = 'no';
         $this->status = 'active';
+        $this->is_published = false;
 
         if ($this->ownerBusinesses->count() === 1) {
             $this->business_id = $this->ownerBusinesses->first()->id;

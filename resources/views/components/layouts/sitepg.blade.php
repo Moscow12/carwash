@@ -390,6 +390,9 @@
                         <a class="nav-link nav-link-site {{ request()->routeIs('site.services') ? 'active' : '' }}" href="{{ route('site.services') }}">Services</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link nav-link-site {{ request()->routeIs('site.marketplace') || request()->routeIs('site.shop') ? 'active' : '' }}" href="{{ route('site.marketplace') }}">Marketplace</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link nav-link-site {{ request()->routeIs('site.contact') ? 'active' : '' }}" href="{{ route('site.contact') }}">Contact Us</a>
                     </li>
                     <li class="nav-item ms-lg-3">

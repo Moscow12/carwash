@@ -196,6 +196,30 @@
         </div>
     </section>
 
+    <!-- Featured Marketplace -->
+    @if($featured->isNotEmpty())
+    <section class="section-padding bg-light">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-title">Featured on the <span class="gradient-text">Marketplace</span></h2>
+                <p class="section-subtitle">Products, rentals and rooms published by businesses on CAMS</p>
+            </div>
+            <div class="row g-4">
+                @foreach($featured as $card)
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <x-listing-card :card="$card" />
+                    </div>
+                @endforeach
+            </div>
+            <div class="text-center mt-5">
+                <a href="{{ route('site.marketplace') }}" class="btn btn-cams btn-lg">
+                    Browse all listings <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+    @endif
+
     <!-- CTA Section -->
     <section class="section-padding" style="background: linear-gradient(135deg, var(--cams-dark) 0%, #16213e 100%);">
         <div class="container">

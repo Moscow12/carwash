@@ -28,6 +28,7 @@ class RentalUnit extends Model
         'monthly_rent',
         'deposit_amount',
         'status',
+        'is_published',
         'description',
     ];
 
@@ -40,6 +41,7 @@ class RentalUnit extends Model
         'floor_no' => 'integer',
         'bedrooms' => 'integer',
         'bathrooms' => 'integer',
+        'is_published' => 'boolean',
     ];
 
     public function property(): BelongsTo
@@ -82,5 +84,40 @@ class RentalUnit extends Model
     public function scopeOccupied(Builder $query): Builder
     {
         return $query->where('status', 'occupied');
+    }
+
+    /** The business this unit belongs to, via property → landlord. */
+    public function resolveBusiness(): ?Business
+    {
+        return $this->property?->landlord?->business;
+    }
+
+    /**
+     * Normalized card for the public marketplace.
+     * @return array<string,mixed>
+     */
+    public function toListingCard(): array
+    {
+        // Primary image (fallback to first) from the unit_images relation.
+        $img = $this->images->firstWhere('is_primary', true) ?? $this->images->first();
+        $price = $this->monthly_rent !== null ? (float) $this->monthly_rent : null;
+        $business = $this->resolveBusiness();
+
+        $title = trim(($this->unit_number ? 'Unit ' . $this->unit_number : 'Rental unit')
+            . ($this->unit_type ? ' · ' . ucwords(str_replace('_', ' ', $this->unit_type)) : ''));
+
+        return [
+            'id' => $this->id,
+            'type' => 'rental',
+            'type_label' => 'Rental',
+            'title' => $title,
+            'price' => $price,
+            'price_label' => $price !== null ? 'TZS ' . number_format($price, 0) . '/mo' : null,
+            'image_url' => $img ? asset('storage/' . $img->image_url) : null,
+            'description' => $this->description,
+            'business' => $business,
+            'shop_url' => $business ? route('site.shop', $business->id, false) : null,
+            'created_at' => $this->created_at,
+        ];
     }
 }

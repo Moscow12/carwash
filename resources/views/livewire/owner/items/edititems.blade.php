@@ -82,6 +82,17 @@
                                 <textarea wire:model="description" class="form-control @error('description') is-invalid @enderror" rows="3" placeholder="Enter item description"></textarea>
                                 @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch p-2 rounded border bg-light" style="padding-left: 3rem !important;">
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                           id="editItemPublish" style="cursor:pointer;width:2.5em;height:1.4em;"
+                                           wire:model="is_published">
+                                    <label class="form-check-label ms-2 fw-medium" for="editItemPublish" style="cursor:pointer;">
+                                        <i class="ti ti-world me-1 text-info"></i>Publish to public marketplace
+                                        <small class="d-block text-muted fw-normal">Visible to everyone on the public site (needs a photo & active status).</small>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

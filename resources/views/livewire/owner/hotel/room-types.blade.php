@@ -223,6 +223,37 @@
                                         @endforeach
                                     </div>
                                 </div>
+
+                                <div class="col-12">
+                                    <label class="form-label">Photos</label>
+                                    <input type="file" wire:model="newImages" class="form-control @error('newImages.*') is-invalid @enderror" multiple accept="image/*">
+                                    @error('newImages.*') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                    <div wire:loading wire:target="newImages" class="form-text">Uploading…</div>
+
+                                    @if(!empty($existingImages))
+                                        <div class="d-flex flex-wrap gap-2 mt-2">
+                                            @foreach($existingImages as $img)
+                                                <div class="position-relative" style="width:80px;height:80px;">
+                                                    <img src="{{ asset('storage/' . $img) }}" class="rounded border w-100 h-100" style="object-fit:cover;">
+                                                    <button type="button" wire:click="removeExistingImage('{{ $img }}')"
+                                                            class="btn btn-sm btn-danger position-absolute top-0 end-0 p-0 lh-1" style="width:20px;height:20px;">×</button>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="form-check form-switch p-2 rounded border bg-light" style="padding-left: 3rem !important;">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                               id="roomPublish" style="cursor:pointer;width:2.5em;height:1.4em;"
+                                               wire:model="is_published">
+                                        <label class="form-check-label ms-2 fw-medium" for="roomPublish" style="cursor:pointer;">
+                                            <i class="ti ti-world me-1 text-info"></i>Publish to public marketplace
+                                            <small class="d-block text-muted fw-normal">Visible to everyone on the public site (add a photo for best results).</small>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </form>
                     </div>

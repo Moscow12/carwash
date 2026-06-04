@@ -23,6 +23,7 @@ class RoomType extends Model
         'amenities',
         'images',
         'status',
+        'is_published',
     ];
 
     protected $casts = [
@@ -30,6 +31,7 @@ class RoomType extends Model
         'weekend_price' => 'decimal:2',
         'amenities' => 'array',
         'images' => 'array',
+        'is_published' => 'boolean',
     ];
 
     // Relationships
@@ -68,5 +70,29 @@ class RoomType extends Model
     public function getTotalCapacityAttribute(): int
     {
         return $this->max_adults + $this->max_children;
+    }
+
+    /**
+     * Normalized card for the public marketplace.
+     * @return array<string,mixed>
+     */
+    public function toListingCard(): array
+    {
+        $first = is_array($this->images) ? ($this->images[0] ?? null) : null;
+        $price = $this->base_price !== null ? (float) $this->base_price : null;
+
+        return [
+            'id' => $this->id,
+            'type' => 'room',
+            'type_label' => 'Hotel Room',
+            'title' => $this->name,
+            'price' => $price,
+            'price_label' => $price !== null ? 'TZS ' . number_format($price, 0) . '/night' : null,
+            'image_url' => $first ? asset('storage/' . $first) : null,
+            'description' => $this->description,
+            'business' => $this->business,
+            'shop_url' => $this->business ? route('site.shop', $this->business->id, false) : null,
+            'created_at' => $this->created_at,
+        ];
     }
 }

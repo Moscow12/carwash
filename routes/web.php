@@ -12,6 +12,8 @@ use App\Livewire\Sitepg\Login;
 use App\Livewire\Sitepg\Register;
 use App\Livewire\Sitepg\ForgotPassword;
 use App\Livewire\Sitepg\ResetPassword;
+use App\Livewire\Sitepg\Marketplace;
+use App\Livewire\Sitepg\ShopDetails;
 
 // Dashboard Pages (Admin)
 use App\Livewire\Dashboard\Auth\Login as AdminLogin;
@@ -55,6 +57,10 @@ Route::get('/services', Services::class)->name('site.services');
 Route::get('/contact', Contact::class)->name('site.contact');
 Route::get('/login', Login::class)->name('site.login');
 Route::get('/register', Register::class)->name('site.register');
+
+// Public marketplace (no auth)
+Route::get('/marketplace', Marketplace::class)->name('site.marketplace');
+Route::get('/shop/{business}', ShopDetails::class)->name('site.shop');
 
 // Password reset (guest only)
 Route::get('/forgot-password', ForgotPassword::class)->name('password.request');

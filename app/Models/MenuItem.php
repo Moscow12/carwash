@@ -30,6 +30,7 @@ class MenuItem extends Model
         'is_available',
         'prep_time_mins',
         'status',
+        'is_published',
     ];
 
     protected $casts = [
@@ -39,6 +40,7 @@ class MenuItem extends Model
         'is_vegetarian' => 'boolean',
         'is_vegan' => 'boolean',
         'is_available' => 'boolean',
+        'is_published' => 'boolean',
     ];
 
     // Relationships
@@ -101,5 +103,35 @@ class MenuItem extends Model
     public function scopeVegetarian(Builder $query): Builder
     {
         return $query->where('is_vegetarian', true);
+    }
+
+    /** The business this menu item belongs to, via its outlet. */
+    public function resolveBusiness(): ?Business
+    {
+        return $this->outlet?->business;
+    }
+
+    /**
+     * Normalized card for the public marketplace.
+     * @return array<string,mixed>
+     */
+    public function toListingCard(): array
+    {
+        $price = $this->price !== null ? (float) $this->price : null;
+        $business = $this->resolveBusiness();
+
+        return [
+            'id' => $this->id,
+            'type' => 'menu',
+            'type_label' => 'Menu',
+            'title' => $this->name,
+            'price' => $price,
+            'price_label' => $price !== null ? 'TZS ' . number_format($price, 0) : null,
+            'image_url' => $this->image ? asset('storage/' . $this->image) : null,
+            'description' => $this->description,
+            'business' => $business,
+            'shop_url' => $business ? route('site.shop', $business->id, false) : null,
+            'created_at' => $this->created_at,
+        ];
     }
 }

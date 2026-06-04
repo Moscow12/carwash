@@ -227,8 +227,32 @@
         </div>
     </section>
 
-    <!-- Process -->
+    <!-- Published Services from the Marketplace -->
+    @if($publishedServices->isNotEmpty())
     <section class="section-padding">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-title">Services on the <span class="gradient-text">Marketplace</span></h2>
+                <p class="section-subtitle">Bookable services published by businesses on CAMS</p>
+            </div>
+            <div class="row g-4">
+                @foreach($publishedServices as $card)
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <x-listing-card :card="$card" />
+                    </div>
+                @endforeach
+            </div>
+            <div class="text-center mt-5">
+                <a href="{{ route('site.marketplace') }}" class="btn btn-outline-cams btn-lg">
+                    Explore the Marketplace <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+    @endif
+
+    <!-- Process -->
+    <section class="section-padding bg-light">
         <div class="container">
             <div class="text-center mb-5">
                 <h2 class="section-title">How It <span class="gradient-text">Works</span></h2>

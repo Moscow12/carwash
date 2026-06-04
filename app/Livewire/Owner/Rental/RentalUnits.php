@@ -52,6 +52,7 @@ class RentalUnits extends Component
     public $deposit_amount = '';
     // 'occupied' is intentionally NOT in this list — it's derived from active tenancy
     public $status = 'vacant';
+    public $is_published = false;
     public $description = '';
 
     // Pivot: feature IDs the user has ticked
@@ -116,6 +117,7 @@ class RentalUnits extends Component
         // If the unit is currently occupied, status stays read-only-ish — but allow
         // the user to flip between vacant/maintenance/reserved freely.
         $this->status = $unit->status === 'occupied' ? 'vacant' : $unit->status;
+        $this->is_published = (bool) $unit->is_published;
         $this->description = $unit->description ?? '';
         $this->selectedFeatures = $unit->features->pluck('id')->toArray();
         $this->editMode = true;
@@ -199,6 +201,7 @@ class RentalUnits extends Component
             'monthly_rent' => 'required|numeric|min:0',
             'deposit_amount' => 'required|numeric|min:0',
             'status' => 'required|in:vacant,maintenance,reserved',
+            'is_published' => 'boolean',
             'description' => 'nullable|string|max:1000',
             'selectedFeatures' => 'array',
             'selectedFeatures.*' => 'uuid|exists:unit_features,id',
@@ -288,6 +291,19 @@ class RentalUnits extends Component
         session()->flash('message', "Unit marked as {$status}.");
     }
 
+    public function togglePublish(string $id): void
+    {
+        if (!$this->ensureBusinessSelected()) return;
+
+        $unit = $this->scopedQuery()->find($id);
+        if (!$unit) return;
+
+        $unit->update(['is_published' => ! $unit->is_published]);
+        session()->flash('message', $unit->is_published
+            ? 'Unit published to the marketplace.'
+            : 'Unit unpublished from the marketplace.');
+    }
+
     public function deleteImage(string $imageId): void
     {
         if (!$this->ensureBusinessSelected() || !$this->unitId) return;
@@ -337,6 +353,7 @@ class RentalUnits extends Component
         $this->has_water = true;
         $this->has_furniture = false;
         $this->status = 'vacant';
+        $this->is_published = false;
         $this->resetValidation();
     }
 

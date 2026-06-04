@@ -228,6 +228,18 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Marketplace</label>
+                                <div class="form-check form-switch p-2 rounded border bg-light" style="padding-left: 3rem !important;">
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                           id="itemPublish" style="cursor:pointer;width:2.5em;height:1.4em;"
+                                           wire:model="is_published">
+                                    <label class="form-check-label ms-2 fw-medium" for="itemPublish" style="cursor:pointer;">
+                                        <i class="ti ti-world me-1 text-info"></i>Publish to public marketplace
+                                        <small class="d-block text-muted fw-normal">Visible to everyone on the public site (needs a photo & active status).</small>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
