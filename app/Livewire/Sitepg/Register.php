@@ -43,7 +43,7 @@ class Register extends Component
     {
         return [
             'name' => ['required', 'string', 'min:3', 'max:150'],
-            'email' => ['required', 'email:rfc,dns', 'max:200', 'unique:users,email'],
+            'email' => ['required', 'email:rfc', 'max:200', 'unique:users,email'],
             'phone' => ['required', 'string', 'min:7', 'max:25', 'unique:users,phone'],
             'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
             'terms' => ['accepted'],
