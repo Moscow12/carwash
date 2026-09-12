@@ -44,6 +44,9 @@
                         <button wire:click="setTab('tools')" class="nav-link text-start rounded-0 {{ $activeTab === 'tools' ? 'active' : '' }}">
                             <i class="ti ti-tool me-2"></i>System Tools
                         </button>
+                        <button wire:click="setTab('payment_gateway')" class="nav-link text-start rounded-0 {{ $activeTab === 'payment_gateway' ? 'active' : '' }}">
+                            <i class="ti ti-credit-card me-2"></i>Payment Gateway
+                        </button>
                     </div>
                 </div>
             </div>
@@ -322,6 +325,104 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Payment Gateway Settings -->
+            @if ($activeTab === 'payment_gateway')
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Payment Gateway (Pesapal)</h5>
+                    </div>
+                    <div class="card-body">
+                        <form wire:submit.prevent="saveGatewaySettings">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Active Environment</label>
+                                    <select wire:model="active_environment" class="form-select @error('active_environment') is-invalid @enderror">
+                                        <option value="test">Sandbox / Test</option>
+                                        <option value="live">Live / Production</option>
+                                    </select>
+                                    @error('active_environment')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">IPN Notification Type</label>
+                                    <select wire:model="ipn_notification_type" class="form-select @error('ipn_notification_type') is-invalid @enderror">
+                                        <option value="GET">GET</option>
+                                        <option value="POST">POST</option>
+                                    </select>
+                                    @error('ipn_notification_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="card border h-100">
+                                        <div class="card-header bg-transparent">
+                                            <strong>Sandbox / Test Credentials</strong>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <label class="form-label">Consumer Key</label>
+                                                <input type="text" wire:model="test_consumer_key" class="form-control" autocomplete="off">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Consumer Secret</label>
+                                                <input type="password" wire:model="test_consumer_secret" class="form-control" autocomplete="new-password">
+                                            </div>
+                                            <div class="mb-0">
+                                                <label class="form-label">Registered IPN ID</label>
+                                                <input type="text" value="{{ $test_ipn_id ?: 'Not registered yet' }}" class="form-control" disabled>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border h-100">
+                                        <div class="card-header bg-transparent">
+                                            <strong>Live / Production Credentials</strong>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <label class="form-label">Consumer Key</label>
+                                                <input type="text" wire:model="live_consumer_key" class="form-control" autocomplete="off">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Consumer Secret</label>
+                                                <input type="password" wire:model="live_consumer_secret" class="form-control" autocomplete="new-password">
+                                            </div>
+                                            <div class="mb-0">
+                                                <label class="form-label">Registered IPN ID</label>
+                                                <input type="text" value="{{ $live_ipn_id ?: 'Not registered yet' }}" class="form-control" disabled>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <span wire:loading.remove wire:target="saveGatewaySettings"><i class="ti ti-device-floppy me-1"></i>Save Settings</span>
+                                    <span wire:loading wire:target="saveGatewaySettings">Saving...</span>
+                                </button>
+                                <button type="button" wire:click="registerIpn" class="btn btn-outline-secondary">
+                                    <span wire:loading.remove wire:target="registerIpn"><i class="ti ti-broadcast me-1"></i>Register IPN</span>
+                                    <span wire:loading wire:target="registerIpn">Registering...</span>
+                                </button>
+                                <button type="button" wire:click="testConnection" class="btn btn-outline-info">
+                                    <span wire:loading.remove wire:target="testConnection"><i class="ti ti-plug me-1"></i>Test Connection</span>
+                                    <span wire:loading wire:target="testConnection">Testing...</span>
+                                </button>
+                            </div>
+
+                            @if ($last_test_connection_at)
+                                <div class="mt-3 small {{ $last_test_connection_ok ? 'text-success' : 'text-danger' }}">
+                                    <i class="ti ti-{{ $last_test_connection_ok ? 'circle-check' : 'circle-x' }} me-1"></i>
+                                    Last tested {{ $last_test_connection_at }}: {{ $last_test_connection_message }}
+                                </div>
+                            @endif
+                        </form>
                     </div>
                 </div>
             @endif

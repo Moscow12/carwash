@@ -2,6 +2,9 @@
 
 namespace App\Livewire\Dashboard\Settings;
 
+use App\Models\PaymentGatewaySetting;
+use App\Services\Pesapal\PesapalClient;
+use App\Services\Pesapal\PesapalException;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -28,10 +31,42 @@ class Index extends Component
     public $new_password = '';
     public $new_password_confirmation = '';
 
+    // Payment gateway (Pesapal) settings
+    public $active_environment = 'test';
+    public $ipn_notification_type = 'GET';
+    public $test_consumer_key = '';
+    public $test_consumer_secret = '';
+    public $test_ipn_id = '';
+    public $live_consumer_key = '';
+    public $live_consumer_secret = '';
+    public $live_ipn_id = '';
+    public $last_test_connection_at = null;
+    public $last_test_connection_ok = null;
+    public $last_test_connection_message = null;
+
     public function mount()
     {
         $this->name = Auth::user()->name;
         $this->email = Auth::user()->email;
+
+        $this->hydrateGatewaySettings();
+    }
+
+    private function hydrateGatewaySettings(): void
+    {
+        $settings = PaymentGatewaySetting::current();
+
+        $this->active_environment = $settings->active_environment;
+        $this->ipn_notification_type = $settings->ipn_notification_type;
+        $this->test_consumer_key = $settings->test_consumer_key ?? '';
+        $this->test_consumer_secret = $settings->test_consumer_secret ?? '';
+        $this->test_ipn_id = $settings->test_ipn_id ?? '';
+        $this->live_consumer_key = $settings->live_consumer_key ?? '';
+        $this->live_consumer_secret = $settings->live_consumer_secret ?? '';
+        $this->live_ipn_id = $settings->live_ipn_id ?? '';
+        $this->last_test_connection_at = $settings->last_test_connection_at?->diffForHumans();
+        $this->last_test_connection_ok = $settings->last_test_connection_ok;
+        $this->last_test_connection_message = $settings->last_test_connection_message;
     }
 
     public function setTab($tab)
@@ -50,6 +85,71 @@ class Index extends Component
 
         // Here you would save to a settings table or config
         session()->flash('success', 'General settings saved successfully.');
+    }
+
+    public function saveGatewaySettings()
+    {
+        $this->validate([
+            'active_environment' => 'required|in:test,live',
+            'ipn_notification_type' => 'required|in:GET,POST',
+            'test_consumer_key' => 'nullable|string',
+            'test_consumer_secret' => 'nullable|string',
+            'live_consumer_key' => 'nullable|string',
+            'live_consumer_secret' => 'nullable|string',
+        ]);
+
+        PaymentGatewaySetting::current()->update([
+            'active_environment' => $this->active_environment,
+            'ipn_notification_type' => $this->ipn_notification_type,
+            'test_consumer_key' => $this->test_consumer_key ?: null,
+            'test_consumer_secret' => $this->test_consumer_secret ?: null,
+            'live_consumer_key' => $this->live_consumer_key ?: null,
+            'live_consumer_secret' => $this->live_consumer_secret ?: null,
+        ]);
+
+        $this->hydrateGatewaySettings();
+
+        session()->flash('success', 'Payment gateway settings saved successfully.');
+    }
+
+    public function registerIpn()
+    {
+        try {
+            $client = PesapalClient::forActiveEnvironment();
+            $client->registerIpn(route('subscriptions.ipn'));
+
+            $this->hydrateGatewaySettings();
+            session()->flash('success', 'IPN URL registered successfully with Pesapal.');
+        } catch (PesapalException $e) {
+            session()->flash('error', 'Failed to register IPN URL: ' . $e->getMessage());
+        }
+    }
+
+    public function testConnection()
+    {
+        $settings = PaymentGatewaySetting::current();
+
+        try {
+            PesapalClient::forActiveEnvironment()->getToken();
+
+            $settings->update([
+                'last_test_connection_at' => now(),
+                'last_test_connection_ok' => true,
+                'last_test_connection_message' => 'Connection successful — token retrieved.',
+            ]);
+
+            session()->flash('success', 'Pesapal connection test succeeded.');
+        } catch (PesapalException $e) {
+            $settings->update([
+                'last_test_connection_at' => now(),
+                'last_test_connection_ok' => false,
+                'last_test_connection_message' => $e->getMessage(),
+            ]);
+
+            session()->flash('error', 'Pesapal connection test failed: ' . $e->getMessage());
+        }
+
+        $this->hydrateGatewaySettings();
     }
 
     public function saveProfile()

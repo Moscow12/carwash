@@ -105,6 +105,16 @@ class Business extends Model
         return $this->hasOne(CarwashSetting::class, 'business_id');
     }
 
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(BusinessSubscription::class, 'business_id');
+    }
+
+    public function subscriptionTransactions(): HasMany
+    {
+        return $this->hasMany(SubscriptionTransaction::class, 'business_id');
+    }
+
     // Hotel module relationships
     public function hotelProfile(): HasOne
     {

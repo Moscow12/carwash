@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    // Structural Pesapal API constants only. Credentials and the active
+    // test/live environment are admin-configurable at runtime via the
+    // payment_gateway_settings table (see PaymentGatewaySetting model).
+    'pesapal' => [
+        'sandbox_base_url' => env('PESAPAL_SANDBOX_BASE_URL', 'https://cybqa.pesapal.com/pesapalv3/api'),
+        'live_base_url' => env('PESAPAL_LIVE_BASE_URL', 'https://pay.pesapal.com/v3/api'),
+        'timeout' => env('PESAPAL_HTTP_TIMEOUT', 30),
+        'token_ttl_buffer' => 30,
+    ],
+
 ];

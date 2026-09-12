@@ -26,6 +26,12 @@ use App\Livewire\Dashboard\Locations\CWards;
 use App\Livewire\Dashboard\Locations\Streets;
 use App\Livewire\Dashboard\Settings\Index as SettingsIndex;
 use App\Livewire\Dashboard\Businesses\Index as AdminBusinesses;
+use App\Livewire\Dashboard\SubscriptionPlans\Index as AdminSubscriptionPlans;
+use App\Livewire\Dashboard\BusinessSubscriptions\Index as AdminBusinessSubscriptions;
+use App\Livewire\Dashboard\SubscriptionPayments\Index as AdminSubscriptionPayments;
+use App\Livewire\Owner\Subscription\Index as OwnerSubscription;
+use App\Http\Controllers\Subscriptions\CallbackController as SubscriptionsCallbackController;
+use App\Http\Controllers\Subscriptions\IpnController as SubscriptionsIpnController;
 
 // Owner Pages
 use App\Livewire\Owner\Dashboard as OwnerDashboard;
@@ -142,11 +148,21 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
     // Settings
     Route::get('/settings', SettingsIndex::class)->name('admin.settings');
+
+    // Subscription Plans
+    Route::get('/subscription-plans', AdminSubscriptionPlans::class)->name('admin.subscription-plans');
+    Route::get('/business-subscriptions', AdminBusinessSubscriptions::class)->name('admin.business-subscriptions');
+    Route::get('/subscription-payments', AdminSubscriptionPayments::class)->name('admin.subscription-payments');
 });
 
+// Public Pesapal callback & IPN endpoints (no auth — Pesapal calls these directly).
+Route::get('/subscriptions/callback', SubscriptionsCallbackController::class)->name('subscriptions.callback');
+Route::match(['get', 'post'], '/subscriptions/ipn', SubscriptionsIpnController::class)->name('subscriptions.ipn');
+
 // Owner Dashboard (Protected Routes - Owner and Staff)
-Route::middleware(['auth', 'role:owner,staff'])->prefix('owner')->group(function () {
+Route::middleware(['auth', 'role:owner,staff', 'subscription.active'])->prefix('owner')->group(function () {
     Route::get('/', OwnerDashboard::class)->name('owner.dashboard');
+    Route::get('/subscription', OwnerSubscription::class)->name('owner.subscription');
     Route::get('/sales/dashboard', OwnerSalesDashboard::class)->middleware('module:pos')->name('owner.sales.dashboard');
     Route::get('/businesses', OwnerBusinesses::class)->name('owner.businesses');
     Route::get('/items', OwnerItems::class)->name('owner.items');

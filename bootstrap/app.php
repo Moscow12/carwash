@@ -16,6 +16,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'business.access' => \App\Http\Middleware\BusinessAccessMiddleware::class,
             'module' => \App\Http\Middleware\EnsureModuleAccess::class,
+            'subscription.active' => \App\Http\Middleware\EnsureActiveSubscription::class,
+        ]);
+
+        // Pesapal calls these endpoints directly with no Laravel session/CSRF token.
+        $middleware->validateCsrfTokens(except: [
+            'subscriptions/ipn',
+            'subscriptions/callback',
         ]);
 
         // Trust all proxies (needed for cPanel/shared hosting)

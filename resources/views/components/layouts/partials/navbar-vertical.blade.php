@@ -42,6 +42,24 @@
       <span class="text">Settings</span>
     </a>
   </li>
+  <li class="nav-item">
+    <a class='nav-link {{ request()->routeIs("admin.subscription-plans*") ? "active" : "" }}' href="{{ route('admin.subscription-plans') }}">
+      <span class="nav-icon"><i class="ti ti-file-invoice fs-5"></i></span>
+      <span class="text">Subscription Plans</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class='nav-link {{ request()->routeIs("admin.business-subscriptions*") ? "active" : "" }}' href="{{ route('admin.business-subscriptions') }}">
+      <span class="nav-icon"><i class="ti ti-credit-card fs-5"></i></span>
+      <span class="text">Manage Subscriptions</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class='nav-link {{ request()->routeIs("admin.subscription-payments*") ? "active" : "" }}' href="{{ route('admin.subscription-payments') }}">
+      <span class="nav-icon"><i class="ti ti-report-money fs-5"></i></span>
+      <span class="text">Payments Report</span>
+    </a>
+  </li>
 
   <!-- Location Management -->
   <li class="nav-item">

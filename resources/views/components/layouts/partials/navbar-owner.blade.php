@@ -10,6 +10,12 @@
             <span class="text">Dashboard</span>
           </a>
     </li>
+    <li class="nav-item">
+          <a class='nav-link {{ request()->routeIs("owner.subscription") ? "active" : "" }}' href="{{ route('owner.subscription') }}">
+            <span class="nav-icon"><i class="ti ti-credit-card fs-5"></i></span>
+            <span class="text">Subscription</span>
+          </a>
+    </li>
   @if($moduleKeys->contains('pos'))
   <!-- POS Management -->
   <li class="nav-item dropdown" id="posManagementMenu">

@@ -40,6 +40,14 @@
 
         <!-- container -->
         <div class="custom-container">
+          @if (session()->has('subscription_warning'))
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+              <i class="ti ti-alert-triangle me-2"></i>{{ session('subscription_warning') }}
+              <a href="{{ route('owner.subscription') }}" class="alert-link ms-1">Renew now</a>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          @endif
+
           {{ $slot }}
         </div>
       </div>
