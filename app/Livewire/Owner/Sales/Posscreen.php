@@ -45,6 +45,9 @@ class Posscreen extends Component
     // Staff (for services)
     public $selectedStaff = '';
 
+    /** Staff record of the logged-in user for the selected business, used as the default. */
+    public $defaultStaffId = '';
+
     // Payment - Multiple Payment Support
     public $showPaymentModal = false;
     public $paymentType = 'cash'; // cash, card, credit, multiple
@@ -114,6 +117,13 @@ class Posscreen extends Component
         $this->loadItems();
     }
 
+    public function clearFilters(): void
+    {
+        $this->search = '';
+        $this->selectedCategory = '';
+        $this->loadItems();
+    }
+
     public function loadData()
     {
         if (!$this->selectedBusiness) return;
@@ -172,23 +182,43 @@ class Posscreen extends Component
 
     public function loadStaffs()
     {
+        $userStaff = $this->resolveLoggedInStaff();
+
         $this->availableStaffs = staffs::where('business_id', $this->selectedBusiness)
             ->where('status', 'active')
             ->orderBy('name')
             ->pluck('name', 'id')
             ->toArray();
 
-        // Auto-select logged-in user's staff record if exists
-        if (empty($this->selectedStaff)) {
-            $userStaff = staffs::where('business_id', $this->selectedBusiness)
-                ->where('user_id', Auth::id())
-                ->where('status', 'active')
-                ->first();
+        $this->defaultStaffId = $userStaff && $userStaff->status === 'active' ? $userStaff->id : '';
+        $this->selectedStaff = $this->defaultStaffId ?: (string) (array_key_first($this->availableStaffs) ?? '');
+    }
 
-            if ($userStaff) {
-                $this->selectedStaff = $userStaff->id;
-            }
+    /**
+     * Find the logged-in user's staff record for the selected business, creating one when missing.
+     * An existing inactive record is returned as-is so a disabled staff member is not re-enabled.
+     */
+    private function resolveLoggedInStaff(): ?staffs
+    {
+        $user = Auth::user();
+
+        $existing = staffs::where('business_id', $this->selectedBusiness)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($existing) {
+            return $existing;
         }
+
+        return staffs::create([
+            'user_id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone ?? '',
+            'position' => ucfirst((string) $user->role),
+            'status' => 'active',
+            'business_id' => $this->selectedBusiness,
+        ]);
     }
 
     public function loadPaymentMethods()
@@ -309,7 +339,7 @@ class Posscreen extends Component
         $this->cartDiscount = 0;
         $this->cartItemsCount = 0;
         $this->customer_id = '';
-        $this->selectedStaff = '';
+        $this->selectedStaff = $this->defaultStaffId ?: (string) (array_key_first($this->availableStaffs) ?? '');
     }
 
     private function calculateTotals()
@@ -525,6 +555,11 @@ class Posscreen extends Component
     {
         if (empty($this->cart)) {
             session()->flash('error', 'Cart is empty.');
+            return;
+        }
+
+        if (! array_key_exists($this->selectedStaff, $this->availableStaffs)) {
+            session()->flash('error', 'Please select who is serving this sale.');
             return;
         }
 

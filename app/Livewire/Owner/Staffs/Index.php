@@ -246,17 +246,7 @@ class Index extends Component
 
                             $data['user_id'] = $user->id;
 
-                            // Create UserBusinessRole entry for the staff
-                            UserBusinessRole::updateOrCreate(
-                                [
-                                    'user_id' => $user->id,
-                                    'business_id' => $this->business_id,
-                                ],
-                                [
-                                    'role' => 'staff',
-                                    'is_active' => true,
-                                ]
-                            );
+                            $this->grantBusinessAccess($user->id);
                         }
                     } else {
                         // If canLogin is disabled and user exists, optionally deactivate user
@@ -286,13 +276,7 @@ class Index extends Component
 
                     $userId = $user->id;
 
-                    // Create UserBusinessRole entry for the staff
-                    UserBusinessRole::create([
-                        'user_id' => $user->id,
-                        'business_id' => $this->business_id,
-                        'role' => 'staff',
-                        'is_active' => true,
-                    ]);
+                    $this->grantBusinessAccess($user->id);
                 }
 
                 $data['user_id'] = $userId;
@@ -315,6 +299,26 @@ class Index extends Component
             DB::rollBack();
             session()->flash('error', 'Error saving staff: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Give a staff login access to the selected business.
+     * user_business_roles.role has no 'staff' value, so new access defaults to 'cashier'
+     * and an existing assignment keeps the role set on the User Roles page.
+     */
+    private function grantBusinessAccess(string $userId): void
+    {
+        $access = UserBusinessRole::firstOrNew([
+            'user_id' => $userId,
+            'business_id' => $this->business_id,
+        ]);
+
+        if (! $access->exists) {
+            $access->role = 'cashier';
+        }
+
+        $access->is_active = true;
+        $access->save();
     }
 
     public function toggleStatus($id)

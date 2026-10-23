@@ -16,14 +16,39 @@ class Listitems extends Component
 {
     use WithPagination;
 
+    /** Products below this balance are flagged as low stock. */
+    public const LOW_STOCK_THRESHOLD = 10;
+
     // Filters
     public $selectedBusiness = '';
     public $typeFilter = '';
     public $categoryFilter = '';
     public $unitFilter = '';
     public $statusFilter = '';
+    public $stockFilter = ''; // '', 'low' (below threshold, incl. out of stock) or 'out'
     public $search = '';
     public $perPage = 25;
+
+    // Sorting
+    public $sortBy = 'name';
+    public $sortDirection = 'asc';
+
+    /** @var array<string, string> sortable field => default direction on first click */
+    protected array $sortableFields = [
+        'name' => 'asc',
+        'cost_price' => 'desc',
+        'selling_price' => 'desc',
+        'profit_margin' => 'desc',
+        'stock_value_cost' => 'desc',
+        'stock_value_sell' => 'desc',
+    ];
+
+    /** @var array<string, string> computed sort fields => select alias; NULLs (services, no price) always sort last */
+    protected array $computedSortColumns = [
+        'profit_margin' => 'selling_margin',
+        'stock_value_cost' => 'stock_value_cost',
+        'stock_value_sell' => 'stock_value_sell',
+    ];
 
     // Active tab
     public $activeTab = 'products';
@@ -56,6 +81,46 @@ class Listitems extends Component
         $this->resetPage();
     }
 
+    public function updating($property): void
+    {
+        if (in_array($property, ['typeFilter', 'categoryFilter', 'unitFilter', 'statusFilter', 'stockFilter', 'perPage'], true)) {
+            $this->resetPage();
+        }
+    }
+
+    public function clearFilters(): void
+    {
+        $this->reset(['search', 'typeFilter', 'categoryFilter', 'unitFilter', 'statusFilter', 'stockFilter']);
+        $this->resetPage();
+    }
+
+    /**
+     * Quick filter from the summary cards: '' (all), 'product', 'Service' or 'low' stock.
+     */
+    public function quickFilter(string $filter): void
+    {
+        $this->typeFilter = in_array($filter, ['product', 'Service'], true) ? $filter : '';
+        $this->stockFilter = $filter === 'low' ? 'low' : '';
+        $this->resetPage();
+    }
+
+    /**
+     * Sort by a whitelisted column; clicking the active column again flips the direction.
+     */
+    public function sortTable(string $field): void
+    {
+        if (! array_key_exists($field, $this->sortableFields)) {
+            return;
+        }
+
+        $this->sortDirection = $this->sortBy === $field
+            ? ($this->sortDirection === 'asc' ? 'desc' : 'asc')
+            : $this->sortableFields[$field];
+        $this->sortBy = $field;
+
+        $this->resetPage();
+    }
+
     public function updatedSelectedBusiness()
     {
         $this->resetPage();
@@ -83,12 +148,43 @@ class Listitems extends Component
         $this->totalItems = (clone $baseQuery)->count();
         $this->totalServices = (clone $baseQuery)->services()->count();
         $this->totalProducts = (clone $baseQuery)->products()->count();
+
+        [$balanceSql, $balanceBindings] = $this->latestBalanceSql();
+        $this->lowStockCount = (clone $baseQuery)->products()
+            ->whereRaw("COALESCE(({$balanceSql}), 0) < ?", [...$balanceBindings, self::LOW_STOCK_THRESHOLD])
+            ->count();
+    }
+
+    /**
+     * SQL for an item's latest ledger balance in the selected business, for use inside an items query.
+     *
+     * @return array{0: string, 1: array<int, mixed>}
+     */
+    protected function latestBalanceSql(): array
+    {
+        $latestBalance = item_balance::select('current_balance')
+            ->whereColumn('item_balances.item_id', 'items.id')
+            ->where('item_balances.business_id', $this->selectedBusiness)
+            ->latest()
+            ->limit(1);
+
+        return [$latestBalance->toSql(), $latestBalance->getBindings()];
+    }
+
+    /**
+     * Find an item that belongs to one of the user's businesses.
+     */
+    protected function findOwnedItem($id): ?items
+    {
+        return items::whereKey($id)
+            ->whereIn('business_id', Auth::user()->assignedBusinesses()->pluck('id'))
+            ->first();
     }
 
     public function viewItem($id)
     {
-        $this->viewingItem = items::with(['category', 'unit', 'business'])->find($id);
-        $this->showViewModal = true;
+        $this->viewingItem = $this->findOwnedItem($id)?->load(['category', 'unit', 'business']);
+        $this->showViewModal = $this->viewingItem !== null;
     }
 
     public function closeViewModal()
@@ -99,7 +195,12 @@ class Listitems extends Component
 
     public function openStockModal($id)
     {
-        $this->stockItem = items::find($id);
+        $this->stockItem = $this->findOwnedItem($id);
+
+        if (! $this->stockItem) {
+            return;
+        }
+
         $this->stockQuantity = 0;
         $this->stockType = 'in';
         $this->stockNote = '';
@@ -171,7 +272,7 @@ class Listitems extends Component
     public function delete($id)
     {
         try {
-            $item = items::find($id);
+            $item = $this->findOwnedItem($id);
             if ($item) {
                 // Check if item has sales
                 if ($item->salesItems && $item->salesItems()->count() > 0) {
@@ -189,7 +290,7 @@ class Listitems extends Component
 
     public function toggleStatus($id)
     {
-        $item = items::find($id);
+        $item = $this->findOwnedItem($id);
         if ($item) {
             $item->update([
                 'status' => $item->status === 'active' ? 'inactive' : 'active',
@@ -246,7 +347,39 @@ class Listitems extends Component
                     });
                 })
                 ->with(['category', 'unit', 'business'])
-                ->orderBy('name');
+                ->select('items.*')
+                // Margin on selling price, aliased so it doesn't clash with the model's markup-based profit_margin accessor.
+                // NULL when there is no selling price, so those items sort last.
+                ->selectRaw('CASE WHEN selling_price > 0 THEN (selling_price - cost_price) * 100.0 / selling_price END as selling_margin');
+
+            // Stock values from the latest ledger balance, so they can be sorted across pages; NULL for services
+            [$balanceSql, $balanceBindings] = $this->latestBalanceSql();
+
+            if ($this->stockFilter === 'low' || $this->stockFilter === 'out') {
+                $query->where('type', 'product')->whereRaw(
+                    $this->stockFilter === 'out' ? "COALESCE(({$balanceSql}), 0) <= 0" : "COALESCE(({$balanceSql}), 0) < ?",
+                    $this->stockFilter === 'out' ? $balanceBindings : [...$balanceBindings, self::LOW_STOCK_THRESHOLD]
+                );
+            }
+
+            foreach (['stock_value_cost' => 'cost_price', 'stock_value_sell' => 'selling_price'] as $alias => $priceColumn) {
+                $query->selectRaw(
+                    "CASE WHEN items.type = 'Service' THEN NULL ELSE COALESCE(({$balanceSql}), 0) * items.{$priceColumn} END as {$alias}",
+                    $balanceBindings
+                );
+            }
+
+            $sortBy = array_key_exists($this->sortBy, $this->sortableFields) ? $this->sortBy : 'name';
+            $direction = $this->sortDirection === 'desc' ? 'desc' : 'asc';
+
+            if (isset($this->computedSortColumns[$sortBy])) {
+                $column = $this->computedSortColumns[$sortBy];
+                $query->orderByRaw("{$column} IS NULL")->orderBy($column, $direction);
+            } else {
+                $query->orderBy($sortBy, $direction);
+            }
+
+            $query->orderBy('name');
 
             $items = $query->paginate($this->perPage);
         }

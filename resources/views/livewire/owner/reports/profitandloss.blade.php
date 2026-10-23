@@ -273,13 +273,15 @@
                     <table class="table table-hover" id="productsTable">
                         <thead>
                             <tr>
-                                <th>Product</th>
-                                <th class="text-end">Gross Profit</th>
+                                <th style="width: 60px;">S/N</th>
+                                @include('livewire.owner.partials.sort-header', ['field' => 'name', 'label' => 'Product'])
+                                @include('livewire.owner.partials.sort-header', ['field' => 'gross_profit', 'label' => 'Gross Profit', 'class' => 'text-end'])
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($profitByProducts as $product)
-                            <tr>
+                            @forelse($this->sortedRows($profitByProducts) as $product)
+                            <tr wire:key="profit-product-{{ $loop->index }}-{{ $product['name'] }}">
+                                <td class="text-muted">{{ $loop->iteration }}</td>
                                 <td>{{ $product['name'] }} @if($product['code'] != '-')<small class="text-muted">({{ $product['code'] }})</small>@endif</td>
                                 <td class="text-end {{ $product['gross_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
                                     TSh {{ number_format($product['gross_profit'], 2) }}
@@ -287,7 +289,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="2" class="text-center text-muted">No data available</td>
+                                <td colspan="3" class="text-center text-muted">No data available</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -301,13 +303,15 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Category</th>
-                                <th class="text-end">Gross Profit</th>
+                                <th style="width: 60px;">S/N</th>
+                                @include('livewire.owner.partials.sort-header', ['field' => 'name', 'label' => 'Category'])
+                                @include('livewire.owner.partials.sort-header', ['field' => 'gross_profit', 'label' => 'Gross Profit', 'class' => 'text-end'])
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($profitByCategories as $category)
-                            <tr>
+                            @forelse($this->sortedRows($profitByCategories) as $category)
+                            <tr wire:key="profit-category-{{ $loop->index }}-{{ $category['name'] }}">
+                                <td class="text-muted">{{ $loop->iteration }}</td>
                                 <td>{{ $category['name'] }}</td>
                                 <td class="text-end {{ $category['gross_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
                                     TSh {{ number_format($category['gross_profit'], 2) }}
@@ -315,7 +319,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="2" class="text-center text-muted">No data available</td>
+                                <td colspan="3" class="text-center text-muted">No data available</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -329,14 +333,16 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Customer</th>
+                                <th style="width: 60px;">S/N</th>
+                                @include('livewire.owner.partials.sort-header', ['field' => 'name', 'label' => 'Customer'])
                                 <th class="text-end">Total Sales</th>
-                                <th class="text-end">Gross Profit</th>
+                                @include('livewire.owner.partials.sort-header', ['field' => 'gross_profit', 'label' => 'Gross Profit', 'class' => 'text-end'])
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($profitByCustomers as $customer)
-                            <tr>
+                            @forelse($this->sortedRows($profitByCustomers) as $customer)
+                            <tr wire:key="profit-customer-{{ $loop->index }}-{{ $customer['name'] }}">
+                                <td class="text-muted">{{ $loop->iteration }}</td>
                                 <td>{{ $customer['name'] }}</td>
                                 <td class="text-end">TSh {{ number_format($customer['total_sales'], 2) }}</td>
                                 <td class="text-end {{ $customer['gross_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
@@ -345,7 +351,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="3" class="text-center text-muted">No data available</td>
+                                <td colspan="4" class="text-center text-muted">No data available</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -359,14 +365,16 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Date</th>
+                                <th style="width: 60px;">S/N</th>
+                                @include('livewire.owner.partials.sort-header', ['field' => 'name', 'label' => 'Date'])
                                 <th class="text-end">Total Sales</th>
-                                <th class="text-end">Gross Profit</th>
+                                @include('livewire.owner.partials.sort-header', ['field' => 'gross_profit', 'label' => 'Gross Profit', 'class' => 'text-end'])
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($profitByDate as $dateRecord)
-                            <tr>
+                            @forelse($this->sortedRows($profitByDate, 'date') as $dateRecord)
+                            <tr wire:key="profit-date-{{ $dateRecord['date'] }}">
+                                <td class="text-muted">{{ $loop->iteration }}</td>
                                 <td>{{ $dateRecord['formatted_date'] }}</td>
                                 <td class="text-end">TSh {{ number_format($dateRecord['total_sales'], 2) }}</td>
                                 <td class="text-end {{ $dateRecord['gross_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
@@ -375,7 +383,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="3" class="text-center text-muted">No data available</td>
+                                <td colspan="4" class="text-center text-muted">No data available</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -389,14 +397,16 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Day</th>
+                                <th style="width: 60px;">S/N</th>
+                                @include('livewire.owner.partials.sort-header', ['field' => 'name', 'label' => 'Day'])
                                 <th class="text-end">Total Sales</th>
-                                <th class="text-end">Gross Profit</th>
+                                @include('livewire.owner.partials.sort-header', ['field' => 'gross_profit', 'label' => 'Gross Profit', 'class' => 'text-end'])
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($profitByDay as $dayRecord)
-                            <tr>
+                            @forelse($this->sortedRows($profitByDay, 'day') as $dayRecord)
+                            <tr wire:key="profit-day-{{ $dayRecord['day'] }}">
+                                <td class="text-muted">{{ $loop->iteration }}</td>
                                 <td>{{ $dayRecord['day'] }}</td>
                                 <td class="text-end">TSh {{ number_format($dayRecord['total_sales'], 2) }}</td>
                                 <td class="text-end {{ $dayRecord['gross_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
@@ -405,7 +415,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="3" class="text-center text-muted">No data available</td>
+                                <td colspan="4" class="text-center text-muted">No data available</td>
                             </tr>
                             @endforelse
                         </tbody>

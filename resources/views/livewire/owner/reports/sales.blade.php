@@ -50,7 +50,7 @@
                     <x-forms.select2
                         name="customer_id"
                         label="Customer"
-                        :options="$customersList"
+                        :options="collect($customersList)->pluck('name', 'id')"
                         wire:model.live="customer_id"
                         placeholder="All Customers"
                         wrapper="false"
@@ -62,7 +62,7 @@
                     <x-forms.select2
                         name="category_id"
                         label="Category"
-                        :options="$categories"
+                        :options="collect($categories)->pluck('name', 'id')"
                         wire:model.live="category_id"
                         placeholder="All Categories"
                         wrapper="false"
@@ -73,10 +73,8 @@
                 <div class="col-md-3">
                     <label class="form-label">Payment Method:</label>
                     <select class="form-select" wire:model.live="payment_method">
-                        <option value="">All Methods</option>
+                        <option value="">All Payments</option>
                         <option value="cash">Cash</option>
-                        <option value="card">Card</option>
-                        <option value="mobile">Mobile Money</option>
                         <option value="credit">Credit</option>
                     </select>
                 </div>
@@ -141,6 +139,40 @@
         </div>
     </div>
 
+    <!-- Cash vs Credit split -->
+    @php
+        $splitTotal = $summary['cash_amount'] + $summary['credit_amount'];
+        $cashShare = $splitTotal > 0 ? round($summary['cash_amount'] / $splitTotal * 100, 1) : 0;
+        $creditShare = $splitTotal > 0 ? round(100 - $cashShare, 1) : 0;
+    @endphp
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <h6 class="mb-0">Payment Split</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button"
+                            wire:click="$set('payment_method', '{{ $payment_method === 'cash' ? '' : 'cash' }}')"
+                            class="btn btn-sm {{ $payment_method === 'cash' ? 'btn-success' : 'btn-outline-success' }}"
+                            title="{{ $payment_method === 'cash' ? 'Show all payments' : 'Show only cash sales' }}">
+                        <i class="ti ti-cash me-1"></i> Cash · TSh {{ number_format($summary['cash_amount'], 2) }}
+                        <span class="opacity-75">({{ $cashShare }}%)</span>
+                    </button>
+                    <button type="button"
+                            wire:click="$set('payment_method', '{{ $payment_method === 'credit' ? '' : 'credit' }}')"
+                            class="btn btn-sm {{ $payment_method === 'credit' ? 'btn-warning' : 'btn-outline-warning' }}"
+                            title="{{ $payment_method === 'credit' ? 'Show all payments' : 'Show only credit sales' }}">
+                        <i class="ti ti-file-invoice me-1"></i> Credit · TSh {{ number_format($summary['credit_amount'], 2) }}
+                        <span class="opacity-75">({{ $creditShare }}%)</span>
+                    </button>
+                </div>
+            </div>
+            <div class="progress" style="height: 10px;" role="img" aria-label="Cash {{ $cashShare }}%, credit {{ $creditShare }}%">
+                <div class="progress-bar bg-success" style="width: {{ $cashShare }}%"></div>
+                <div class="progress-bar bg-warning" style="width: {{ $creditShare }}%"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Tabs -->
     <div class="card">
         <div class="card-header bg-white">
@@ -192,6 +224,7 @@
                 <table class="table table-hover table-striped">
                     <thead class="table-light">
                         <tr>
+                            <th style="width: 60px;">S/N</th>
                             <th>Product</th>
                             <th>Customer</th>
                             <th>Invoice No.</th>
@@ -205,7 +238,9 @@
                     </thead>
                     <tbody>
                         @forelse($detailedData as $item)
-                        <tr>
+                        @php $payment = $this->paymentIndicator($item->payment_type, $item->payment_status); @endphp
+                        <tr class="payment-row payment-row-{{ $payment['color'] }}" wire:key="sale-line-{{ $item->id }}">
+                            <td class="text-muted">{{ $detailedData->firstItem() + $loop->index }}</td>
                             <td>{{ $item->product_name }}</td>
                             <td>{{ $item->customer_name ?? 'Walk-In Customer' }}</td>
                             <td>
@@ -220,7 +255,14 @@
                             <td class="text-end text-success fw-bold">
                                 TSh {{ number_format(($item->price * $item->quantity) - ($item->discount ?? 0), 2) }}
                             </td>
-                            <td><span class="badge bg-info">{{ ucfirst($item->payment_type ?? 'Cash') }}</span></td>
+                            <td>
+                                <span class="badge bg-{{ $payment['color'] }}-subtle text-{{ $payment['color'] }}-emphasis border border-{{ $payment['color'] }}-subtle">
+                                    <i class="ti {{ $payment['icon'] }} me-1"></i>{{ $payment['label'] }}
+                                </span>
+                                @if($payment['status'])
+                                    <small class="d-block mt-1 text-{{ $payment['status_color'] }} fw-medium">{{ $payment['status'] }}</small>
+                                @endif
+                            </td>
                         </tr>
                         @empty
                         <tr>
@@ -251,25 +293,29 @@
                 <table class="table table-hover table-striped">
                     <thead class="table-light">
                         <tr>
+                            <th style="width: 60px;">S/N</th>
                             <th>Product</th>
                             <th class="text-end">Total Quantity</th>
                             <th class="text-end">Avg. Unit Price</th>
                             <th class="text-end">Total Discount</th>
+                            <th class="text-end"><i class="ti ti-cash text-success me-1"></i>Cash</th>
+                            <th class="text-end"><i class="ti ti-file-invoice text-warning me-1"></i>Credit</th>
                             <th class="text-end">Total Amount</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($groupedData as $item)
-                        <tr>
+                        <tr wire:key="grouped-{{ $item->item_id }}">
+                            <td class="text-muted">{{ $groupedData->firstItem() + $loop->index }}</td>
                             <td>{{ $item->product_name }}</td>
                             <td class="text-end">{{ number_format($item->total_quantity, 2) }}</td>
                             <td class="text-end">TSh {{ number_format($item->avg_price, 2) }}</td>
                             <td class="text-end">TSh {{ number_format($item->total_discount, 2) }}</td>
-                            <td class="text-end text-success fw-bold">TSh {{ number_format($item->total_amount, 2) }}</td>
+                            @include('livewire.owner.reports.partials.payment-split-cells', ['row' => $item])
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">
+                            <td colspan="8" class="text-center text-muted py-4">
                                 <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
                                 No sales data found for the selected filters.
                             </td>
@@ -296,23 +342,27 @@
                 <table class="table table-hover table-striped">
                     <thead class="table-light">
                         <tr>
+                            <th style="width: 60px;">S/N</th>
                             <th>Category</th>
                             <th class="text-end">Total Quantity</th>
                             <th class="text-end">Total Discount</th>
+                            <th class="text-end"><i class="ti ti-cash text-success me-1"></i>Cash</th>
+                            <th class="text-end"><i class="ti ti-file-invoice text-warning me-1"></i>Credit</th>
                             <th class="text-end">Total Amount</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($byCategoryData as $item)
-                        <tr>
+                        <tr wire:key="category-{{ $item->category_id }}">
+                            <td class="text-muted">{{ $byCategoryData->firstItem() + $loop->index }}</td>
                             <td>{{ $item->category_name }}</td>
                             <td class="text-end">{{ number_format($item->total_quantity, 2) }}</td>
                             <td class="text-end">TSh {{ number_format($item->total_discount, 2) }}</td>
-                            <td class="text-end text-success fw-bold">TSh {{ number_format($item->total_amount, 2) }}</td>
+                            @include('livewire.owner.reports.partials.payment-split-cells', ['row' => $item])
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" class="text-center text-muted py-4">
+                            <td colspan="7" class="text-center text-muted py-4">
                                 <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
                                 No sales data found for the selected filters.
                             </td>
@@ -334,6 +384,12 @@
             @endif
         </div>
     </div>
+
+    <style>
+        .payment-row > td:first-child { box-shadow: inset 4px 0 0 var(--row-payment-color); }
+        .payment-row-success { --row-payment-color: var(--bs-success); }
+        .payment-row-warning { --row-payment-color: var(--bs-warning); }
+    </style>
 
     <!-- Loading Indicator - Non-blocking -->
     <div wire:loading.delay wire:loading.class="opacity-100" class="opacity-0 position-fixed top-0 end-0 m-3 p-2 bg-primary text-white rounded shadow" style="z-index: 1050; transition: opacity 0.2s;">

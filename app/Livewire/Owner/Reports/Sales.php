@@ -193,6 +193,7 @@ class Sales extends Component
                 'sales.sale_date',
                 'sales.customer_id',
                 'sales.payment_type',
+                'sales.payment_status',
                 'sales.id as sale_id',
                 'items.name as product_name',
                 'items.barcode as sku',
@@ -246,7 +247,8 @@ class Sales extends Component
                 DB::raw('SUM(sales_items.quantity) as total_quantity'),
                 DB::raw('AVG(sales_items.price) as avg_price'),
                 DB::raw('SUM(COALESCE(sales_items.discount, 0)) as total_discount'),
-                DB::raw('SUM((sales_items.price * sales_items.quantity) - COALESCE(sales_items.discount, 0)) as total_amount')
+                DB::raw('SUM((sales_items.price * sales_items.quantity) - COALESCE(sales_items.discount, 0)) as total_amount'),
+                ...$this->paymentTypeAmountColumns()
             )
             ->groupBy('items.id', 'items.name', 'items.barcode')
             ->orderBy('total_amount', 'desc')
@@ -261,7 +263,8 @@ class Sales extends Component
                 'categories.name as category_name',
                 DB::raw('SUM(sales_items.quantity) as total_quantity'),
                 DB::raw('SUM(COALESCE(sales_items.discount, 0)) as total_discount'),
-                DB::raw('SUM((sales_items.price * sales_items.quantity) - COALESCE(sales_items.discount, 0)) as total_amount')
+                DB::raw('SUM((sales_items.price * sales_items.quantity) - COALESCE(sales_items.discount, 0)) as total_amount'),
+                ...$this->paymentTypeAmountColumns()
             )
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->groupBy('categories.id', 'categories.name')
@@ -273,10 +276,62 @@ class Sales extends Component
     {
         $query = $this->getBaseQuery();
 
+        $amountByPaymentType = $this->getBaseQuery()
+            ->select('sales.payment_type', DB::raw('SUM((sales_items.price * sales_items.quantity) - COALESCE(sales_items.discount, 0)) as total_amount'))
+            ->groupBy('sales.payment_type')
+            ->pluck('total_amount', 'payment_type');
+
         return [
             'total_quantity' => (float) $query->sum('sales_items.quantity'),
             'total_discount' => (float) $query->sum('sales_items.discount'),
             'total_amount' => (float) $query->sum(DB::raw('(sales_items.price * sales_items.quantity) - COALESCE(sales_items.discount, 0)')),
+            'cash_amount' => (float) ($amountByPaymentType['cash'] ?? 0),
+            'credit_amount' => (float) ($amountByPaymentType['credit'] ?? 0),
+        ];
+    }
+
+    /**
+     * Cash and credit totals per group, so grouped tabs can show the payment split.
+     *
+     * @return array<int, \Illuminate\Contracts\Database\Query\Expression>
+     */
+    protected function paymentTypeAmountColumns(): array
+    {
+        $lineAmount = '(sales_items.price * sales_items.quantity) - COALESCE(sales_items.discount, 0)';
+
+        return [
+            DB::raw("SUM(CASE WHEN sales.payment_type = 'credit' THEN {$lineAmount} ELSE 0 END) as credit_amount"),
+            DB::raw("SUM(CASE WHEN sales.payment_type = 'credit' THEN 0 ELSE {$lineAmount} END) as cash_amount"),
+        ];
+    }
+
+    /**
+     * Colour, icon and label for a sale's payment type, with the credit settlement state.
+     *
+     * @return array{color: string, icon: string, label: string, status: ?string, status_color: ?string}
+     */
+    public function paymentIndicator(?string $paymentType, ?string $paymentStatus): array
+    {
+        if ($paymentType === 'credit') {
+            return [
+                'color' => 'warning',
+                'icon' => 'ti-file-invoice',
+                'label' => 'Credit',
+                'status' => ucfirst($paymentStatus ?: 'unpaid'),
+                'status_color' => match ($paymentStatus) {
+                    'paid' => 'success',
+                    'partial' => 'info',
+                    default => 'danger',
+                },
+            ];
+        }
+
+        return [
+            'color' => 'success',
+            'icon' => 'ti-cash',
+            'label' => 'Cash',
+            'status' => $paymentStatus === 'partial' ? 'Partial' : null,
+            'status_color' => $paymentStatus === 'partial' ? 'info' : null,
         ];
     }
 

@@ -164,6 +164,7 @@
                 <table class="table table-hover table-striped mb-0">
                     <thead class="table-light position-sticky top-0" style="z-index: 1;">
                         <tr>
+                            <th style="width: 60px;">S/N</th>
                             <th>Invoice</th>
                             <th>Date</th>
                             <th>Customer</th>
@@ -181,7 +182,8 @@
                                 $paidAmount = (float) $sale->payments->sum('amount');
                                 $unpaidAmount = max(0, (float) $sale->total_amount - $paidAmount);
                             @endphp
-                            <tr>
+                            <tr wire:key="sale-{{ $sale->id }}">
+                                <td class="text-muted">{{ $sales->firstItem() + $loop->index }}</td>
                                 <td>
                                     <span class="fw-medium text-primary">{{ $sale->invoice_number }}</span>
                                     <br>
@@ -246,7 +248,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center py-5">
+                                <td colspan="10" class="text-center py-5">
                                     <div class="text-muted">
                                         <i class="ti ti-receipt-off fs-1 d-block mb-2"></i>
                                         No sales found for the selected filters
@@ -338,6 +340,7 @@
                             <table class="table table-sm table-bordered">
                                 <thead class="table-light">
                                     <tr>
+                                        <th style="width: 50px;">S/N</th>
                                         <th>Item</th>
                                         <th>Plate Number</th>
                                         <th class="text-center">Qty</th>
@@ -348,7 +351,8 @@
                                 </thead>
                                 <tbody>
                                     @foreach($selectedSaleItems as $item)
-                                        <tr>
+                                        <tr wire:key="sale-detail-item-{{ $loop->index }}">
+                                            <td class="text-muted">{{ $loop->iteration }}</td>
                                             <td>{{ $item['item']['name'] ?? '-' }}</td>
                                             <td>{{ $item['plate_number'] ?? '-' }}</td>
                                             <td class="text-center">{{ $item['quantity'] }}</td>
@@ -360,7 +364,7 @@
                                 </tbody>
                                 <tfoot class="table-light">
                                     <tr>
-                                        <td colspan="5" class="text-end fw-bold">Total Amount:</td>
+                                        <td colspan="6" class="text-end fw-bold">Total Amount:</td>
                                         <td class="text-end fw-bold text-primary">TZS {{ number_format($selectedSale['total_amount']) }}</td>
                                     </tr>
                                 </tfoot>
@@ -681,6 +685,7 @@
                                 <div>Thank you for your business!</div>
                                 <div class="small">Please visit again</div>
                             @endif
+                            <div class="receipt-powered-by">Powered by Tech Scales Co. Ltd</div>
                         </div>
                     </div>
                 </div>
@@ -800,6 +805,14 @@
             margin-top: 10px;
             font-size: 11px;
         }
+        .receipt-powered-by {
+            margin-top: 8px;
+            padding-top: 4px;
+            border-top: 1px dashed #000;
+            font-size: 9px;
+            text-align: center;
+            color: #555;
+        }
         @media print {
             body * { visibility: hidden; }
             #printableReceipt, #printableReceipt * { visibility: visible; }
@@ -860,8 +873,9 @@
                         .receipt-balance { font-weight: bold; }
                         .receipt-change { font-weight: bold; }
                         .receipt-footer { text-align: center; margin-top: 10px; font-size: 11px; }
+                        .receipt-powered-by { margin-top: 8px; padding-top: 4px; border-top: 1px dashed #000; font-size: 9px; text-align: center; color: #555; }
                     </style>
-                </head>
+                <\/head>
                 <body>
                     <div class="receipt-wrapper">
                         ${content}
@@ -872,8 +886,8 @@
                             setTimeout(function() { window.close(); }, 500);
                         };
                     <\/script>
-                </body>
-                </html>
+                <\/body>
+                <\/html>
             `);
             printWindow.document.close();
         }

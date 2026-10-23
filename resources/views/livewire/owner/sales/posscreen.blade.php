@@ -1,383 +1,382 @@
-<div class="pos-container">
+<div class="pos-container" x-data="{ view: 'products' }" :data-view="view">
     <style>
-        :root {
-            --pos-primary: #0d6efd;
-            --pos-success: #198754;
-            --pos-warning: #ffc107;
-            --pos-danger: #dc3545;
-            --pos-info: #0dcaf0;
-            --pos-bg: #f0f4f8;
-            --pos-header: #e8f4fc;
-        }
-
         .pos-container {
-            min-height: 100vh;
+            --pos-surface: var(--bs-body-bg);
+            --pos-muted: var(--bs-tertiary-bg);
+            --pos-border: var(--bs-border-color);
+            --pos-cart-width: 400px;
             display: flex;
             flex-direction: column;
-            background: var(--pos-bg);
+            background: var(--pos-muted);
+            border: 1px solid var(--pos-border);
+            border-radius: 16px;
+            overflow: clip;
+        }
+
+        @media (min-width: 992px) {
+            .pos-container { height: calc(100dvh - 130px); min-height: 560px; }
+            .product-grid { overflow-y: auto; flex: 1; }
         }
 
         /* Header */
         .pos-header {
-            background: var(--pos-header);
-            padding: 10px 15px;
-            border-bottom: 1px solid #d0e3f0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            background: var(--pos-surface);
+            border-bottom: 1px solid var(--pos-border);
+            padding: 10px 16px;
         }
 
-        /* Main Layout */
-        .pos-main {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        /* Desktop: Side by side */
-        @media (min-width: 992px) {
-            .pos-cart { width: 45%; }
-            .pos-products { width: 55%; }
-            .mobile-toggle { display: none !important; }
-            .pos-cart, .pos-products { display: flex !important; }
-        }
-
-        /* Mobile/Tablet: Full width with toggle */
-        @media (max-width: 991px) {
-            .pos-cart, .pos-products {
-                width: 100%;
-                display: none;
-            }
-            .pos-cart.active, .pos-products.active {
-                display: flex !important;
-            }
-            .mobile-toggle {
-                display: flex !important;
-            }
-        }
-
-        .pos-cart {
-            background: #fff;
-            flex-direction: column;
-            border-right: 1px solid #e0e0e0;
-        }
-
-        .pos-products {
-            background: #f8fafc;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* Mobile Toggle Tabs */
-        .mobile-toggle {
-            display: none;
-            background: #fff;
-            border-bottom: 2px solid #e0e0e0;
-        }
-
-        .mobile-toggle .toggle-btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            background: transparent;
-            font-weight: 600;
-            color: #6c757d;
-            position: relative;
-        }
-
-        .mobile-toggle .toggle-btn.active {
-            color: var(--pos-primary);
-        }
-
-        .mobile-toggle .toggle-btn.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--pos-primary);
-        }
-
-        .mobile-toggle .cart-badge {
-            position: absolute;
-            top: 8px;
-            right: 25%;
-            background: var(--pos-danger);
-            color: #fff;
+        .pos-header .store-icon {
+            width: 38px;
+            height: 38px;
             border-radius: 10px;
-            padding: 2px 6px;
-            font-size: 10px;
-            min-width: 18px;
-        }
-
-        /* Product Grid - Responsive */
-        .product-grid {
-            display: grid;
-            gap: 10px;
-            padding: 10px;
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        @media (min-width: 992px) {
-            .product-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
-        }
-
-        @media (min-width: 768px) and (max-width: 991px) {
-            .product-grid { grid-template-columns: repeat(4, 1fr); }
-        }
-
-        @media (min-width: 576px) and (max-width: 767px) {
-            .product-grid { grid-template-columns: repeat(3, 1fr); }
-        }
-
-        @media (max-width: 575px) {
-            .product-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 8px; }
-        }
-
-        .product-card {
-            background: #fff;
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 10px 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .product-card:hover, .product-card:active {
-            border-color: var(--pos-primary);
-            box-shadow: 0 2px 12px rgba(13, 110, 253, 0.2);
-            transform: scale(1.02);
-        }
-
-        .product-icon {
-            width: 45px;
-            height: 45px;
-            margin: 0 auto 6px;
-            background: #f0f4f8;
-            border-radius: 10px;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
         }
 
-        @media (max-width: 575px) {
-            .product-icon { width: 50px; height: 50px; }
-            .product-card { padding: 12px 8px; min-height: 140px; }
-            .product-card .small { font-size: 12px; }
+        /* Layout */
+        .pos-main {
+            display: flex;
+            flex: 1;
+            min-height: 0;
         }
 
-        /* Cart Table */
-        .cart-table {
+        .pos-products {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pos-cart {
+            width: var(--pos-cart-width);
+            flex-shrink: 0;
+            background: var(--pos-surface);
+            border-left: 1px solid var(--pos-border);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        /* Mobile tabs */
+        .pos-tabs {
+            display: none;
+            background: var(--pos-surface);
+            border-bottom: 1px solid var(--pos-border);
+            padding: 6px;
+            gap: 6px;
+        }
+
+        .pos-tabs button {
+            flex: 1;
+            border: 0;
+            border-radius: 10px;
+            padding: 10px;
+            font-weight: 600;
+            background: transparent;
+            color: var(--bs-secondary-color);
+        }
+
+        .pos-tabs button.active {
+            background: var(--bs-primary-bg-subtle);
+            color: var(--bs-primary-text-emphasis);
+        }
+
+        .pos-mobile-bar {
+            display: none;
+        }
+
+        @media (max-width: 991.98px) {
+            .pos-tabs { display: flex; }
+            .pos-cart {
+                width: 100%;
+                border-left: 0;
+            }
+            .pos-cart .cart-footer {
+                position: sticky;
+                bottom: 0;
+                z-index: 5;
+                box-shadow: 0 -6px 16px rgba(0, 0, 0, .06);
+            }
+            .pos-container[data-view="products"] .pos-cart { display: none; }
+            .pos-container[data-view="cart"] .pos-products { display: none; }
+            .pos-container[data-view="products"] .pos-mobile-bar { display: block; }
+            .pos-products { padding-bottom: 84px; }
+        }
+
+        .pos-mobile-bar {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+            background: var(--pos-surface);
+            border-top: 1px solid var(--pos-border);
+            z-index: 1030;
+        }
+
+        /* Category chips */
+        .category-chips {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+            scrollbar-width: none;
+        }
+
+        .category-chips::-webkit-scrollbar { display: none; }
+
+        .category-chips .btn {
+            white-space: nowrap;
+            border-radius: 999px;
+            flex-shrink: 0;
+        }
+
+        /* Product grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            padding: 16px;
+            align-content: start;
+        }
+
+        @media (max-width: 575.98px) {
+            .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 12px; }
+        }
+
+        .product-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+            text-align: left;
+            background: var(--pos-surface);
+            border: 1px solid var(--pos-border);
+            border-radius: 14px;
+            padding: 10px;
+            color: inherit;
+            transition: border-color .15s, box-shadow .15s, transform .1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .product-card:hover { border-color: var(--bs-primary); box-shadow: 0 4px 14px rgba(13, 110, 253, .12); }
+        .product-card:active { transform: scale(.97); }
+        .product-card.in-cart { border-color: var(--bs-primary); }
+
+        .product-thumb {
+            aspect-ratio: 4 / 3;
+            border-radius: 10px;
+            background: var(--pos-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+        .product-name {
+            font-weight: 600;
+            font-size: .875rem;
+            line-height: 1.25;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 2.5em;
+        }
+
+        .product-qty-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            min-width: 26px;
+            height: 26px;
+            border-radius: 13px;
+            padding: 0 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .8rem;
+            font-weight: 700;
+            background: var(--bs-primary);
+            color: #fff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
+        }
+
+        /* Cart */
+        .cart-items {
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
 
-        .cart-table table {
-            font-size: 14px;
+        .cart-line {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--pos-border);
         }
 
-        @media (max-width: 575px) {
-            .cart-table table { font-size: 13px; }
-            .cart-table .qty-btn {
-                padding: 8px 10px;
-                min-width: 36px;
-                min-height: 36px;
-            }
-            .cart-table input.form-control {
-                width: 48px !important;
-                padding: 6px 4px;
-                font-size: 14px;
-                min-height: 36px;
-            }
+        .qty-stepper {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid var(--pos-border);
+            border-radius: 10px;
+            overflow: hidden;
         }
 
-        .qty-btn {
-            padding: 4px 8px;
+        .qty-stepper button {
+            width: 38px;
+            height: 38px;
+            border: 0;
+            background: var(--pos-muted);
+            color: inherit;
         }
 
-        /* Cart Summary */
-        .cart-summary {
-            background: #f8fafc;
-            padding: 12px 15px;
-            border-top: 1px solid #e0e0e0;
+        .qty-stepper input {
+            width: 48px;
+            height: 38px;
+            border: 0;
+            text-align: center;
+            font-weight: 600;
+            background: transparent;
+            color: inherit;
+            -moz-appearance: textfield;
         }
 
-        /* Footer */
-        .pos-footer {
-            background: var(--pos-header);
-            padding: 10px 15px;
-            border-top: 1px solid #d0e3f0;
-            position: sticky;
-            bottom: 0;
-            z-index: 100;
+        .qty-stepper input::-webkit-outer-spin-button,
+        .qty-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .cart-footer {
+            border-top: 1px solid var(--pos-border);
+            padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+            background: var(--pos-surface);
         }
 
-        .btn-action {
-            min-height: 42px;
+        .pay-btn {
+            min-height: 52px;
+            font-weight: 600;
+            border-radius: 12px;
         }
 
-        @media (max-width: 767px) {
-            .pos-footer {
-                padding: 10px;
-            }
-            .pos-footer .btn-action {
-                padding: 10px 14px;
-                font-size: 14px;
-                min-height: 48px;
-                flex: 1;
-                min-width: 70px;
-            }
-            .pos-footer .total-display {
-                padding: 10px 15px;
-                font-size: 16px;
-                width: 100%;
-                text-align: center;
-                background: #fff;
-                border-radius: 8px;
-                margin-bottom: 8px;
-            }
-            .pos-footer .total-display .fs-4 {
-                font-size: 16px !important;
-            }
+        .pos-field {
+            border-radius: 12px;
+            padding: 10px 12px;
+            min-height: 60px;
+            background: var(--pos-muted);
         }
 
-        @media (max-width: 575px) {
-            .pos-footer .d-flex {
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-            .pos-footer .btn-action {
-                flex: 1;
-                min-width: auto;
-                padding: 10px 8px;
-            }
-            .pos-footer .btn-action .btn-text {
-                display: none;
-            }
-            .pos-footer .total-display {
-                width: 100%;
-                text-align: center;
-                order: -1;
-                margin-bottom: 8px;
-            }
-        }
+        .served-by { background: var(--bs-primary-bg-subtle); }
 
-        .btn-action {
-            min-width: 90px;
-            font-weight: 500;
-        }
-
-        .total-display {
-            background: #1a3a5c;
+        .pos-field .avatar-initials {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bs-primary);
             color: #fff;
-            padding: 10px 20px;
-            border-radius: 6px;
-            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
         }
 
-        /* Modals - Mobile Friendly */
-        @media (max-width: 575px) {
-            .modal-dialog {
-                margin: 10px;
-                max-width: calc(100% - 20px);
-            }
-            .modal-dialog.modal-lg {
-                max-width: calc(100% - 20px);
-            }
-            .modal-body {
-                padding: 15px;
-            }
-            .modal .form-control,
-            .modal .form-select {
-                font-size: 16px; /* Prevents zoom on iOS */
-            }
+        .customer-field .avatar-initials {
+            background: var(--bs-secondary-bg);
+            color: var(--bs-secondary-color);
         }
 
-        /* Touch-friendly inputs */
-        .form-control, .form-select {
-            min-height: 44px;
-        }
-
-        @media (max-width: 575px) {
-            .form-control-sm, .form-select-sm,
-            .input-group-sm > .form-control,
-            .input-group-sm > .form-select {
-                min-height: 40px;
-            }
-        }
-
-        /* Quantity buttons - touch friendly */
-        .qty-btn {
+        .pos-field .field-action {
             width: 36px;
             height: 36px;
             padding: 0;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
+            border-radius: 50%;
+            flex-shrink: 0;
         }
 
-        @media (max-width: 575px) {
-            .qty-btn { width: 32px; height: 32px; }
+        /* Make Select2 read like the plain "Served by" select */
+        .pos-field .select2-container { display: block; }
+
+        .pos-field .select2-container--bootstrap-5 .select2-selection {
+            border: 0;
+            background-color: transparent;
+            box-shadow: none !important;
+            min-height: 24px;
+            padding: 0 2.75rem 0 0;
+            font-weight: 600;
+            font-size: .875rem;
         }
 
-        /* Hide scrollbar but keep functionality */
-        .cart-table::-webkit-scrollbar,
-        .product-grid::-webkit-scrollbar {
-            width: 4px;
+        .pos-field .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+            padding: 0;
+            line-height: 24px;
+            color: inherit;
         }
 
-        .cart-table::-webkit-scrollbar-thumb,
-        .product-grid::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 2px;
+        .pos-field .select2-container--bootstrap-5 .select2-selection--single .select2-selection__placeholder {
+            color: inherit;
         }
 
-        /* Mobile adjustments */
-        @media (max-width: 767px) {
-            .input-group .select2-container .select2-selection {
-                min-height: 40px;
-            }
+        .pos-field .select2-container--bootstrap-5 .select2-selection__clear {
+            right: 1.5rem;
+        }
 
-            .input-group .btn {
-                padding-left: 0.5rem;
-                padding-right: 0.5rem;
-            }
+        .pos-container .pos-field .form-select {
+            border: 0;
+            background-color: transparent;
+            font-weight: 600;
+            padding-left: 0;
+            min-height: auto;
+            box-shadow: none !important;
+        }
+
+        .pos-toast {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1090;
+            width: min(92vw, 480px);
+        }
+
+        /* Touch-friendly inputs; 16px avoids iOS zoom */
+        .pos-container .form-control,
+        .pos-container .form-select { min-height: 44px; }
+
+        @media (max-width: 575.98px) {
+            .pos-container .form-control,
+            .pos-container .form-select { font-size: 16px; }
         }
     </style>
 
     {{-- Header --}}
     <div class="pos-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-                <span class="fw-bold text-primary">
-                    <i class="ti ti-map-pin me-1"></i>
-                    @php $businessName = $ownerBusinesses[$selectedBusiness] ?? 'Select Location'; @endphp
-                    <span class="d-none d-sm-inline">{{ $businessName }}</span>
-                    <span class="d-sm-none">{{ Str::limit($businessName, 10) }}</span>
-                </span>
-                <span class="text-muted small d-none d-md-inline">
-                    <i class="ti ti-calendar me-1"></i>
-                    {{ now()->format('M d, Y H:i') }}
-                </span>
+        <div class="d-flex justify-content-between align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 min-w-0">
+                <span class="store-icon bg-primary-subtle text-primary"><i class="ti ti-building-store fs-4"></i></span>
+                <div class="min-w-0">
+                    @if(count($ownerBusinesses) > 1)
+                        <select wire:model.live="selectedBusiness" class="form-select form-select-sm fw-semibold border-0 ps-0 bg-transparent shadow-none" style="min-height: auto;" aria-label="Business">
+                            @foreach($ownerBusinesses as $id => $name)
+                                <option value="{{ $id }}" wire:key="pos-business-{{ $id }}">{{ $name }}</option>
+                            @endforeach
+                        </select>
+                    @else
+                        <div class="fw-semibold text-truncate">{{ $ownerBusinesses[$selectedBusiness] ?? 'No business' }}</div>
+                    @endif
+                    <small class="text-muted d-none d-sm-block">{{ now()->format('D, M d Y · H:i') }}</small>
+                </div>
             </div>
             <div class="d-flex gap-2 align-items-center">
-                @if(count($ownerBusinesses) > 1)
-                <x-forms.select2
-                    name="selectedBusiness"
-                    :options="$ownerBusinesses"
-                    wire:model.live="selectedBusiness"
-                    wrapper="false"
-                    class="form-select form-select-sm"
-                    style="width: auto; max-width: 150px;"
-                />
-                @endif
-                <a href="{{ route('owner.dashboard') }}" class="btn btn-sm btn-outline-secondary d-none d-md-inline-flex">
-                    <i class="ti ti-arrow-left me-1"></i> Back
+                <button wire:click="openRecentModal" class="btn btn-sm btn-outline-secondary" title="Recent sales">
+                    <i class="ti ti-history"></i><span class="d-none d-md-inline ms-1">Recent</span>
+                </button>
+                <a href="{{ route('owner.dashboard') }}" class="btn btn-sm btn-outline-secondary" title="Back to dashboard">
+                    <i class="ti ti-arrow-left"></i><span class="d-none d-md-inline ms-1">Back</span>
                 </a>
             </div>
         </div>
@@ -385,273 +384,251 @@
 
     {{-- Flash Messages --}}
     @if (session()->has('message'))
-        <div class="alert alert-success alert-dismissible fade show m-2 py-2" role="alert">
-            <i class="ti ti-check me-2"></i>{{ session('message') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="pos-toast" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)" x-transition>
+            <div class="alert alert-success shadow d-flex align-items-center mb-0 py-2" role="alert">
+                <i class="ti ti-circle-check me-2 fs-5"></i>
+                <div class="flex-grow-1">{{ session('message') }}</div>
+                <button type="button" class="btn-close ms-2" @click="show = false"></button>
+            </div>
         </div>
     @endif
     @if (session()->has('error'))
-        <div class="alert alert-danger alert-dismissible fade show m-2 py-2" role="alert">
-            <i class="ti ti-alert-circle me-2"></i>{{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="pos-toast" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 6000)" x-transition>
+            <div class="alert alert-danger shadow d-flex align-items-center mb-0 py-2" role="alert">
+                <i class="ti ti-alert-circle me-2 fs-5"></i>
+                <div class="flex-grow-1">{{ session('error') }}</div>
+                <button type="button" class="btn-close ms-2" @click="show = false"></button>
+            </div>
         </div>
     @endif
 
-    {{-- Mobile Toggle Tabs --}}
-    <div class="mobile-toggle">
-        <button type="button" class="toggle-btn active" onclick="toggleView('products')">
-            <i class="ti ti-package me-1"></i> Products
+    {{-- Mobile Tabs --}}
+    <div class="pos-tabs">
+        <button type="button" :class="{ 'active': view === 'products' }" @click="view = 'products'">
+            <i class="ti ti-layout-grid me-1"></i> Products
         </button>
-        <button type="button" class="toggle-btn" onclick="toggleView('cart')">
+        <button type="button" :class="{ 'active': view === 'cart' }" @click="view = 'cart'">
             <i class="ti ti-shopping-cart me-1"></i> Cart
             @if($cartItemsCount > 0)
-                <span class="cart-badge">{{ $cartItemsCount }}</span>
+                <span class="badge rounded-pill bg-danger ms-1">{{ $cartItemsCount }}</span>
             @endif
         </button>
     </div>
 
-    {{-- Main Content --}}
     <div class="pos-main">
-        {{-- Cart Section --}}
-        <div class="pos-cart" id="cartSection">
-            {{-- Customer & Staff Selection --}}
-            <div class="p-2 p-md-3 border-bottom">
-                <div class="row g-2">
-                    <div class="col-12 col-md-7">
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="ti ti-user"></i></span>
+        {{-- Products --}}
+        <section class="pos-products">
+            <div class="p-3 pb-2 bg-body border-bottom">
+                <div class="input-group mb-2">
+                    <span class="input-group-text bg-body"><i class="ti ti-search"></i></span>
+                    <input type="search" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Search products or services..." aria-label="Search products">
+                    <button wire:click="openScanner" class="btn btn-primary" type="button" title="Scan barcode">
+                        <i class="ti ti-scan"></i><span class="d-none d-sm-inline ms-1">Scan</span>
+                    </button>
+                </div>
+                @if(count($availableCategories) > 0)
+                    <div class="category-chips">
+                        <button type="button" wire:click="$set('selectedCategory', '')" class="btn btn-sm {{ $selectedCategory === '' ? 'btn-primary' : 'btn-outline-secondary' }}">
+                            All
+                        </button>
+                        @foreach($availableCategories as $categoryId => $categoryName)
+                            <button type="button" wire:key="category-chip-{{ $categoryId }}" wire:click="$set('selectedCategory', '{{ $categoryId }}')" class="btn btn-sm {{ $selectedCategory === $categoryId ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                {{ $categoryName }}
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            @php
+                $cartQuantities = collect($cart)->groupBy('id')->map(fn ($lines) => $lines->sum('quantity'));
+            @endphp
+            <div class="product-grid" wire:loading.class="opacity-75" wire:target="search,selectedCategory">
+                @forelse($availableItems as $item)
+                    @php $inCartQuantity = $cartQuantities[$item['id']] ?? 0; @endphp
+                    <button type="button"
+                            wire:key="product-{{ $item['id'] }}"
+                            wire:click="addToCart('{{ $item['id'] }}')"
+                            class="product-card {{ $inCartQuantity > 0 ? 'in-cart' : '' }}"
+                            title="{{ $item['name'] }}">
+                        @if($inCartQuantity > 0)
+                            <span class="product-qty-badge">{{ $inCartQuantity + 0 }}</span>
+                        @endif
+                        <div class="product-thumb">
+                            @if(!empty($item['image']))
+                                <img src="{{ asset('storage/' . $item['image']) }}" alt="" loading="lazy" onerror="this.remove()">
+                            @endif
+                            <i class="ti ti-{{ $item['type'] === 'Service' ? 'car-garage text-primary' : 'package text-info' }} fs-1"></i>
+                        </div>
+                        <div class="product-name">{{ $item['name'] }}</div>
+                        <div class="d-flex justify-content-between align-items-center gap-1">
+                            <span class="fw-bold text-primary small">TZS {{ number_format($item['selling_price'], 0) }}</span>
+                            @if($item['require_plate_number'] === 'yes')
+                                <i class="ti ti-car text-muted" title="Requires plate number"></i>
+                            @endif
+                        </div>
+                    </button>
+                @empty
+                    <div class="text-center py-5 text-muted" style="grid-column: 1 / -1;">
+                        <i class="ti ti-package-off fs-1 d-block mb-2"></i>
+                        {{ $search || $selectedCategory ? 'No products match your filters.' : 'No products available for this business.' }}
+                        @if($search || $selectedCategory)
+                            <div class="mt-2">
+                                <button type="button" wire:click="clearFilters" class="btn btn-sm btn-outline-primary">Clear filters</button>
+                            </div>
+                        @endif
+                    </div>
+                @endforelse
+            </div>
+        </section>
+
+        {{-- Cart --}}
+        <aside class="pos-cart">
+            <div class="p-3 border-bottom d-flex flex-column gap-2">
+                {{-- Served by --}}
+                @php
+                    $staffName = $availableStaffs[$selectedStaff] ?? null;
+                    $staffInitials = $staffName ? collect(explode(' ', $staffName))->filter()->take(2)->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('') : '?';
+                @endphp
+                <div class="pos-field served-by d-flex align-items-center gap-2 {{ $staffName ? '' : 'border border-danger' }}">
+                    <span class="avatar-initials {{ $staffName ? '' : 'bg-danger' }}">{{ $staffInitials }}</span>
+                    <div class="flex-grow-1 min-w-0">
+                        <small class="text-muted d-block lh-1">Served by</small>
+                        <select wire:model.live="selectedStaff" class="form-select form-select-sm" aria-label="Served by">
+                            @if(!$staffName)
+                                <option value="">Select staff member</option>
+                            @endif
+                            @foreach($availableStaffs as $staffId => $name)
+                                <option value="{{ $staffId }}" wire:key="staff-option-{{ $staffId }}">
+                                    {{ $name }}{{ $staffId === $defaultStaffId ? ' (You)' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @if($defaultStaffId && $selectedStaff !== $defaultStaffId)
+                        <button type="button" wire:click="$set('selectedStaff', '{{ $defaultStaffId }}')" class="btn btn-sm btn-link text-decoration-none" title="Switch back to yourself">
+                            <i class="ti ti-arrow-back-up"></i> Me
+                        </button>
+                    @endif
+                </div>
+
+                {{-- Customer --}}
+                <div class="pos-field customer-field d-flex align-items-center gap-2">
+                    <span class="avatar-initials"><i class="ti ti-user"></i></span>
+                    <div class="flex-grow-1 min-w-0">
+                        <small class="text-muted d-block lh-1">Customer</small>
+                        {{-- Ignored by morphing so Select2 is not torn down on every cart update; the key rebuilds it when the list or selection changes. --}}
+                        <div wire:ignore wire:key="customer-select-{{ count($availableCustomers) }}-{{ $customer_id ?: 'walk-in' }}">
                             <x-forms.select2
                                 name="customer_id"
                                 :options="$availableCustomers"
+                                :selected="$customer_id"
                                 wire:model="customer_id"
-                                placeholder="Walk-In Customer"
-                                wrapper="false"
-                                inputGroup="true"
-                                class="form-select"
-                            />
-                            <button wire:click="openCustomerModal" class="btn btn-primary" title="Add Customer">
-                                <i class="ti ti-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-5">
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="ti ti-user-check"></i></span>
-                            <x-forms.select2
-                                name="selectedStaff"
-                                :options="$availableStaffs"
-                                wire:model="selectedStaff"
-                                placeholder="Select Staff"
+                                placeholder="Walk-in customer"
                                 wrapper="false"
                                 inputGroup="true"
                                 class="form-select"
                             />
                         </div>
-                        @if($selectedStaff && count($availableStaffs) > 0)
-                            <small class="text-muted d-block mt-1">
-                                <i class="ti ti-info-circle"></i>
-                                Staff: {{ $availableStaffs[$selectedStaff] ?? 'Selected' }}
-                            </small>
-                        @endif
                     </div>
+                    <button type="button" wire:click="openCustomerModal" class="btn btn-sm btn-outline-primary field-action" title="Add new customer" aria-label="Add new customer">
+                        <i class="ti ti-user-plus"></i>
+                    </button>
                 </div>
             </div>
 
-            {{-- Cart Table --}}
-            <div class="cart-table">
-                <table class="table table-sm mb-0">
-                    <thead class="table-light sticky-top">
-                        <tr>
-                            <th>Product</th>
-                            <th class="text-center" style="width: 110px;">Qty</th>
-                            <th class="text-end" style="width: 90px;">Total</th>
-                            <th style="width: 40px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($cart as $key => $item)
-                        <tr>
-                            <td>
-                                <div class="fw-medium small">{{ Str::limit($item['name'], 20) }}</div>
+            {{-- Cart lines --}}
+            <div class="cart-items">
+                @forelse($cart as $key => $item)
+                    <div class="cart-line" wire:key="cart-line-{{ $key }}">
+                        <div class="d-flex justify-content-between gap-2">
+                            <div class="min-w-0">
+                                <div class="fw-semibold text-truncate">{{ $item['name'] }}</div>
+                                <small class="text-muted">TZS {{ number_format($item['price'], 0) }} each</small>
                                 @if($item['plate_number'])
-                                    <small class="text-primary"><i class="ti ti-car"></i> {{ $item['plate_number'] }}</small>
-                                @endif
-                                <small class="text-muted d-block">TZS {{ number_format($item['price'], 0) }}</small>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center justify-content-center gap-1">
-                                    <button wire:click="decrementQuantity('{{ $key }}')" class="btn btn-outline-secondary qty-btn">
-                                        <i class="ti ti-minus"></i>
-                                    </button>
-                                    <input type="number" value="{{ $item['quantity'] }}" wire:change="updateQuantity('{{ $key }}', $event.target.value)" class="form-control form-control-sm text-center" style="width: 45px;">
-                                    <button wire:click="incrementQuantity('{{ $key }}')" class="btn btn-outline-secondary qty-btn">
-                                        <i class="ti ti-plus"></i>
-                                    </button>
-                                </div>
-                            </td>
-                            <td class="text-end fw-medium small">
-                                TZS {{ number_format($item['price'] * $item['quantity'], 0) }}
-                            </td>
-                            <td class="text-center">
-                                <button wire:click="removeFromCart('{{ $key }}')" class="btn btn-sm text-danger p-1">
-                                    <i class="ti ti-x"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="4" class="text-center py-5 text-muted">
-                                <i class="ti ti-shopping-cart fs-1 d-block mb-2"></i>
-                                <span class="d-none d-lg-inline">Cart is empty. Click on products to add.</span>
-                                <span class="d-lg-none">Tap products to add to cart</span>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            {{-- Cart Summary --}}
-            <div class="cart-summary">
-                <div class="row g-2 small">
-                    <div class="col-6">
-                        <span class="text-muted">Items:</span>
-                        <span class="fw-medium">{{ $cartItemsCount }}</span>
-                    </div>
-                    <div class="col-6 text-end">
-                        <span class="text-muted">Subtotal:</span>
-                        <span class="fw-medium">TZS {{ number_format($cartTotal + $cartDiscount, 0) }}</span>
-                    </div>
-                    @if($cartDiscount > 0)
-                    <div class="col-6">
-                        <span class="text-muted">Discount:</span>
-                        <span class="text-danger fw-medium">- TZS {{ number_format($cartDiscount, 0) }}</span>
-                    </div>
-                    @endif
-                    <div class="col-12 text-end pt-2 border-top">
-                        <span class="text-muted">Total:</span>
-                        <span class="fw-bold text-primary fs-5">TZS {{ number_format($cartTotal, 0) }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Products Section --}}
-        <div class="pos-products active" id="productsSection">
-            {{-- Search & Filters --}}
-            <div class="p-2 p-md-3 bg-white border-bottom">
-                <div class="row g-2">
-                    <div class="col-7 col-md-7">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white"><i class="ti ti-search"></i></span>
-                            <input type="text" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Search...">
-                            <button wire:click="openScanner" class="btn btn-primary" type="button" title="Scan Barcode">
-                                <i class="ti ti-scan"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="col-5 col-md-5">
-                        <x-forms.select2
-                            name="selectedCategory"
-                            :options="$availableCategories"
-                            wire:model.live="selectedCategory"
-                            placeholder="All"
-                            wrapper="false"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {{-- Product Grid --}}
-            <div class="product-grid">
-                @forelse($availableItems as $item)
-                <div wire:click="addToCart('{{ $item['id'] }}')" class="product-card">
-                    <div class="product-icon">
-                        @if(!empty($item['image']))
-                            <img src="{{ asset('storage/' . $item['image']) }}"
-                                 alt="{{ $item['name'] }}"
-                                 class="img-fluid rounded"
-                                 style="width: 100%; height: 60px; object-fit: cover;"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div style="display: none; align-items: center; justify-content: center; height: 60px;">
-                                @if($item['type'] === 'Service')
-                                    <i class="ti ti-car-garage text-primary fs-4"></i>
-                                @else
-                                    <i class="ti ti-package text-info fs-4"></i>
+                                    <span class="badge bg-primary-subtle text-primary ms-1"><i class="ti ti-car"></i> {{ $item['plate_number'] }}</span>
                                 @endif
                             </div>
-                        @else
-                            @if($item['type'] === 'Service')
-                                <i class="ti ti-car-garage text-primary fs-4"></i>
-                            @else
-                                <i class="ti ti-package text-info fs-4"></i>
-                            @endif
-                        @endif
+                            <button wire:click="removeFromCart('{{ $key }}')" class="btn btn-sm btn-link text-danger p-0 align-self-start" title="Remove {{ $item['name'] }}">
+                                <i class="ti ti-trash fs-5"></i>
+                            </button>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <div class="qty-stepper">
+                                <button type="button" wire:click="decrementQuantity('{{ $key }}')" aria-label="Decrease quantity"><i class="ti ti-minus"></i></button>
+                                <input type="number" min="1" inputmode="numeric" value="{{ $item['quantity'] }}" wire:change="updateQuantity('{{ $key }}', $event.target.value)" aria-label="Quantity">
+                                <button type="button" wire:click="incrementQuantity('{{ $key }}')" aria-label="Increase quantity"><i class="ti ti-plus"></i></button>
+                            </div>
+                            <span class="fw-bold">TZS {{ number_format($item['price'] * $item['quantity'], 0) }}</span>
+                        </div>
                     </div>
-                    <div class="small fw-medium text-truncate" title="{{ $item['name'] }}">{{ Str::limit($item['name'], 12) }}</div>
-                    <div class="text-primary small fw-bold">TZS {{ number_format($item['selling_price'], 0) }}</div>
-                    <span class="badge bg-{{ $item['type'] === 'Service' ? 'primary' : 'info' }}-subtle text-{{ $item['type'] === 'Service' ? 'primary' : 'info' }}" style="font-size: 9px;">
-                        {{ $item['type'] === 'Service' ? 'Service' : 'Product' }}
-                    </span>
-                </div>
                 @empty
-                <div class="text-center py-5 text-muted" style="grid-column: 1 / -1;">
-                    <i class="ti ti-package-off fs-1 d-block mb-2"></i>
-                    No products found
-                </div>
+                    <div class="text-center text-muted py-5 px-3">
+                        <i class="ti ti-shopping-cart fs-1 d-block mb-2"></i>
+                        <div class="fw-semibold">Cart is empty</div>
+                        <small><span class="d-none d-lg-inline">Click</span><span class="d-lg-none">Tap</span> a product to add it.</small>
+                        <div class="d-lg-none mt-3">
+                            <button type="button" class="btn btn-outline-primary btn-sm" @click="view = 'products'">
+                                <i class="ti ti-layout-grid me-1"></i> Browse products
+                            </button>
+                        </div>
+                    </div>
                 @endforelse
             </div>
-        </div>
+
+            {{-- Totals & payment --}}
+            <div class="cart-footer">
+                <div class="d-flex justify-content-between small text-muted mb-1">
+                    <span>{{ $cartItemsCount }} {{ Str::plural('item', $cartItemsCount) }}</span>
+                    <span>Subtotal TZS {{ number_format($cartTotal + $cartDiscount, 0) }}</span>
+                </div>
+                @if($cartDiscount > 0)
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span class="text-muted">Discount</span>
+                        <span class="text-danger">- TZS {{ number_format($cartDiscount, 0) }}</span>
+                    </div>
+                @endif
+                <div class="d-flex justify-content-between align-items-baseline mb-3">
+                    <span class="fw-semibold">Total</span>
+                    <span class="fs-3 fw-bold text-primary">TZS {{ number_format($cartTotal, 0) }}</span>
+                </div>
+
+                <button wire:click="quickCashOut" wire:loading.attr="disabled" class="btn btn-success pay-btn w-100 mb-2" @disabled(empty($cart))>
+                    <span wire:loading.remove wire:target="quickCashOut"><i class="ti ti-cash me-1"></i> Pay Cash · TZS {{ number_format($cartTotal, 0) }}</span>
+                    <span wire:loading wire:target="quickCashOut"><span class="spinner-border spinner-border-sm me-1"></span> Processing...</span>
+                </button>
+                <div class="d-grid gap-2" style="grid-template-columns: repeat(3, 1fr);">
+                    <button wire:click="openPaymentModal('card')" class="btn btn-outline-primary pay-btn" @disabled(empty($cart))>
+                        <i class="ti ti-credit-card d-block fs-5"></i><small>Card</small>
+                    </button>
+                    <button wire:click="openPaymentModal('multiple')" class="btn btn-outline-primary pay-btn" @disabled(empty($cart))>
+                        <i class="ti ti-arrows-split-2 d-block fs-5"></i><small>Split</small>
+                    </button>
+                    <button wire:click="openPaymentModal('credit')" class="btn btn-outline-primary pay-btn" @disabled(empty($cart))>
+                        <i class="ti ti-file-invoice d-block fs-5"></i><small>Credit</small>
+                    </button>
+                </div>
+                @if(!empty($cart))
+                    <button wire:click="clearCart" wire:confirm="Remove all items from the cart?" class="btn btn-link text-danger w-100 mt-1 text-decoration-none">
+                        <i class="ti ti-trash me-1"></i> Clear cart
+                    </button>
+                @endif
+            </div>
+        </aside>
     </div>
 
-    {{-- Footer Actions --}}
-    <div class="pos-footer">
-        {{-- Total Display - First on mobile --}}
-        <div class="total-display d-md-none mb-2">
-            <span class="small">Total:</span>
-            <span class="fs-4 fw-bold ms-2">TZS {{ number_format($cartTotal, 0) }}</span>
-        </div>
-
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            {{-- Total Display - Desktop --}}
-            <div class="total-display d-none d-md-block">
-                <span class="small">Total:</span>
-                <span class="fs-4 fw-bold">TZS {{ number_format($cartTotal, 0) }}</span>
-            </div>
-
-            {{-- Action Buttons --}}
-            <div class="d-flex gap-2 flex-wrap w-md-auto w-100">
-                <button wire:click="quickCashOut" class="btn btn-success btn-action" {{ empty($cart) ? 'disabled' : '' }}>
-                    <span wire:loading.remove wire:target="quickCashOut">
-                        <i class="ti ti-cash"></i>
-                        <span class="btn-text ms-1">Cash</span>
-                    </span>
-                    <span wire:loading wire:target="quickCashOut">
-                        <span class="spinner-border spinner-border-sm"></span>
-                    </span>
-                </button>
-                <button wire:click="openPaymentModal('card')" class="btn btn-warning btn-action" {{ empty($cart) ? 'disabled' : '' }}>
-                    <i class="ti ti-credit-card"></i>
-                    <span class="btn-text ms-1 d-none d-md-inline">Card</span>
-                </button>
-                <button wire:click="openPaymentModal('credit')" class="btn btn-info btn-action" {{ empty($cart) ? 'disabled' : '' }}>
-                    <i class="ti ti-file-invoice"></i>
-                    <span class="btn-text ms-1 d-none d-md-inline">Credit</span>
-                </button>
-                <button wire:click="openPaymentModal('multiple')" class="btn btn-secondary btn-action d-none d-md-inline-flex" {{ empty($cart) ? 'disabled' : '' }}>
-                    <i class="ti ti-wallet"></i>
-                    <span class="btn-text ms-1">Multiple</span>
-                </button>
-                <button wire:click="clearCart" class="btn btn-outline-danger btn-action" {{ empty($cart) ? 'disabled' : '' }}>
-                    <i class="ti ti-x"></i>
-                    <span class="btn-text ms-1 d-none d-sm-inline">Clear</span>
-                </button>
-                <button wire:click="openRecentModal" class="btn btn-outline-secondary btn-action d-none d-md-inline-flex">
-                    <i class="ti ti-history"></i>
-                    <span class="btn-text ms-1">Recent</span>
-                </button>
-            </div>
-        </div>
+    {{-- Mobile bottom bar (products view) --}}
+    <div class="pos-mobile-bar d-lg-none">
+        <button type="button" class="btn btn-primary w-100 pay-btn d-flex justify-content-between align-items-center px-3" @click="view = 'cart'" @disabled(empty($cart))>
+            <span>
+                <i class="ti ti-shopping-cart me-1"></i>
+                View cart
+                @if($cartItemsCount > 0)
+                    <span class="badge rounded-pill bg-light text-primary ms-1">{{ $cartItemsCount }}</span>
+                @endif
+            </span>
+            <span class="fw-bold">TZS {{ number_format($cartTotal, 0) }}</span>
+        </button>
     </div>
 
     {{-- Add Customer Modal --}}
@@ -706,7 +683,7 @@
                     </div>
                     @endif
                     <div class="mb-3">
-                        <input type="text" wire:model="plateNumber" class="form-control form-control-lg text-center text-uppercase" placeholder="T 123 ABC" style="font-size: 24px; letter-spacing: 2px;" autofocus>
+                        <input type="text" wire:model="plateNumber" wire:keydown.enter="addItemWithPlate" x-init="$nextTick(() => $el.focus())" class="form-control form-control-lg text-center text-uppercase" placeholder="T 123 ABC" style="font-size: 24px; letter-spacing: 2px;" autocomplete="off">
                     </div>
                     <div class="d-flex gap-2">
                         <button wire:click="closePlateModal" class="btn btn-light flex-fill py-3">Cancel</button>
@@ -723,7 +700,7 @@
     {{-- Payment Modal - Multiple Payment Support --}}
     @if($showPaymentModal)
     <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-0 pb-0">
                     <h5 class="modal-title">
@@ -814,32 +791,32 @@
                         </div>
 
                         {{-- Right Section: Summary --}}
-                        <div class="col-md-4 bg-warning p-3 d-flex flex-column">
+                        <div class="col-md-4 bg-body-tertiary p-3 d-flex flex-column order-first order-md-last">
                             <div class="flex-grow-1">
                                 <div class="mb-3">
-                                    <div class="text-dark small">Total Items:</div>
-                                    <div class="fs-4 fw-bold text-dark">{{ number_format($cartItemsCount, 2) }}</div>
+                                    <div class="text-muted small">Total Items:</div>
+                                    <div class="fs-4 fw-bold">{{ number_format($cartItemsCount, 2) }}</div>
                                 </div>
 
                                 <div class="mb-3">
-                                    <div class="text-dark small">Total Payable:</div>
-                                    <div class="fs-5 fw-bold text-dark">TSh {{ number_format($cartTotal, 2) }}</div>
+                                    <div class="text-muted small">Total Payable:</div>
+                                    <div class="fs-5 fw-bold">TSh {{ number_format($cartTotal, 2) }}</div>
                                 </div>
 
                                 @if($paymentType !== 'credit')
                                 <div class="mb-3">
-                                    <div class="text-dark small">Total Paying:</div>
-                                    <div class="fs-5 fw-bold text-dark">TSh {{ number_format($this->totalPaying, 2) }}</div>
+                                    <div class="text-muted small">Total Paying:</div>
+                                    <div class="fs-5 fw-bold">TSh {{ number_format($this->totalPaying, 2) }}</div>
                                 </div>
 
                                 <div class="mb-3">
-                                    <div class="text-dark small">Change Return:</div>
+                                    <div class="text-muted small">Change Return:</div>
                                     <div class="fs-5 fw-bold text-success">TSh {{ number_format($this->changeReturn, 2) }}</div>
                                 </div>
 
-                                <div class="mb-3 pb-3 border-bottom border-dark">
-                                    <div class="text-dark small">Balance:</div>
-                                    <div class="fs-5 fw-bold {{ $this->balanceDue > 0 ? 'text-danger' : 'text-dark' }}">
+                                <div class="mb-3 pb-3 border-bottom">
+                                    <div class="text-muted small">Balance:</div>
+                                    <div class="fs-5 fw-bold {{ $this->balanceDue > 0 ? 'text-danger' : '' }}">
                                         TSh {{ number_format($this->balanceDue, 2) }}
                                     </div>
                                 </div>
@@ -1113,6 +1090,7 @@
                                 <div class="thank-you">Thank you for your business!</div>
                                 <div class="visit-again">Please visit again</div>
                             @endif
+                            <div class="receipt-powered-by">Powered by Tech Scales Co. Ltd</div>
                         </div>
                     </div>
                 </div>
@@ -1325,6 +1303,15 @@
             font-size: 10px;
         }
 
+        .receipt-powered-by {
+            margin-top: 8px;
+            padding-top: 4px;
+            border-top: 1px dashed #000;
+            font-size: 9px;
+            text-align: center;
+            color: #555;
+        }
+
         /* Print Styles */
         @media print {
             body * {
@@ -1405,33 +1392,6 @@
     </style>
 
     <script>
-        function toggleView(view) {
-            const cartSection = document.getElementById('cartSection');
-            const productsSection = document.getElementById('productsSection');
-            const toggleBtns = document.querySelectorAll('.toggle-btn');
-
-            toggleBtns.forEach(btn => btn.classList.remove('active'));
-
-            if (view === 'cart') {
-                cartSection.classList.add('active');
-                productsSection.classList.remove('active');
-                toggleBtns[1].classList.add('active');
-            } else {
-                productsSection.classList.add('active');
-                cartSection.classList.remove('active');
-                toggleBtns[0].classList.add('active');
-            }
-        }
-
-        // Auto-switch to cart when item is added on mobile
-        document.addEventListener('livewire:initialized', () => {
-            Livewire.on('itemAdded', () => {
-                if (window.innerWidth < 992) {
-                    toggleView('cart');
-                }
-            });
-        });
-
         // Print thermal receipt
         function printThermalReceipt() {
             const receiptContent = document.getElementById('receiptContent');
@@ -1488,6 +1448,7 @@
                     .receipt-footer { text-align: center; margin-top: 10px; font-size: 10px; }
                     .receipt-footer .thank-you { font-weight: bold; font-size: 12px; }
                     .receipt-footer .custom-footer { font-size: 11px; }
+                    .receipt-powered-by { margin-top: 8px; padding-top: 4px; border-top: 1px dashed #000; font-size: 9px; text-align: center; color: #555; }
                     .text-left { text-align: left; }
                     .text-center { text-align: center; }
                     .text-right { text-align: right; }
@@ -1505,13 +1466,13 @@
                 <head>
                     <title>Receipt</title>
                     ${styles}
-                </head>
+                <\/head>
                 <body>
                     <div class="receipt-wrapper">
                         ${receiptContent.innerHTML}
                     </div>
-                </body>
-                </html>
+                <\/body>
+                <\/html>
             `);
 
             printWindow.document.close();

@@ -44,7 +44,7 @@
                     <x-forms.select2
                         name="staff_id"
                         label="Staff"
-                        :options="$staffList"
+                        :options="collect($staffList)->pluck('name', 'id')"
                         wire:model.live="staff_id"
                         placeholder="All Staff"
                         wrapper="false"
@@ -57,11 +57,11 @@
                         name="date_filter"
                         label="Period"
                         :options="[
-                            ['id' => 'day', 'name' => 'Today'],
-                            ['id' => 'week', 'name' => 'This Week'],
-                            ['id' => 'month', 'name' => 'This Month'],
-                            ['id' => 'year', 'name' => 'This Year'],
-                            ['id' => 'custom', 'name' => 'Custom Range']
+                            'day' => 'Today',
+                            'week' => 'This Week',
+                            'month' => 'This Month',
+                            'year' => 'This Year',
+                            'custom' => 'Custom Range',
                         ]"
                         wire:model.live="date_filter"
                         placeholder="Select Period"
@@ -173,6 +173,7 @@
                 <table class="table table-hover table-striped mb-0">
                     <thead class="table-light">
                         <tr>
+                            <th style="width: 60px;">S/N</th>
                             <th>Staff</th>
                             <th>Position</th>
                             <th class="text-center">Status</th>
@@ -184,7 +185,8 @@
                     </thead>
                     <tbody>
                         @forelse($staffPerformance as $staff)
-                        <tr>
+                        <tr wire:key="staff-performance-{{ $staff['id'] ?? $loop->index }}">
+                            <td class="text-muted">{{ $loop->iteration }}</td>
                             <td>
                                 <div class="d-flex align-items-center">
                                     <div class="avatar avatar-sm bg-primary-subtle text-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
@@ -232,7 +234,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-5">
+                            <td colspan="8" class="text-center text-muted py-5">
                                 <i class="ti ti-users-off display-4 d-block mb-3 opacity-50"></i>
                                 <h5>No staff found</h5>
                                 <p class="mb-0">Add staff members to see their commission report</p>
@@ -243,7 +245,7 @@
                     @if($staffPerformance->count() > 0)
                     <tfoot class="table-light">
                         <tr class="fw-bold">
-                            <td colspan="4" class="text-end">Totals:</td>
+                            <td colspan="5" class="text-end">Totals:</td>
                             <td class="text-end">{{ number_format($summary['total_services']) }}</td>
                             <td class="text-end text-success">TSh {{ number_format($summary['total_amount'], 0) }}</td>
                             <td class="text-end text-warning">TSh {{ number_format($summary['total_commission'], 0) }}</td>
@@ -276,6 +278,7 @@
                 <table class="table table-hover table-striped mb-0">
                     <thead class="table-light">
                         <tr>
+                            <th style="width: 60px;">S/N</th>
                             <th>Date</th>
                             <th>Staff</th>
                             <th>Service/Item</th>
@@ -287,7 +290,8 @@
                     </thead>
                     <tbody>
                         @foreach($detailedData as $item)
-                        <tr>
+                        <tr wire:key="commission-line-{{ $item->id }}">
+                            <td class="text-muted">{{ $detailedData->firstItem() + $loop->index }}</td>
                             <td>{{ \Carbon\Carbon::parse($item->date)->format('M d, Y H:i') }}</td>
                             <td>{{ $item->staff_name }}</td>
                             <td>

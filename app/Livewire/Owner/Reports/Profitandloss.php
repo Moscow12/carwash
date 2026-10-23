@@ -67,6 +67,10 @@ class Profitandloss extends Component
     public $profitByDate = [];
     public $profitByDay = [];
 
+    // Breakdown table sorting; an empty sortBy keeps each tab's default order
+    public $sortBy = '';
+    public $sortDirection = 'desc';
+
     public function mount()
     {
         $owner = Auth::user();
@@ -118,6 +122,48 @@ class Profitandloss extends Component
     public function setTab($tab)
     {
         $this->activeTab = $tab;
+        $this->reset(['sortBy', 'sortDirection']);
+    }
+
+    /**
+     * Sort the breakdown table by name or gross profit; clicking the same column again flips the direction.
+     */
+    public function sortTable(string $field): void
+    {
+        if (! in_array($field, ['name', 'gross_profit'], true)) {
+            return;
+        }
+
+        if ($this->sortBy === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+
+            return;
+        }
+
+        $this->sortBy = $field;
+        $this->sortDirection = $field === 'name' ? 'asc' : 'desc';
+    }
+
+    /**
+     * Apply the current sort to a breakdown table.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @param  string  $nameKey  Row key used when sorting by name (e.g. 'date' sorts the date tab chronologically)
+     * @return array<int, array<string, mixed>>
+     */
+    public function sortedRows(array $rows, string $nameKey = 'name'): array
+    {
+        if ($this->sortBy === '') {
+            return $rows;
+        }
+
+        $key = $this->sortBy === 'name' ? $nameKey : 'gross_profit';
+        $descending = $this->sortDirection === 'desc';
+
+        return collect($rows)
+            ->sortBy(fn (array $row) => $key === 'gross_profit' ? (float) $row[$key] : mb_strtolower((string) $row[$key]), SORT_REGULAR, $descending)
+            ->values()
+            ->all();
     }
 
     protected function getDateRange()

@@ -44,7 +44,8 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-4" style="width: 40%">Name</th>
+                            <th class="ps-4" style="width: 60px;">S/N</th>
+                            <th style="width: 35%">Name</th>
                             <th style="width: 15%">Symbol</th>
                             <th style="width: 25%">Description</th>
                             <th style="width: 10%" class="text-center">Status</th>
@@ -54,7 +55,8 @@
                     <tbody>
                         @forelse($units as $unit)
                         <tr wire:key="unit-{{ $unit->id }}">
-                            <td class="ps-4">
+                            <td class="ps-4 text-muted">{{ $units->firstItem() + $loop->index }}</td>
+                            <td>
                                 <div class="d-flex align-items-center">
                                     <div class="avatar avatar-sm bg-primary bg-opacity-10 rounded me-3">
                                         <span class="text-primary fw-semibold">{{ strtoupper(substr($unit->name, 0, 2)) }}</span>
@@ -104,7 +106,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-center py-5">
+                            <td colspan="6" class="text-center py-5">
                                 <div class="py-4">
                                     <div class="avatar avatar-xl bg-light rounded-circle mb-3">
                                         <i class="ti ti-ruler-2 fs-1 text-muted"></i>

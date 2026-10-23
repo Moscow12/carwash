@@ -146,7 +146,7 @@
                 <table class="table table-hover table-striped">
                     <thead class="table-light">
                         <tr>
-                            <th>ID</th>
+                            <th style="width: 60px;">S/N</th>
                             <th>SKU</th>
                             <th>Product Name</th>
                             <th>Category</th>
@@ -172,8 +172,8 @@
                             $itemProfit = $stockValueSale - $stockValueCost;
                             $totalSold = $this->getTotalUnitsSold($item->id);
                         @endphp
-                        <tr>
-                            <td><small class="text-muted">{{ substr($item->id, 0, 8) }}...</small></td>
+                        <tr wire:key="stock-item-{{ $item->id }}">
+                            <td class="text-muted">{{ $stockData->firstItem() + $loop->index }}</td>
                             <td><span class="badge bg-secondary">{{ $item->barcode ?? '-' }}</span></td>
                             <td>{{ $item->name }}</td>
                             <td>{{ $item->category->name ?? '-' }}</td>

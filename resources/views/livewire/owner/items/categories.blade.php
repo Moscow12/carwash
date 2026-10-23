@@ -61,7 +61,8 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr class="bg-light">
-                            <th class="border-0 ps-4">Category</th>
+                            <th class="border-0 ps-4" style="width: 60px;">S/N</th>
+                            <th class="border-0">Category</th>
                             <th class="border-0">Business</th>
                             <th class="border-0 text-center">Status</th>
                             <th class="border-0 text-end pe-4">Actions</th>
@@ -69,8 +70,9 @@
                     </thead>
                     <tbody>
                         @forelse($categories as $category)
-                        <tr>
-                            <td class="ps-4">
+                        <tr wire:key="category-{{ $category->id }}">
+                            <td class="ps-4 text-muted">{{ $categories->firstItem() + $loop->index }}</td>
+                            <td>
                                 <div class="d-flex align-items-center">
                                     <div class="avatar avatar-md bg-primary-subtle text-primary rounded me-3 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
                                         <i class="ti ti-category fs-5"></i>
@@ -114,7 +116,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" class="text-center py-5">
+                            <td colspan="5" class="text-center py-5">
                                 <div class="text-muted">
                                     <i class="ti ti-category display-4 d-block mb-3 opacity-50"></i>
                                     <h5>No categories found</h5>

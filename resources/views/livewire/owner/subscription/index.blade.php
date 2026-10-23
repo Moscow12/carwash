@@ -59,6 +59,7 @@
                     <table class="table table-hover mb-0 align-middle">
                         <thead class="table-light">
                             <tr>
+                                <th style="width: 60px;">S/N</th>
                                 <th>Plan</th>
                                 <th>Fee</th>
                                 <th>Interval</th>
@@ -67,7 +68,8 @@
                         </thead>
                         <tbody>
                             @forelse($plans as $plan)
-                            <tr>
+                            <tr wire:key="plan-{{ $plan->id }}">
+                                <td class="text-muted">{{ $loop->iteration }}</td>
                                 <td class="fw-semibold">{{ $plan->name }}</td>
                                 <td>{{ number_format($plan->fee_amount, 2) }} {{ $plan->currency }}</td>
                                 <td>{{ $plan->billing_interval_label }}</td>
@@ -80,7 +82,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="4" class="text-center py-4 text-muted">No plans available for your business type</td>
+                                <td colspan="5" class="text-center py-4 text-muted">No plans available for your business type</td>
                             </tr>
                             @endforelse
                         </tbody>
