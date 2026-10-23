@@ -174,7 +174,7 @@
                         @endphp
                         <tr wire:key="stock-item-{{ $item->id }}">
                             <td class="text-muted">{{ $stockData->firstItem() + $loop->index }}</td>
-                            <td><span class="badge bg-secondary">{{ $item->barcode ?? '-' }}</span></td>
+                            <td><span class="badge bg-secondary">{{ $item->sku ?? '-' }}</span></td>
                             <td>{{ $item->name }}</td>
                             <td>{{ $item->category->name ?? '-' }}</td>
                             <td class="text-end">TSh {{ number_format($sellingPrice, 2) }}</td>

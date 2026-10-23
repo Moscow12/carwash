@@ -37,12 +37,40 @@ class items extends Model
     ];
 
     protected $casts = [
+        'sku' => 'integer',
         'cost_price' => 'decimal:2',
         'selling_price' => 'decimal:2',
         'market_price' => 'decimal:2',
         'commission' => 'decimal:2',
         'is_published' => 'boolean',
     ];
+
+    /**
+     * Every new item gets the next SKU in its business (1, 2, 3...). It is never mass-assigned.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (items $item) {
+            if ($item->sku === null && $item->business_id) {
+                $item->sku = static::nextSkuFor($item->business_id);
+            }
+        });
+
+        // SKUs are numbered per business, so an item moved to another business takes that business's next number
+        static::updating(function (items $item) {
+            if ($item->isDirty('business_id') && $item->business_id) {
+                $item->sku = static::nextSkuFor($item->business_id);
+            }
+        });
+    }
+
+    /**
+     * The next SKU for a business; deleted items keep their numbers so a SKU is never reused.
+     */
+    public static function nextSkuFor(string $businessId): int
+    {
+        return (int) static::withTrashed()->where('business_id', $businessId)->max('sku') + 1;
+    }
 
     // Relationships
     public function business(): BelongsTo

@@ -135,6 +135,11 @@ class Stock extends Component
             $query->where(function ($q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
                     ->orWhere('barcode', 'like', '%' . $this->search . '%');
+
+                $sku = ltrim(trim($this->search), '#');
+                if (ctype_digit($sku)) {
+                    $q->orWhere('sku', (int) $sku);
+                }
             });
         }
 

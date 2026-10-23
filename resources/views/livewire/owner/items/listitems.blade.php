@@ -113,7 +113,7 @@
                 <div class="col-12 col-lg-4">
                     <div class="input-group">
                         <span class="input-group-text bg-body"><i class="ti ti-search"></i></span>
-                        <input type="search" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Search by name or description..." aria-label="Search items">
+                        <input type="search" wire:model.live.debounce.300ms="search" class="form-control" placeholder="Search by name, SKU or barcode..." aria-label="Search items">
                     </div>
                 </div>
                 <div class="col-12 col-sm-6 col-lg-auto">
@@ -217,6 +217,9 @@
                                             @endif
                                             <div class="min-w-0">
                                                 <button type="button" wire:click="viewItem('{{ $item->id }}')" class="btn btn-link p-0 fw-semibold text-body text-decoration-none text-start">{{ $item->name }}</button>
+                                                @if($item->sku)
+                                                    <span class="badge bg-body-tertiary text-body-secondary border ms-1" title="SKU">SKU {{ $item->sku }}</span>
+                                                @endif
                                                 <div class="small text-muted">
                                                     <span class="badge bg-{{ $isService ? 'success' : 'info' }}-subtle text-{{ $isService ? 'success' : 'info' }}-emphasis me-1">{{ $isService ? 'Service' : 'Product' }}</span>
                                                     {{ $item->category?->name ?? 'Uncategorised' }}
@@ -318,7 +321,7 @@
                                 <tr wire:key="stock-row-{{ $item->id }}">
                                     <td class="text-muted">{{ $items->firstItem() + $loop->index }}</td>
                                     <td>
-                                        <div class="fw-semibold">{{ $item->name }}</div>
+                                        <div class="fw-semibold">{{ $item->name }} @if($item->sku)<span class="badge bg-body-tertiary text-body-secondary border ms-1" title="SKU">SKU {{ $item->sku }}</span>@endif</div>
                                         <small class="text-muted">{{ $item->category?->name ?? 'Uncategorised' }} · {{ $item->unit?->name ?? '-' }}</small>
                                     </td>
                                     <td class="text-end">
@@ -456,6 +459,10 @@
                         </div>
 
                         <dl class="row mb-0 small">
+                            <dt class="col-5 text-muted fw-normal">SKU</dt>
+                            <dd class="col-7">{{ $viewingItem->sku ?? '-' }}</dd>
+                            <dt class="col-5 text-muted fw-normal">Barcode</dt>
+                            <dd class="col-7">{{ $viewingItem->barcode ?: '-' }}</dd>
                             <dt class="col-5 text-muted fw-normal">Description</dt>
                             <dd class="col-7">{{ $viewingItem->description ?: '-' }}</dd>
                             <dt class="col-5 text-muted fw-normal">Category</dt>

@@ -51,10 +51,10 @@ class Itemregister extends Component
     public $market_price = '';
 
     #[Rule('required|in:Service,product')]
-    public $type = 'Service';
+    public $type = 'product';
 
     #[Rule('required|in:yes,no')]
-    public $product_stock = 'no';
+    public $product_stock = 'yes';
 
     #[Rule('required|in:yes,no')]
     public $require_plate_number = 'no';
@@ -89,6 +89,10 @@ class Itemregister extends Component
     public $availableCategories = [];
     public $availableUnits = [];
 
+    // Inline "new category" from the item form
+    public $showNewCategory = false;
+    public $newCategoryName = '';
+
     public function mount()
     {
         $this->ownerBusinesses = Auth::user()->assignedBusinesses()->orderBy('name')->get();
@@ -99,12 +103,77 @@ class Itemregister extends Component
             $this->filterBusiness = $this->business_id;
             $this->loadCategories();
         }
+
+        $this->applyPlateNumberDefault();
     }
 
     public function updatedBusinessId($value)
     {
         $this->loadCategories();
         $this->category_id = '';
+
+        if (! $this->editMode) {
+            $this->applyPlateNumberDefault();
+        }
+    }
+
+    /**
+     * Products track stock by default; services don't hold stock.
+     */
+    public function updatedType($value): void
+    {
+        $this->product_stock = $value === 'product' ? 'yes' : 'no';
+    }
+
+    /**
+     * Car washes ask for a plate number at checkout by default; other businesses don't.
+     */
+    protected function applyPlateNumberDefault(): void
+    {
+        $this->require_plate_number = $this->isCarWashBusiness() ? 'yes' : 'no';
+    }
+
+    protected function isCarWashBusiness(): bool
+    {
+        $business = collect($this->ownerBusinesses)->firstWhere('id', $this->business_id);
+
+        return in_array($business?->type, ['car_wash', 'carwash'], true);
+    }
+
+    public function createCategory(): void
+    {
+        $this->validate([
+            'business_id' => 'required|exists:businesses,id',
+            'newCategoryName' => 'required|string|max:255',
+        ], [
+            'newCategoryName.required' => 'Enter a name for the new category.',
+        ]);
+
+        if (! Auth::user()->assignedBusinesses()->pluck('id')->contains($this->business_id)) {
+            $this->addError('newCategoryName', 'Invalid business selected.');
+            return;
+        }
+
+        $name = trim($this->newCategoryName);
+        $category = category::where('business_id', $this->business_id)
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])
+            ->first();
+
+        if ($category && $category->status !== 'active') {
+            $category->update(['status' => 'active']);
+        }
+
+        $category ??= category::create([
+            'name' => $name,
+            'slug' => \Illuminate\Support\Str::slug($name),
+            'status' => 'active',
+            'business_id' => $this->business_id,
+        ]);
+
+        $this->loadCategories();
+        $this->category_id = $category->id;
+        $this->reset(['showNewCategory', 'newCategoryName']);
+        $this->resetValidation(['category_id', 'newCategoryName']);
     }
 
     public function updatedFilterBusiness($value)
@@ -138,7 +207,9 @@ class Itemregister extends Component
 
     public function editItem($id)
     {
-        $item = items::findOrFail($id);
+        $item = items::whereKey($id)
+            ->whereIn('business_id', Auth::user()->assignedBusinesses()->pluck('id'))
+            ->firstOrFail();
 
         $this->itemId = $item->id;
         $this->name = $item->name;
@@ -230,9 +301,14 @@ class Itemregister extends Component
             : 'Item unpublished from the marketplace.');
     }
 
-    public function save()
+    public function save(bool $addAnother = false)
     {
         $this->validate();
+
+        if (! category::whereKey($this->category_id)->where('business_id', $this->business_id)->exists()) {
+            $this->addError('category_id', 'Choose a category from this business.');
+            return;
+        }
 
         // Custom barcode uniqueness validation per business
         if ($this->barcode) {
@@ -284,15 +360,30 @@ class Itemregister extends Component
         }
 
         if ($this->editMode) {
-            $item = items::findOrFail($this->itemId);
+            $item = items::whereKey($this->itemId)->whereIn('business_id', $businessIds)->firstOrFail();
             $item->update($data);
             session()->flash('message', 'Item updated successfully.');
         } else {
-            items::create($data);
-            session()->flash('message', 'Item created successfully.');
+            $item = items::create($data);
+            session()->flash('message', "\"{$item->name}\" added.");
+        }
+
+        if ($addAnother && ! $this->editMode) {
+            // Keep business, category, unit and type so similar items are quick to enter
+            $keep = ['business_id' => $this->business_id, 'category_id' => $this->category_id, 'unit_id' => $this->unit_id, 'type' => $this->type];
+            $this->closeModal();
+            foreach ($keep as $property => $value) {
+                $this->{$property} = $value;
+            }
+            $this->updatedType($this->type);
+            $this->applyPlateNumberDefault();
+            $this->dispatch('item-form-reset');
+            return;
         }
 
         $this->closeModal();
+
+        return $this->redirectRoute('owner.list-items');
     }
 
     public function closeModal()
@@ -330,12 +421,11 @@ class Itemregister extends Component
             'itemId', 'name', 'barcode', 'description', 'cost_price', 'selling_price',
             'market_price', 'type', 'product_stock', 'require_plate_number',
             'commission', 'commission_type', 'status', 'is_published', 'category_id', 'unit_id',
-            'image', 'existingImage', 'showScannerModal'
+            'image', 'existingImage', 'showScannerModal', 'showNewCategory', 'newCategoryName'
         ]);
 
-        $this->type = 'Service';
-        $this->product_stock = 'no';
-        $this->require_plate_number = 'no';
+        $this->type = 'product';
+        $this->product_stock = 'yes';
         $this->status = 'active';
         $this->is_published = false;
 
@@ -351,45 +441,15 @@ class Itemregister extends Component
             }
         }
 
+        $this->applyPlateNumberDefault();
         $this->resetValidation();
     }
 
     public function render()
     {
-        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
-
-        $items = items::whereIn('business_id', $businessIds)
-            ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('description', 'like', '%' . $this->search . '%')
-                      ->orWhere('barcode', 'like', '%' . $this->search . '%');
-                });
-            })
-            ->when($this->filterBusiness, function ($query) {
-                $query->where('business_id', $this->filterBusiness);
-            })
-            ->when($this->filterCategory, function ($query) {
-                $query->where('category_id', $this->filterCategory);
-            })
-            ->when($this->filterType, function ($query) {
-                $query->where('type', $this->filterType);
-            })
-            ->when($this->filterStatus, function ($query) {
-                $query->where('status', $this->filterStatus);
-            })
-            ->with(['business', 'category', 'unit'])
-            ->latest()
-            ->paginate(10);
-
-        // Get categories for filter based on selected business
-        $filterCategories = $this->filterBusiness
-            ? category::where('business_id', $this->filterBusiness)->where('status', 'active')->get()
-            : category::whereIn('business_id', $businessIds)->where('status', 'active')->get();
-
         return view('livewire.owner.items.itemregister', [
-            'items' => $items,
-            'filterCategories' => $filterCategories,
+            'nextSku' => $this->business_id ? items::nextSkuFor($this->business_id) : null,
+            'existingSku' => $this->editMode && $this->itemId ? items::withTrashed()->whereKey($this->itemId)->value('sku') : null,
         ]);
     }
 }

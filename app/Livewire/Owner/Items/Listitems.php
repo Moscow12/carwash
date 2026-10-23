@@ -343,7 +343,14 @@ class Listitems extends Component
                 ->when($this->search, function ($q) {
                     $q->where(function ($query) {
                         $query->where('name', 'like', "%{$this->search}%")
-                            ->orWhere('description', 'like', "%{$this->search}%");
+                            ->orWhere('description', 'like', "%{$this->search}%")
+                            ->orWhere('barcode', 'like', "%{$this->search}%");
+
+                        // "12" or "#12" finds SKU 12
+                        $sku = ltrim(trim($this->search), '#');
+                        if (ctype_digit($sku)) {
+                            $query->orWhere('sku', (int) $sku);
+                        }
                     });
                 })
                 ->with(['category', 'unit', 'business'])

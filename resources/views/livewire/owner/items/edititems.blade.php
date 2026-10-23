@@ -57,10 +57,14 @@
                                     wrapper="false"
                                 />
                             </div>
-                            <div class="col-md-8">
-                                <label class="form-label">Barcode / SKU</label>
+                            <div class="col-md-3">
+                                <label class="form-label">SKU</label>
+                                <input type="text" class="form-control bg-body-tertiary" value="{{ $item->sku ?? '-' }}" readonly tabindex="-1" title="Assigned automatically">
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label">Barcode</label>
                                 <div class="input-group">
-                                    <input type="text" wire:model="barcode" class="form-control @error('barcode') is-invalid @enderror" placeholder="Enter barcode or SKU">
+                                    <input type="text" wire:model="barcode" class="form-control @error('barcode') is-invalid @enderror" placeholder="Enter or scan barcode">
                                     <button type="button" wire:click="openScannerModal" class="btn btn-outline-primary">
                                         <i class="ti ti-scan"></i>
                                     </button>

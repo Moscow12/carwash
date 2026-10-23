@@ -196,7 +196,7 @@ class Sales extends Component
                 'sales.payment_status',
                 'sales.id as sale_id',
                 'items.name as product_name',
-                'items.barcode as sku',
+                'items.sku as sku',
                 'items.category_id',
                 'customers.name as customer_name'
             )
@@ -212,6 +212,11 @@ class Sales extends Component
             $query->where(function ($q) {
                 $q->where('items.name', 'like', '%' . $this->search . '%')
                     ->orWhere('items.barcode', 'like', '%' . $this->search . '%');
+
+                $sku = ltrim(trim($this->search), '#');
+                if (ctype_digit($sku)) {
+                    $q->orWhere('items.sku', (int) $sku);
+                }
             });
         }
 
@@ -243,14 +248,14 @@ class Sales extends Component
             ->select(
                 'items.id as item_id',
                 'items.name as product_name',
-                'items.barcode as sku',
+                'items.sku as sku',
                 DB::raw('SUM(sales_items.quantity) as total_quantity'),
                 DB::raw('AVG(sales_items.price) as avg_price'),
                 DB::raw('SUM(COALESCE(sales_items.discount, 0)) as total_discount'),
                 DB::raw('SUM((sales_items.price * sales_items.quantity) - COALESCE(sales_items.discount, 0)) as total_amount'),
                 ...$this->paymentTypeAmountColumns()
             )
-            ->groupBy('items.id', 'items.name', 'items.barcode')
+            ->groupBy('items.id', 'items.name', 'items.sku')
             ->orderBy('total_amount', 'desc')
             ->paginate($this->perPage);
     }

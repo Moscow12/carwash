@@ -36,6 +36,9 @@ class Uploaditems extends Component
 
     public $importComplete = false;
 
+    /** Preview table filter: 'all', 'ready' or 'errors' */
+    public $previewFilter = 'all';
+
     public $ownerBusinesses = [];
 
     public $availableCategories = [];
@@ -83,6 +86,16 @@ class Uploaditems extends Component
         if ($this->ownerBusinesses->count() === 1) {
             $this->business_id = $this->ownerBusinesses->first()->id;
             $this->loadCategories();
+        }
+    }
+
+    /**
+     * Read the file as soon as it is chosen, so there is no separate "parse" click.
+     */
+    public function updatedFile(): void
+    {
+        if ($this->business_id) {
+            $this->parseFile();
         }
     }
 
@@ -443,7 +456,7 @@ class Uploaditems extends Component
 
     public function resetUpload()
     {
-        $this->reset(['file', 'parsedItems', 'parseErrors', 'successCount', 'errorCount', 'showPreview', 'importComplete', 'newCategoryNames', 'newUnitNames']);
+        $this->reset(['file', 'parsedItems', 'parseErrors', 'successCount', 'errorCount', 'showPreview', 'importComplete', 'newCategoryNames', 'newUnitNames', 'previewFilter']);
     }
 
     public function render()
