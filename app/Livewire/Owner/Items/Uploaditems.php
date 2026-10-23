@@ -2,16 +2,16 @@
 
 namespace App\Livewire\Owner\Items;
 
-use Livewire\Component;
-use Livewire\Attributes\Layout;
-use Livewire\WithFileUploads;
+use App\Models\Business;
+use App\Models\category;
+use App\Models\items;
+use App\Models\unit;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Str;
-use App\Models\items;
-use App\Models\Business;
-use App\Models\category;
-use App\Models\unit;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Layout('components.layouts.app-owner')]
 class Uploaditems extends Component
@@ -19,28 +19,66 @@ class Uploaditems extends Component
     use WithFileUploads;
 
     public $file;
+
     public $business_id = '';
+
     public $parsedItems = [];
+
     public $parseErrors = [];
+
     public $successCount = 0;
+
     public $errorCount = 0;
+
     public $showPreview = false;
+
     public $importing = false;
+
     public $importComplete = false;
 
     public $ownerBusinesses = [];
+
     public $availableCategories = [];
+
     public $availableUnits = [];
+
+    /** @var array<int, string> */
+    public $newCategoryNames = [];
+
+    /** @var array<int, string> */
+    public $newUnitNames = [];
 
     protected $rules = [
         'file' => 'required|mimes:csv,txt|max:5120',
         'business_id' => 'required|exists:businesses,id',
     ];
 
+    /**
+     * CSV template columns, required ones first.
+     *
+     * @return array<string, array{required: bool, description: string, example: string, default: ?string}>
+     */
+    public static function templateColumns(): array
+    {
+        return [
+            'name' => ['required' => true, 'description' => 'Item name', 'example' => 'Full Car Wash', 'default' => null],
+            'cost_price' => ['required' => true, 'description' => 'Cost price (number)', 'example' => '5000', 'default' => null],
+            'selling_price' => ['required' => true, 'description' => 'Selling price (number)', 'example' => '15000', 'default' => null],
+            'type' => ['required' => true, 'description' => 'Service or product', 'example' => 'Service', 'default' => null],
+            'category_name' => ['required' => true, 'description' => 'Category name (created if it does not exist)', 'example' => 'Premium Services', 'default' => null],
+            'unit_name' => ['required' => true, 'description' => 'Unit name (created if it does not exist)', 'example' => 'Per Service', 'default' => null],
+            'description' => ['required' => false, 'description' => 'Item description', 'example' => 'Complete exterior and interior cleaning', 'default' => 'empty'],
+            'market_price' => ['required' => false, 'description' => 'Market price (number)', 'example' => '20000', 'default' => 'empty'],
+            'product_stock' => ['required' => false, 'description' => 'Track stock (yes/no)', 'example' => 'no', 'default' => 'no'],
+            'commission' => ['required' => false, 'description' => 'Commission amount', 'example' => '1000', 'default' => 'empty'],
+            'commission_type' => ['required' => false, 'description' => 'fixed or percentage', 'example' => 'fixed', 'default' => 'empty'],
+        ];
+    }
+
     public function mount()
     {
         $this->ownerBusinesses = Auth::user()->assignedBusinesses()->orderBy('name')->get();
-        $this->availableUnits = unit::where('status', 'active')->orderBy('name')->get();
+        $this->loadUnits();
 
         if ($this->ownerBusinesses->count() === 1) {
             $this->business_id = $this->ownerBusinesses->first()->id;
@@ -51,7 +89,7 @@ class Uploaditems extends Component
     public function updatedBusinessId($value)
     {
         $this->loadCategories();
-        $this->reset(['parsedItems', 'parseErrors', 'showPreview', 'importComplete']);
+        $this->reset(['parsedItems', 'parseErrors', 'showPreview', 'importComplete', 'newCategoryNames', 'newUnitNames']);
     }
 
     public function loadCategories()
@@ -66,6 +104,11 @@ class Uploaditems extends Component
         }
     }
 
+    public function loadUnits(): void
+    {
+        $this->availableUnits = unit::where('status', 'active')->orderBy('name')->get();
+    }
+
     public function downloadTemplate()
     {
         $headers = [
@@ -73,39 +116,16 @@ class Uploaditems extends Component
             'Content-Disposition' => 'attachment; filename="items_template.csv"',
         ];
 
-        $columns = [
-            'name',
-            'description',
-            'cost_price',
-            'selling_price',
-            'market_price',
-            'type',
-            'product_stock',
-            'require_plate_number',
-            'commission',
-            'commission_type',
-            'category_name',
-            'unit_name',
-            'status'
-        ];
+        $templateColumns = self::templateColumns();
 
-        $exampleRow = [
-            'Full Car Wash',
-            'Complete exterior and interior cleaning',
-            '5000',
-            '15000',
-            '20000',
-            'Service',
-            'no',
-            'yes',
-            '1000',
-            'fixed',
-            'Premium Services',
-            'Per Service',
-            'active'
-        ];
+        $columns = collect($templateColumns)
+            ->map(fn ($column, $key) => $key.($column['required'] ? ' (required)' : ' (optional)'))
+            ->values()
+            ->all();
 
-        $callback = function() use ($columns, $exampleRow) {
+        $exampleRow = collect($templateColumns)->pluck('example')->all();
+
+        $callback = function () use ($columns, $exampleRow) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
             fputcsv($file, $exampleRow);
@@ -124,44 +144,66 @@ class Uploaditems extends Component
 
         // Verify business ownership
         $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
-        if (!$businessIds->contains($this->business_id)) {
+        if (! $businessIds->contains($this->business_id)) {
             session()->flash('error', 'Invalid business selected.');
+
             return;
         }
 
-        $this->reset(['parsedItems', 'parseErrors', 'successCount', 'errorCount', 'importComplete']);
+        $this->reset(['parsedItems', 'parseErrors', 'successCount', 'errorCount', 'importComplete', 'newCategoryNames', 'newUnitNames']);
+        $this->loadCategories();
+        $this->loadUnits();
 
         $path = $this->file->getRealPath();
         $handle = fopen($path, 'r');
 
         if ($handle === false) {
             session()->flash('error', 'Unable to read the file.');
+
             return;
         }
 
         $header = fgetcsv($handle);
-        $expectedHeaders = ['name', 'description', 'cost_price', 'selling_price', 'market_price', 'type', 'product_stock', 'require_plate_number', 'commission', 'commission_type', 'category_name', 'unit_name', 'status'];
 
-        // Normalize headers
-        $header = array_map(function($h) {
-            return strtolower(trim($h));
-        }, $header);
+        if ($header === false) {
+            fclose($handle);
+            session()->flash('error', 'The file is empty.');
+
+            return;
+        }
+
+        $header = array_map(fn ($h) => $this->normalizeHeader((string) $h), $header);
+
+        $requiredColumns = collect(self::templateColumns())->filter(fn ($column) => $column['required'])->keys();
+        $missingColumns = $requiredColumns->diff($header);
+
+        if ($missingColumns->isNotEmpty()) {
+            fclose($handle);
+            session()->flash('error', 'Missing required column(s): '.$missingColumns->implode(', ').'. Please use the latest template.');
+
+            return;
+        }
 
         $rowNumber = 1;
         while (($row = fgetcsv($handle)) !== false) {
             $rowNumber++;
 
-            if (count($row) < count($expectedHeaders)) {
-                $this->parseErrors[] = "Row {$rowNumber}: Incomplete data - expected " . count($expectedHeaders) . " columns, got " . count($row);
+            if (count(array_filter($row, fn ($value) => trim((string) $value) !== '')) === 0) {
                 continue;
             }
 
-            $data = array_combine($header, array_slice($row, 0, count($header)));
+            $data = [];
+            foreach (array_keys(self::templateColumns()) as $column) {
+                $position = array_search($column, $header, true);
+                $data[$column] = $position !== false ? trim((string) ($row[$position] ?? '')) : '';
+            }
 
-            // Validate row
             $rowErrors = $this->validateRow($data, $rowNumber);
 
-            if (!empty($rowErrors)) {
+            $data['_new_category'] = $data['category_name'] !== '' && ! $this->findByName($this->availableCategories, $data['category_name']);
+            $data['_new_unit'] = $data['unit_name'] !== '' && ! $this->findByName($this->availableUnits, $data['unit_name']);
+
+            if (! empty($rowErrors)) {
                 $this->parseErrors = array_merge($this->parseErrors, $rowErrors);
                 $data['_has_error'] = true;
                 $data['_errors'] = $rowErrors;
@@ -178,72 +220,88 @@ class Uploaditems extends Component
 
         if (empty($this->parsedItems)) {
             session()->flash('error', 'No valid data found in the file.');
+
             return;
         }
 
+        $this->refreshNewNames();
         $this->showPreview = true;
+    }
+
+    /**
+     * Strip "(required)", "(optional)" and "*" markers from a header cell.
+     */
+    private function normalizeHeader(string $header): string
+    {
+        $header = preg_replace('/^\xEF\xBB\xBF/', '', $header);
+        $header = preg_replace('/\((required|optional)\)|\*/i', '', $header);
+
+        return strtolower(trim($header));
+    }
+
+    /**
+     * Case-insensitive lookup of a model by name in a collection.
+     */
+    private function findByName(iterable $records, string $name): mixed
+    {
+        $name = Str::lower(trim($name));
+
+        return collect($records)->first(fn ($record) => Str::lower(trim($record['name'])) === $name);
+    }
+
+    private function refreshNewNames(): void
+    {
+        $validItems = collect($this->parsedItems)->reject(fn ($item) => $item['_has_error']);
+
+        $this->newCategoryNames = $validItems->where('_new_category', true)
+            ->pluck('category_name')
+            ->unique(fn ($name) => Str::lower($name))
+            ->values()
+            ->all();
+
+        $this->newUnitNames = $validItems->where('_new_unit', true)
+            ->pluck('unit_name')
+            ->unique(fn ($name) => Str::lower($name))
+            ->values()
+            ->all();
     }
 
     private function validateRow(array $data, int $rowNumber): array
     {
         $errors = [];
 
-        // Required fields
-        if (empty($data['name'])) {
+        if ($data['name'] === '') {
             $errors[] = "Row {$rowNumber}: Name is required";
         }
-        if (empty($data['description'])) {
-            $errors[] = "Row {$rowNumber}: Description is required";
-        }
-        if (!is_numeric($data['cost_price'] ?? '') || $data['cost_price'] < 0) {
+        if (! is_numeric($data['cost_price']) || $data['cost_price'] < 0) {
             $errors[] = "Row {$rowNumber}: Cost price must be a valid positive number";
         }
-        if (!is_numeric($data['selling_price'] ?? '') || $data['selling_price'] < 0) {
+        if (! is_numeric($data['selling_price']) || $data['selling_price'] < 0) {
             $errors[] = "Row {$rowNumber}: Selling price must be a valid positive number";
         }
+        if ($data['market_price'] !== '' && (! is_numeric($data['market_price']) || $data['market_price'] < 0)) {
+            $errors[] = "Row {$rowNumber}: Market price must be a valid positive number";
+        }
 
-        // Type validation
-        $validTypes = ['Service', 'product'];
-        if (!in_array($data['type'] ?? '', $validTypes)) {
+        if (! in_array(Str::lower($data['type']), ['service', 'product'], true)) {
             $errors[] = "Row {$rowNumber}: Type must be 'Service' or 'product'";
         }
 
-        // Yes/No fields
-        $yesNoFields = ['product_stock', 'require_plate_number'];
-        foreach ($yesNoFields as $field) {
-            if (!in_array(strtolower($data[$field] ?? ''), ['yes', 'no'])) {
-                $errors[] = "Row {$rowNumber}: {$field} must be 'yes' or 'no'";
-            }
+        if ($data['product_stock'] !== '' && ! in_array(Str::lower($data['product_stock']), ['yes', 'no'], true)) {
+            $errors[] = "Row {$rowNumber}: product_stock must be 'yes' or 'no'";
         }
 
-        // Status validation
-        if (!in_array(strtolower($data['status'] ?? ''), ['active', 'inactive'])) {
-            $errors[] = "Row {$rowNumber}: Status must be 'active' or 'inactive'";
-        }
-
-        // Category validation
-        if (!empty($data['category_name'])) {
-            $category = collect($this->availableCategories)->firstWhere('name', $data['category_name']);
-            if (!$category) {
-                $errors[] = "Row {$rowNumber}: Category '{$data['category_name']}' not found for this business";
-            }
-        } else {
+        if ($data['category_name'] === '') {
             $errors[] = "Row {$rowNumber}: Category name is required";
         }
-
-        // Unit validation
-        if (!empty($data['unit_name'])) {
-            $unit = collect($this->availableUnits)->firstWhere('name', $data['unit_name']);
-            if (!$unit) {
-                $errors[] = "Row {$rowNumber}: Unit '{$data['unit_name']}' not found";
-            }
-        } else {
+        if ($data['unit_name'] === '') {
             $errors[] = "Row {$rowNumber}: Unit name is required";
         }
 
-        // Commission type validation (if commission is provided)
-        if (!empty($data['commission']) && is_numeric($data['commission'])) {
-            if (!in_array(strtolower($data['commission_type'] ?? ''), ['fixed', 'percentage', ''])) {
+        if ($data['commission'] !== '') {
+            if (! is_numeric($data['commission']) || $data['commission'] < 0) {
+                $errors[] = "Row {$rowNumber}: Commission must be a valid positive number";
+            } elseif (! in_array(Str::lower($data['commission_type']), ['fixed', 'percentage', ''], true)) {
                 $errors[] = "Row {$rowNumber}: Commission type must be 'fixed' or 'percentage'";
             }
         }
@@ -251,10 +309,64 @@ class Uploaditems extends Component
         return $errors;
     }
 
+    /**
+     * Find a category for the selected business by name, creating it when missing.
+     */
+    private function resolveCategory(string $name): category
+    {
+        $existing = category::where('business_id', $this->business_id)
+            ->whereRaw('LOWER(name) = ?', [Str::lower(trim($name))])
+            ->first();
+
+        if ($existing) {
+            if ($existing->status !== 'active') {
+                $existing->update(['status' => 'active']);
+            }
+
+            return $existing;
+        }
+
+        return category::create([
+            'name' => trim($name),
+            'slug' => Str::slug($name),
+            'status' => 'active',
+            'business_id' => $this->business_id,
+        ]);
+    }
+
+    /**
+     * Find a unit by name, creating it when missing.
+     */
+    private function resolveUnit(string $name): unit
+    {
+        $existing = unit::whereRaw('LOWER(name) = ?', [Str::lower(trim($name))])->first();
+
+        if ($existing) {
+            if ($existing->status !== 'active') {
+                $existing->update(['status' => 'active']);
+            }
+
+            return $existing;
+        }
+
+        return unit::create([
+            'name' => trim($name),
+            'status' => 'active',
+        ]);
+    }
+
     public function importItems()
     {
         if (empty($this->parsedItems)) {
             session()->flash('error', 'No items to import.');
+
+            return;
+        }
+
+        $businessIds = Auth::user()->assignedBusinesses()->pluck('id');
+        if (! $businessIds->contains($this->business_id)) {
+            session()->flash('error', 'Invalid business selected.');
+
             return;
         }
 
@@ -262,36 +374,39 @@ class Uploaditems extends Component
         $this->successCount = 0;
         $this->errorCount = 0;
 
+        $categories = [];
+        $units = [];
+
         foreach ($this->parsedItems as $index => $data) {
             if ($data['_has_error']) {
                 $this->errorCount++;
+
                 continue;
             }
 
             try {
-                // Find category and unit
-                $category = collect($this->availableCategories)->firstWhere('name', $data['category_name']);
-                $unit = collect($this->availableUnits)->firstWhere('name', $data['unit_name']);
+                $categoryKey = Str::lower($data['category_name']);
+                $unitKey = Str::lower($data['unit_name']);
 
-                if (!$category || !$unit) {
-                    $this->errorCount++;
-                    continue;
-                }
+                $categories[$categoryKey] ??= $this->resolveCategory($data['category_name']);
+                $units[$unitKey] ??= $this->resolveUnit($data['unit_name']);
+
+                $hasCommission = $data['commission'] !== '';
 
                 items::create([
                     'name' => $data['name'],
-                    'description' => $data['description'],
+                    'description' => $data['description'] !== '' ? $data['description'] : null,
                     'cost_price' => $data['cost_price'],
                     'selling_price' => $data['selling_price'],
-                    'market_price' => !empty($data['market_price']) ? $data['market_price'] : null,
-                    'type' => $data['type'],
-                    'product_stock' => strtolower($data['product_stock']),
-                    'require_plate_number' => strtolower($data['require_plate_number']),
-                    'commission' => !empty($data['commission']) ? $data['commission'] : null,
-                    'commission_type' => !empty($data['commission']) && !empty($data['commission_type']) ? strtolower($data['commission_type']) : null,
-                    'status' => strtolower($data['status']),
-                    'category_id' => $category['id'],
-                    'unit_id' => $unit['id'],
+                    'market_price' => $data['market_price'] !== '' ? $data['market_price'] : null,
+                    'type' => Str::lower($data['type']) === 'service' ? 'Service' : 'product',
+                    'product_stock' => $data['product_stock'] !== '' ? Str::lower($data['product_stock']) : 'no',
+                    'require_plate_number' => 'no',
+                    'commission' => $hasCommission ? $data['commission'] : null,
+                    'commission_type' => $hasCommission && $data['commission_type'] !== '' ? Str::lower($data['commission_type']) : null,
+                    'status' => 'active',
+                    'category_id' => $categories[$categoryKey]->id,
+                    'unit_id' => $units[$unitKey]->id,
                     'business_id' => $this->business_id,
                 ]);
 
@@ -306,6 +421,8 @@ class Uploaditems extends Component
 
         $this->importing = false;
         $this->importComplete = true;
+        $this->loadCategories();
+        $this->loadUnits();
 
         if ($this->successCount > 0) {
             session()->flash('message', "{$this->successCount} item(s) imported successfully.");
@@ -320,16 +437,19 @@ class Uploaditems extends Component
         if (isset($this->parsedItems[$index])) {
             unset($this->parsedItems[$index]);
             $this->parsedItems = array_values($this->parsedItems);
+            $this->refreshNewNames();
         }
     }
 
     public function resetUpload()
     {
-        $this->reset(['file', 'parsedItems', 'parseErrors', 'successCount', 'errorCount', 'showPreview', 'importComplete']);
+        $this->reset(['file', 'parsedItems', 'parseErrors', 'successCount', 'errorCount', 'showPreview', 'importComplete', 'newCategoryNames', 'newUnitNames']);
     }
 
     public function render()
     {
-        return view('livewire.owner.items.uploaditems');
+        return view('livewire.owner.items.uploaditems', [
+            'templateColumns' => self::templateColumns(),
+        ]);
     }
 }

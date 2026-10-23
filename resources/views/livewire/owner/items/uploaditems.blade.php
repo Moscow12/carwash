@@ -85,8 +85,8 @@
                             </div>
                         </div>
                     @elseif($business_id && count($availableCategories) === 0)
-                        <div class="alert alert-warning mt-3 mb-0 py-2">
-                            <small><i class="ti ti-alert-triangle me-1"></i> No categories found. Please create categories first.</small>
+                        <div class="alert alert-info mt-3 mb-0 py-2">
+                            <small><i class="ti ti-info-circle me-1"></i> No categories yet. Categories in your file will be created automatically on import.</small>
                         </div>
                     @endif
                 </div>
@@ -129,10 +129,11 @@
                     <ul class="small text-muted mb-0 ps-3">
                         <li class="mb-1">Download the template first</li>
                         <li class="mb-1">Fill in your items data (keep the header row)</li>
-                        <li class="mb-1">Use exact category and unit names</li>
+                        <li class="mb-1">Columns marked <code>(required)</code> must be filled; <code>(optional)</code> may be left blank</li>
+                        <li class="mb-1">New categories and units are created automatically</li>
                         <li class="mb-1">Type must be <code>Service</code> or <code>product</code></li>
-                        <li class="mb-1">Use <code>yes</code> or <code>no</code> for boolean fields</li>
-                        <li class="mb-1">Status must be <code>active</code> or <code>inactive</code></li>
+                        <li class="mb-1">Use <code>yes</code> or <code>no</code> for <code>product_stock</code> (defaults to <code>no</code>)</li>
+                        <li class="mb-1">Imported items are set to <code>active</code> automatically</li>
                         <li>Maximum file size: 5MB</li>
                     </ul>
                 </div>
@@ -202,6 +203,23 @@
                         </div>
                     @endif
 
+                    {{-- New Categories / Units --}}
+                    @if(!$importComplete && (count($newCategoryNames) > 0 || count($newUnitNames) > 0))
+                        <div class="card-body border-bottom bg-info-subtle py-2 small">
+                            <i class="ti ti-sparkles me-1 text-info"></i>
+                            <strong>Will be created on import:</strong>
+                            @if(count($newCategoryNames) > 0)
+                                <span class="ms-1">{{ count($newCategoryNames) }} {{ Str::plural('category', count($newCategoryNames)) }} ({{ implode(', ', $newCategoryNames) }})</span>
+                            @endif
+                            @if(count($newCategoryNames) > 0 && count($newUnitNames) > 0)
+                                <span class="mx-1">&middot;</span>
+                            @endif
+                            @if(count($newUnitNames) > 0)
+                                <span>{{ count($newUnitNames) }} {{ Str::plural('unit', count($newUnitNames)) }} ({{ implode(', ', $newUnitNames) }})</span>
+                            @endif
+                        </div>
+                    @endif
+
                     {{-- Import Summary --}}
                     @if($importComplete)
                         <div class="card-body border-bottom bg-light py-3">
@@ -231,6 +249,7 @@
                                     <th class="border-0">Name</th>
                                     <th class="border-0">Type</th>
                                     <th class="border-0">Category</th>
+                                    <th class="border-0">Unit</th>
                                     <th class="border-0 text-end">Selling Price</th>
                                     <th class="border-0 text-center">Status</th>
                                     <th class="border-0 text-end" style="width: 80px;"></th>
@@ -238,7 +257,7 @@
                             </thead>
                             <tbody>
                                 @foreach($parsedItems as $index => $item)
-                                <tr class="{{ $item['_has_error'] ? 'table-danger' : (($item['_imported'] ?? false) ? 'table-success' : '') }}">
+                                <tr wire:key="upload-item-{{ $item['_row'] }}" class="{{ $item['_has_error'] ? 'table-danger' : (($item['_imported'] ?? false) ? 'table-success' : '') }}">
                                     <td>
                                         <span class="badge bg-secondary">{{ $item['_row'] }}</span>
                                     </td>
@@ -258,9 +277,20 @@
                                             {{ $item['type'] ?? '-' }}
                                         </span>
                                     </td>
-                                    <td>{{ $item['category_name'] ?? '-' }}</td>
+                                    <td>
+                                        {{ $item['category_name'] ?: '-' }}
+                                        @if(($item['_new_category'] ?? false) && !($item['_imported'] ?? false))
+                                            <span class="badge bg-info-subtle text-info ms-1">New</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        {{ $item['unit_name'] ?: '-' }}
+                                        @if(($item['_new_unit'] ?? false) && !($item['_imported'] ?? false))
+                                            <span class="badge bg-info-subtle text-info ms-1">New</span>
+                                        @endif
+                                    </td>
                                     <td class="text-end fw-medium">
-                                        TZS {{ number_format($item['selling_price'] ?? 0, 0) }}
+                                        TZS {{ is_numeric($item['selling_price'] ?? null) ? number_format((float) $item['selling_price'], 0) : '-' }}
                                     </td>
                                     <td class="text-center">
                                         @if($item['_imported'] ?? false)
@@ -271,10 +301,12 @@
                                             <span class="badge bg-danger" title="{{ implode(', ', $item['_errors']) }}">
                                                 <i class="ti ti-x me-1"></i> Error
                                             </span>
-                                        @else
-                                            <span class="badge bg-{{ strtolower($item['status'] ?? '') === 'active' ? 'success' : 'secondary' }}-subtle text-{{ strtolower($item['status'] ?? '') === 'active' ? 'success' : 'secondary' }}">
-                                                {{ ucfirst($item['status'] ?? '-') }}
+                                        @elseif($item['_import_error'] ?? false)
+                                            <span class="badge bg-danger" title="{{ $item['_import_error'] }}">
+                                                <i class="ti ti-x me-1"></i> Failed
                                             </span>
+                                        @else
+                                            <span class="badge bg-success-subtle text-success">Active</span>
                                         @endif
                                     </td>
                                     <td class="text-end">
@@ -354,84 +386,25 @@
                                     </tr>
                                 </thead>
                                 <tbody class="small">
-                                    <tr>
-                                        <td><code>name</code></td>
-                                        <td><span class="badge bg-danger">Yes</span></td>
-                                        <td>Item name</td>
-                                        <td>Full Car Wash</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>description</code></td>
-                                        <td><span class="badge bg-danger">Yes</span></td>
-                                        <td>Item description</td>
-                                        <td>Complete cleaning service</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>cost_price</code></td>
-                                        <td><span class="badge bg-danger">Yes</span></td>
-                                        <td>Cost price (number)</td>
-                                        <td>5000</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>selling_price</code></td>
-                                        <td><span class="badge bg-danger">Yes</span></td>
-                                        <td>Selling price (number)</td>
-                                        <td>15000</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>market_price</code></td>
-                                        <td><span class="badge bg-secondary">No</span></td>
-                                        <td>Market price (number)</td>
-                                        <td>20000</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>type</code></td>
-                                        <td><span class="badge bg-danger">Yes</span></td>
-                                        <td>Service or product</td>
-                                        <td>Service</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>product_stock</code></td>
-                                        <td><span class="badge bg-danger">Yes</span></td>
-                                        <td>Track stock (yes/no)</td>
-                                        <td>no</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>require_plate_number</code></td>
-                                        <td><span class="badge bg-danger">Yes</span></td>
-                                        <td>Require plate (yes/no)</td>
-                                        <td>yes</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>commission</code></td>
-                                        <td><span class="badge bg-secondary">No</span></td>
-                                        <td>Commission amount</td>
-                                        <td>1000</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>commission_type</code></td>
-                                        <td><span class="badge bg-secondary">No</span></td>
-                                        <td>fixed or percentage</td>
-                                        <td>fixed</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>category_name</code></td>
-                                        <td><span class="badge bg-danger">Yes</span></td>
-                                        <td>Exact category name</td>
-                                        <td>Premium Services</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>unit_name</code></td>
-                                        <td><span class="badge bg-danger">Yes</span></td>
-                                        <td>Exact unit name</td>
-                                        <td>Per Service</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>status</code></td>
-                                        <td><span class="badge bg-danger">Yes</span></td>
-                                        <td>active or inactive</td>
-                                        <td>active</td>
-                                    </tr>
+                                    @foreach($templateColumns as $column => $spec)
+                                        <tr wire:key="template-column-{{ $column }}">
+                                            <td><code>{{ $column }}</code></td>
+                                            <td>
+                                                @if($spec['required'])
+                                                    <span class="badge bg-danger">Required</span>
+                                                @else
+                                                    <span class="badge bg-secondary">Optional</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                {{ $spec['description'] }}
+                                                @if(!$spec['required'] && $spec['default'] && $spec['default'] !== 'empty')
+                                                    <small class="text-muted d-block">Default: {{ $spec['default'] }}</small>
+                                                @endif
+                                            </td>
+                                            <td>{{ $spec['example'] }}</td>
+                                        </tr>
+                                    @endforeach
                                 </tbody>
                             </table>
                         </div>
