@@ -43,6 +43,7 @@ use App\Livewire\Owner\Sales\Index as OwnerSales;
 use App\Livewire\Owner\Sales\Dashboard as OwnerSalesDashboard;
 use App\Livewire\Owner\Purchases\Index as OwnerPurchases;
 use App\Livewire\Owner\Stocktaking\Index as OwnerStocktaking;
+use App\Livewire\Owner\Stocktaking\Sheet as OwnerStocktakingSheet;
 use App\Livewire\Owner\Suppliers\Index as OwnerSuppliers;
 use App\Livewire\Owner\Businesses\Mybusiness;
 use App\Livewire\Owner\Items\Categories;
@@ -176,6 +177,7 @@ Route::middleware(['auth', 'role:owner,staff', 'subscription.active'])->prefix('
     Route::get('/sales', OwnerSales::class)->middleware('module:pos')->name('owner.sales');
     Route::get('/purchases', OwnerPurchases::class)->name('owner.purchases');
     Route::get('/stocktaking', OwnerStocktaking::class)->name('owner.stocktaking');
+    Route::get('/stocktaking/count/{stock?}', OwnerStocktakingSheet::class)->name('owner.stocktaking.sheet');
     Route::get('/suppliers', OwnerSuppliers::class)->name('owner.people.suppliers');
     Route::get('/units', Units::class)->name('owner.units');
     Route::get('/my-business', Mybusiness::class)->name('owner.mybusiness');
