@@ -86,16 +86,38 @@
                                     </svg>
                                     Password
                                 </label>
-                                <input type="password"
-                                       name="password"
-                                       class="form-control form-control-lg @error('password') is-invalid @enderror"
-                                       placeholder="Enter your password"
-                                       style="border-radius: 12px; border: 2px solid #e9ecef; padding: 0.75rem 1rem; font-size: clamp(0.95rem, 2.5vw, 1rem); transition: all 0.3s;"
-                                       onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 0.2rem rgba(13, 110, 253, 0.15)'"
-                                       onblur="this.style.borderColor='#e9ecef'; this.style.boxShadow='none'"
-                                       required>
+                                <div class="position-relative" x-data="{ showPassword: false }">
+                                    <input :type="showPassword ? 'text' : 'password'"
+                                           type="password"
+                                           name="password"
+                                           class="form-control form-control-lg @error('password') is-invalid @enderror"
+                                           placeholder="Enter your password"
+                                           autocomplete="current-password"
+                                           style="border-radius: 12px; border: 2px solid #e9ecef; padding: 0.75rem 3rem 0.75rem 1rem; font-size: clamp(0.95rem, 2.5vw, 1rem); transition: all 0.3s;"
+                                           onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 0.2rem rgba(13, 110, 253, 0.15)'"
+                                           onblur="this.style.borderColor='#e9ecef'; this.style.boxShadow='none'"
+                                           required>
+                                    <button type="button"
+                                            class="btn btn-link position-absolute top-50 end-0 translate-middle-y text-muted p-0 me-3 border-0 shadow-none"
+                                            style="z-index: 5; line-height: 0;"
+                                            @click="showPassword = !showPassword"
+                                            :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                                            :title="showPassword ? 'Hide password' : 'Show password'"
+                                            aria-label="Show password">
+                                        <svg x-show="!showPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                        <svg x-show="showPassword" x-cloak xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                                            <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                                        </svg>
+                                    </button>
+                                </div>
                                 @error('password')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
 
@@ -180,6 +202,14 @@
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         -webkit-text-size-adjust: 100%;
         -webkit-tap-highlight-color: transparent;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+
+    input[name="password"].is-invalid {
+        background-image: none;
     }
 
     .object-fit-cover {
