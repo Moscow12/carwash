@@ -224,21 +224,66 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user has a specific permission
+     * Permission names granted by this user's active role, loaded once per request.
+     *
+     * @var \Illuminate\Support\Collection<int, string>|null
+     */
+    protected ?\Illuminate\Support\Collection $cachedPermissionNames = null;
+
+    /**
+     * Check if user has a specific permission.
+     * Admins and owners can do everything in their businesses; staff are limited to their active role.
      */
     public function hasPermission(string $permissionName): bool
     {
-        // If user has a dynamic role, check its permissions
-        if ($this->role_id && $this->assignedRole) {
-            return $this->assignedRole->hasPermission($permissionName);
-        }
-
-        // For system roles (admin, owner), grant all permissions
-        if (in_array($this->role, ['admin', 'owner'])) {
+        if (in_array($this->role, ['admin', 'owner'], true)) {
             return true;
         }
 
-        return false;
+        if ($this->role !== 'staff') {
+            return false;
+        }
+
+        return $this->permissionNames()->contains($permissionName);
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    public function permissionNames(): \Illuminate\Support\Collection
+    {
+        if ($this->cachedPermissionNames !== null) {
+            return $this->cachedPermissionNames;
+        }
+
+        $role = $this->role_id ? $this->assignedRole : null;
+
+        return $this->cachedPermissionNames = $role && $role->is_active
+            ? $role->permissions()->pluck('name')
+            : collect();
+    }
+
+    /**
+     * Whether the user passes the `can:` middleware on a named route (used to hide menu links).
+     * Routes without a `can:` middleware are open to everyone who can reach the route group.
+     */
+    public function canAccessRoute(string $routeName): bool
+    {
+        $route = \Illuminate\Support\Facades\Route::getRoutes()->getByName($routeName);
+
+        if (! $route) {
+            return false;
+        }
+
+        foreach ($route->gatherMiddleware() as $middleware) {
+            if (is_string($middleware) && str_starts_with($middleware, 'can:')) {
+                if (! $this->can(explode(',', substr($middleware, 4))[0])) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**

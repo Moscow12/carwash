@@ -1,692 +1,332 @@
 @php
     // Modules this owner/staff can access (admin sees all). Computed once for the sidebar.
     $moduleKeys = auth()->check() ? auth()->user()->accessibleModuleKeys() : collect();
+
+    // Hide links the user's role can't open (uses each route's own can: middleware); owners see everything.
+    $canSee = fn (string $route) => auth()->check() && auth()->user()->canAccessRoute($route);
+    $canSeeAny = fn (array $routes) => collect($routes)->contains(fn ($route) => $canSee($route));
+
+    // A link: label, route name, icon, and the routeIs() pattern that marks it active (defaults to the route itself)
+    $link = fn (string $label, string $route, string $icon, ?string $active = null) => compact('label', 'route', 'icon') + ['active' => $active ?? $route];
+
+    /*
+     * The sidebar, top to bottom, grouped by what people do:
+     * sell → run the business (industry modules) → products & stock → people → money → settings.
+     * Each group: ['label', 'icon', 'module' (optional), 'sections' => [title|null => [links]]].
+     */
+    $menu = [
+        [
+            'heading' => null,
+            'entries' => [
+                $link('Dashboard', 'owner.dashboard', 'ti-dashboard'),
+            ],
+        ],
+        [
+            'heading' => 'Sell',
+            'entries' => [
+                [
+                    'label' => 'POS & Sales', 'icon' => 'ti-shopping-cart', 'module' => 'pos',
+                    'sections' => [
+                        null => [
+                            $link('POS Screen', 'owner.posscreen', 'ti-cash-register'),
+                            $link('All Sales', 'owner.sales', 'ti-receipt'),
+                            $link('Sales Dashboard', 'owner.sales.dashboard', 'ti-chart-bar'),
+                        ],
+                    ],
+                ],
+            ],
+        ],
+        [
+            'heading' => 'Operations',
+            'entries' => [
+                [
+                    'label' => 'Hotel', 'icon' => 'ti-bed', 'module' => 'hotel',
+                    'sections' => [
+                        'Front Desk' => [
+                            $link('Front Desk', 'owner.hotel.frontdesk', 'ti-dashboard'),
+                            $link('Reservations', 'owner.hotel.reservations', 'ti-calendar-event'),
+                            $link('Check-In', 'owner.hotel.checkin', 'ti-login'),
+                            $link('Check-Out', 'owner.hotel.checkout', 'ti-logout'),
+                            $link('Room Status', 'owner.hotel.room-status', 'ti-door'),
+                        ],
+                        'Guests' => [
+                            $link('Guests', 'owner.hotel.guests', 'ti-users'),
+                            $link('Guest Documents', 'owner.hotel.guest-documents', 'ti-file-text'),
+                            $link('Communication', 'owner.hotel.communication-log', 'ti-mail'),
+                            $link('Amenity Requests', 'owner.hotel.amenity-requests', 'ti-briefcase'),
+                            $link('Wake-up Calls', 'owner.hotel.wakeup-calls', 'ti-alarm'),
+                            $link('Laundry Orders', 'owner.hotel.laundry-orders', 'ti-wash'),
+                        ],
+                        'Housekeeping & Maintenance' => [
+                            $link('Housekeeping Tasks', 'owner.hotel.housekeeping.tasks', 'ti-checkbox'),
+                            $link('Housekeeping Status', 'owner.hotel.housekeeping.status', 'ti-vacuum-cleaner'),
+                            $link('Lost & Found', 'owner.hotel.lost-found', 'ti-search'),
+                            $link('Maintenance Requests', 'owner.hotel.maintenance.requests', 'ti-tool'),
+                            $link('Preventive Maintenance', 'owner.hotel.maintenance.preventive', 'ti-calendar-check'),
+                        ],
+                        'Food & Beverage' => [
+                            $link('POS Outlets', 'owner.hotel.pos-outlets', 'ti-building-store'),
+                            $link('Orders', 'owner.hotel.pos-orders', 'ti-receipt-2'),
+                            $link('Tables', 'owner.hotel.tables', 'ti-armchair'),
+                            $link('Sessions', 'owner.hotel.pos-sessions', 'ti-clock'),
+                        ],
+                        'Billing' => [
+                            $link('Folios', 'owner.hotel.folios', 'ti-file-invoice'),
+                            $link('Invoices', 'owner.hotel.invoices', 'ti-receipt'),
+                            $link('Payments', 'owner.hotel.payments', 'ti-cash'),
+                            $link('Night Audit', 'owner.hotel.night-audit', 'ti-moon'),
+                        ],
+                        'Rooms & Setup' => [
+                            $link('My Hotels', 'owner.hotels', 'ti-building'),
+                            $link('Rooms', 'owner.hotel.rooms', 'ti-door'),
+                            $link('Room Types', 'owner.hotel.room-types', 'ti-tag'),
+                            $link('Rate Plans', 'owner.hotel.rate-plans', 'ti-currency-dollar'),
+                            $link('Availability', 'owner.hotel.availability', 'ti-calendar-stats'),
+                            $link('Tax Config', 'owner.hotel.tax-config', 'ti-percentage'),
+                            $link('Booking Sources', 'owner.hotel.booking-sources', 'ti-source'),
+                            $link('Channel Mapping', 'owner.hotel.channel-mapping', 'ti-map-pin'),
+                        ],
+                        'Hotel Reports' => [
+                            $link('Occupancy', 'owner.hotel.reports.occupancy', 'ti-chart-bar'),
+                            $link('Revenue', 'owner.hotel.reports.revenue', 'ti-chart-line'),
+                            $link('Reservations Report', 'owner.hotel.reports.reservations', 'ti-calendar-stats'),
+                            $link('Housekeeping Report', 'owner.hotel.reports.housekeeping', 'ti-report'),
+                            $link('Guest History', 'owner.hotel.reports.guest-history', 'ti-history'),
+                        ],
+                    ],
+                ],
+                [
+                    'label' => 'Restaurant', 'icon' => 'ti-tools-kitchen-2', 'module' => 'restaurant',
+                    'sections' => [
+                        null => [
+                            $link('Dashboard', 'owner.restaurant.dashboard', 'ti-dashboard'),
+                            $link('Restaurant POS', 'owner.restaurant.pos', 'ti-cash-register'),
+                            $link('Kitchen Screen', 'owner.restaurant.kitchenscreen', 'ti-chef-hat'),
+                            $link('Table Reservations', 'owner.restaurant.reservations', 'ti-calendar-event'),
+                        ],
+                        'Setup' => [
+                            $link('Menu Recipes', 'owner.restaurant.recipes', 'ti-notebook'),
+                            $link('Waiters', 'owner.restaurant.waiters', 'ti-users'),
+                            $link('Restaurant Settings', 'owner.restaurant.settings', 'ti-settings'),
+                        ],
+                    ],
+                ],
+                [
+                    'label' => 'Bar', 'icon' => 'ti-glass-full', 'module' => 'bar',
+                    'sections' => [
+                        null => [
+                            $link('Dashboard', 'owner.bar.dashboard', 'ti-dashboard'),
+                            $link('Bar POS', 'owner.bar.pos', 'ti-beer'),
+                            $link('Bar Tabs', 'owner.bar.tabs', 'ti-receipt'),
+                        ],
+                        'Setup' => [
+                            $link('Menu Items', 'owner.bar.menu', 'ti-menu-2'),
+                            $link('Bar Stock', 'owner.bar.stock', 'ti-package'),
+                        ],
+                        'Insights' => [
+                            $link('Bar Reports', 'owner.bar.reports', 'ti-chart-bar'),
+                        ],
+                    ],
+                ],
+                [
+                    'label' => 'Rentals', 'icon' => 'ti-building-community', 'module' => 'rental', 'active' => 'owner.rental*',
+                    'sections' => [
+                        null => [
+                            $link('Dashboard', 'owner.rental.dashboard', 'ti-dashboard'),
+                        ],
+                        'Operations' => [
+                            $link('Tenancy Agreements', 'owner.rental.agreements', 'ti-file-text'),
+                            $link('Rent Payments', 'owner.rental.rent-payments', 'ti-receipt'),
+                            $link('Utility Bills', 'owner.rental.utility-bills', 'ti-bolt'),
+                            $link('Maintenance', 'owner.rental.maintenance', 'ti-tool'),
+                        ],
+                        'Catalog' => [
+                            $link('Properties', 'owner.rental.properties', 'ti-building'),
+                            $link('Rental Units', 'owner.rental.units', 'ti-home-2'),
+                            $link('Landlords', 'owner.rental.landlords', 'ti-users'),
+                        ],
+                    ],
+                ],
+            ],
+        ],
+        [
+            'heading' => 'Products & Stock',
+            'entries' => [
+                [
+                    'label' => 'Items & Services', 'icon' => 'ti-package',
+                    'sections' => [
+                        null => [
+                            $link('All Items', 'owner.list-items', 'ti-list'),
+                            $link('Add Item', 'owner.itemregister', 'ti-plus'),
+                            $link('Import Items', 'owner.uploaditems', 'ti-file-upload'),
+                        ],
+                        'Organise' => [
+                            $link('Categories', 'owner.categories', 'ti-category'),
+                            $link('Units', 'owner.units', 'ti-ruler-2', 'owner.units*'),
+                        ],
+                    ],
+                ],
+                [
+                    'label' => 'Inventory', 'icon' => 'ti-building-warehouse',
+                    'sections' => [
+                        null => [
+                            $link('Purchase Orders', 'owner.inventory.purchases', 'ti-shopping-bag', 'owner.inventory.purchases*'),
+                            $link('Stocktaking', 'owner.stocktaking', 'ti-clipboard-list', 'owner.stocktaking*'),
+                            $link('Stock Transfers', 'owner.inventory.stocktransfers', 'ti-arrows-exchange'),
+                        ],
+                    ],
+                ],
+            ],
+        ],
+        [
+            'heading' => 'People',
+            'entries' => [
+                $link('Customers', 'owner.people.customers', 'ti-user-heart'),
+                $link('Suppliers', 'owner.people.suppliers', 'ti-truck', 'owner.people.suppliers*'),
+                [
+                    'label' => 'Staff & Access', 'icon' => 'ti-id-badge-2',
+                    'sections' => [
+                        null => [
+                            $link('Staff', 'owner.people.Staffs', 'ti-users'),
+                            $link('Assign Roles', 'owner.people.user-roles', 'ti-user-check', 'owner.people.user-roles*'),
+                            $link('Roles & Permissions', 'owner.people.roles', 'ti-shield-lock', 'owner.people.roles*'),
+                        ],
+                    ],
+                ],
+            ],
+        ],
+        [
+            'heading' => 'Money',
+            'entries' => [
+                [
+                    'label' => 'Expenses', 'icon' => 'ti-receipt-2',
+                    'sections' => [
+                        null => [
+                            $link('All Expenses', 'owner.expenses', 'ti-list'),
+                            $link('Expense Categories', 'owner.expenses.categories', 'ti-category'),
+                        ],
+                    ],
+                ],
+                [
+                    'label' => 'Reports', 'icon' => 'ti-chart-pie',
+                    'sections' => [
+                        null => [
+                            $link('Profit & Loss', 'owner.reports.profitandloss', 'ti-scale'),
+                            $link('Sales Report', 'owner.reports.sales', 'ti-chart-bar'),
+                            $link('Stock Report', 'owner.reports.stock', 'ti-packages'),
+                            $link('Staff Commissions', 'owner.reports.staffcommissions', 'ti-coins'),
+                        ],
+                    ],
+                ],
+            ],
+        ],
+        [
+            'heading' => 'Settings',
+            'entries' => [
+                [
+                    'label' => 'Businesses', 'icon' => 'ti-building-store',
+                    'sections' => [
+                        null => [
+                            $link('My Businesses', 'owner.businesses', 'ti-list'),
+                            $link('Add Business', 'owner.mybusiness', 'ti-plus'),
+                        ],
+                    ],
+                ],
+                [
+                    'label' => 'Settings', 'icon' => 'ti-settings',
+                    'sections' => [
+                        null => [
+                            $link('General Settings', 'owner.settings', 'ti-adjustments'),
+                            ...($moduleKeys->contains('hotel') ? [$link('Hotel Settings', 'owner.settings.hotel', 'ti-bed')] : []),
+                        ],
+                    ],
+                ],
+                $link('Subscription', 'owner.subscription', 'ti-credit-card'),
+            ],
+        ],
+    ];
+
+    // Keep only what this user can open: links they have access to, groups whose module is enabled
+    // and that still have links, and headings that still have entries.
+    $visibleMenu = collect($menu)->map(function (array $block) use ($canSee, $moduleKeys) {
+        $block['entries'] = collect($block['entries'])->map(function (array $entry) use ($canSee, $moduleKeys) {
+            if (isset($entry['route'])) {
+                return $canSee($entry['route']) ? $entry : null;
+            }
+
+            if (isset($entry['module']) && ! $moduleKeys->contains($entry['module'])) {
+                return null;
+            }
+
+            $entry['sections'] = collect($entry['sections'])
+                ->map(fn (array $links) => array_values(array_filter($links, fn (array $link) => $canSee($link['route']))))
+                ->filter()
+                ->all();
+
+            if ($entry['sections'] === []) {
+                return null;
+            }
+
+            $entry['patterns'] = collect($entry['sections'])->flatten(1)->pluck('active')->all();
+            if (isset($entry['active'])) {
+                $entry['patterns'][] = $entry['active'];
+            }
+
+            return $entry;
+        })->filter()->values()->all();
+
+        return $block;
+    })->filter(fn (array $block) => $block['entries'] !== [])->values();
 @endphp
 <ul class="navbar-nav flex-column" id="miniSidebarNav">
-  <!-- Dashboard -->
-    <li class="nav-item">
-          <a class='nav-link {{ request()->routeIs("owner.dashboard") ? "active" : "" }}' href="{{ route('owner.dashboard') }}">
-            <span class="nav-icon"><i class="ti ti-dashboard fs-5"></i></span>
-            <span class="text">Dashboard</span>
+  @foreach($visibleMenu as $block)
+    @if($block['heading'])
+      <li class="nav-item">
+        <div class="nav-heading">{{ $block['heading'] }}</div>
+        <hr class="mx-5 nav-line mb-1" />
+      </li>
+    @endif
+
+    @foreach($block['entries'] as $entry)
+      @if(isset($entry['route']))
+        {{-- Single link --}}
+        <li class="nav-item">
+          <a class="nav-link {{ request()->routeIs($entry['active']) ? 'active' : '' }}" href="{{ route($entry['route']) }}">
+            <span class="nav-icon"><i class="ti {{ $entry['icon'] }} fs-5"></i></span>
+            <span class="text">{{ $entry['label'] }}</span>
           </a>
-    </li>
-    <li class="nav-item">
-          <a class='nav-link {{ request()->routeIs("owner.subscription") ? "active" : "" }}' href="{{ route('owner.subscription') }}">
-            <span class="nav-icon"><i class="ti ti-credit-card fs-5"></i></span>
-            <span class="text">Subscription</span>
+        </li>
+      @else
+        {{-- Group --}}
+        @php $isOpen = request()->routeIs(...$entry['patterns']); @endphp
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle {{ $isOpen ? 'active' : '' }}"
+             href="#!"
+             role="button"
+             data-bs-toggle="dropdown"
+             aria-expanded="{{ $isOpen ? 'true' : 'false' }}">
+            <span class="nav-icon"><i class="ti {{ $entry['icon'] }} fs-5"></i></span>
+            <span class="text">{{ $entry['label'] }}</span>
           </a>
-    </li>
-  @if($moduleKeys->contains('pos'))
-  <!-- POS Management -->
-  <li class="nav-item dropdown" id="posManagementMenu">
-    <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.sales.dashboard') || request()->routeIs('owner.posscreen') || request()->routeIs('owner.sales') ? 'active' : '' }}"
-      href="#!"
-      role="button"
-      data-bs-toggle="dropdown"
-      aria-expanded="{{ request()->routeIs('owner.sales.dashboard') || request()->routeIs('owner.posscreen') || request()->routeIs('owner.sales') ? 'true' : 'false' }}">
-      <span class="nav-icon"><i class="ti ti-building-warehouse fs-5"></i></span>
-      <span class="text">POS / Sales</span>
-    </a>
-    <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.sales.dashboard') || request()->routeIs('owner.posscreen') || request()->routeIs('owner.sales') ? 'show' : '' }}">
-      <li class="nav-item">
-        <a class='dropdown-item {{ request()->routeIs("owner.sales.dashboard") ? "active" : "" }}' href="{{ route('owner.sales.dashboard') }}">
-          <i class="ti ti-chart-bar me-2"></i> Sales Dashboard
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class='dropdown-item {{ request()->routeIs("owner.posscreen") ? "active" : "" }}' href="{{ route('owner.posscreen') }}">
-          <i class="fa-solid fa-cash-register me-2"></i> POS Screen
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class='dropdown-item {{ request()->routeIs("owner.sales") ? "active" : "" }}' href="{{ route('owner.sales') }}">
-          <i class="ti ti-receipt me-2"></i> All Sales
-        </a>
-      </li>
-    </ul>
-  </li>
-  @endif
-@if($moduleKeys->contains('rental'))
-<!-- rental management -->
-<li class="nav-item dropdown" id="rentalManagementMenu">
-  <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.rental*') ? 'active' : '' }}"
-    href="#!"
-    role="button"
-    data-bs-toggle="dropdown"
-    aria-expanded="{{ request()->routeIs('owner.rental*') ? 'true' : 'false' }}">
-    <span class="nav-icon"><i class="ti ti-building-warehouse fs-5"></i></span>
-    <span class="text">Rental Management</span>
-  </a>
-  <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.rental*') ? 'show' : '' }}">
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.rental.dashboard") ? "active" : "" }}' href="{{ route('owner.rental.dashboard') }}">
-        <i class="ti ti-dashboard me-2"></i> Dashboard
-      </a>
-    </li>
-    <li>
-      <hr class="dropdown-divider">
-    </li>
-    <li class="nav-item"><small class="dropdown-header text-muted">Catalog</small></li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.rental.landlords") ? "active" : "" }}' href="{{ route('owner.rental.landlords') }}">
-        <i class="ti ti-users me-2"></i> Landlords
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.rental.properties") ? "active" : "" }}' href="{{ route('owner.rental.properties') }}">
-        <i class="ti ti-building me-2"></i> Properties
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.rental.units") ? "active" : "" }}' href="{{ route('owner.rental.units') }}">
-        <i class="ti ti-home-2 me-2"></i> Rental Units
-      </a>
-    </li>
-    <li>
-      <hr class="dropdown-divider">
-    </li>
-    <li class="nav-item"><small class="dropdown-header text-muted">Operations</small></li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.rental.agreements") ? "active" : "" }}' href="{{ route('owner.rental.agreements') }}">
-        <i class="ti ti-file-text me-2"></i> Tenancy Agreements
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.rental.rent-payments") ? "active" : "" }}' href="{{ route('owner.rental.rent-payments') }}">
-        <i class="ti ti-receipt me-2"></i> Rent Payments
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.rental.utility-bills") ? "active" : "" }}' href="{{ route('owner.rental.utility-bills') }}">
-        <i class="ti ti-bolt me-2"></i> Utility Bills
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.rental.maintenance") ? "active" : "" }}' href="{{ route('owner.rental.maintenance') }}">
-        <i class="ti ti-tool me-2"></i> Maintenance
-      </a>
-    </li>
-  </ul>
-</li>
-@endif
-@if($moduleKeys->contains('hotel'))
-<!-- Hotel Management -->
-<li class="nav-item dropdown" id="hotelManagementMenu">
-  <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.hotel*') ? 'active' : '' }}"
-    href="#!"
-    role="button"
-    data-bs-toggle="dropdown"
-    aria-expanded="{{ request()->routeIs('owner.hotel*') ? 'true' : 'false' }}">
-    <span class="nav-icon"><i class="ti ti-bed fs-5"></i></span>
-    <span class="text">Hotel Management</span>
-  </a>
-  <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.hotel*') ? 'show' : '' }}">
-    <!-- Hotels Section -->
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotels") ? "active" : "" }}' href="{{ route('owner.hotels') }}">
-        <i class="ti ti-bed me-2"></i> My Hotels
-      </a>
-    </li>
-    <li>
-      <hr class="dropdown-divider">
-    </li>
-
-    <!-- Front Desk -->
-    <li class="nav-item"><small class="dropdown-header text-muted">Front Desk</small></li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.frontdesk") ? "active" : "" }}' href="{{ route('owner.hotel.frontdesk') }}">
-        <i class="ti ti-dashboard me-2"></i> Dashboard
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.guests") ? "active" : "" }}' href="{{ route('owner.hotel.guests') }}">
-        <i class="ti ti-users me-2"></i> Register Guest
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.reservations") ? "active" : "" }}' href="{{ route('owner.hotel.reservations') }}">
-        <i class="ti ti-calendar-event me-2"></i> Reservations
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.checkin") ? "active" : "" }}' href="{{ route('owner.hotel.checkin') }}">
-        <i class="ti ti-login me-2"></i> Check-In
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.checkout") ? "active" : "" }}' href="{{ route('owner.hotel.checkout') }}">
-        <i class="ti ti-logout me-2"></i> Check-Out
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.room-status") ? "active" : "" }}' href="{{ route('owner.hotel.room-status') }}">
-        <i class="ti ti-door me-2"></i> Room Status
-      </a>
-    </li>
-    <li>
-      <hr class="dropdown-divider">
-    </li>
-
-    <!-- Rooms & Inventory -->
-    <li class="nav-item"><small class="dropdown-header text-muted">Rooms & Inventory</small></li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.room-types") ? "active" : "" }}' href="{{ route('owner.hotel.room-types') }}">
-        <i class="ti ti-tag me-2"></i> Room Types
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.rooms") ? "active" : "" }}' href="{{ route('owner.hotel.rooms') }}">
-        <i class="ti ti-door me-2"></i> Rooms
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.rate-plans") ? "active" : "" }}' href="{{ route('owner.hotel.rate-plans') }}">
-        <i class="ti ti-currency-dollar me-2"></i> Rate Plans
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.availability") ? "active" : "" }}' href="{{ route('owner.hotel.availability') }}">
-        <i class="ti ti-calendar-stats me-2"></i> Availability
-      </a>
-    </li>
-    <li>
-      <hr class="dropdown-divider">
-    </li>
-
-    <!-- Guests -->
-    <li class="nav-item"><small class="dropdown-header text-muted">Guests</small></li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.guests") ? "active" : "" }}' href="{{ route('owner.hotel.guests') }}">
-        <i class="ti ti-users me-2"></i> Guest Directory
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.guest-documents") ? "active" : "" }}' href="{{ route('owner.hotel.guest-documents') }}">
-        <i class="ti ti-file-text me-2"></i> Documents
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.communication-log") ? "active" : "" }}' href="{{ route('owner.hotel.communication-log') }}">
-        <i class="ti ti-mail me-2"></i> Communication
-      </a>
-    </li>
-    <li>
-      <hr class="dropdown-divider">
-    </li>
-
-    <!-- Housekeeping -->
-    <li class="nav-item"><small class="dropdown-header text-muted">Housekeeping</small></li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.housekeeping.tasks") ? "active" : "" }}' href="{{ route('owner.hotel.housekeeping.tasks') }}">
-        <i class="ti ti-checkbox me-2"></i> Tasks
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.housekeeping.status") ? "active" : "" }}' href="{{ route('owner.hotel.housekeeping.status') }}">
-        <i class="ti ti-vacuum-cleaner me-2"></i> Room Status
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.lost-found") ? "active" : "" }}' href="{{ route('owner.hotel.lost-found') }}">
-        <i class="ti ti-search me-2"></i> Lost & Found
-      </a>
-    </li>
-    <li>
-      <hr class="dropdown-divider">
-    </li>
-
-    <!-- Maintenance -->
-    <li class="nav-item"><small class="dropdown-header text-muted">Maintenance</small></li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.maintenance.requests") ? "active" : "" }}' href="{{ route('owner.hotel.maintenance.requests') }}">
-        <i class="ti ti-tool me-2"></i> Requests
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.maintenance.preventive") ? "active" : "" }}' href="{{ route('owner.hotel.maintenance.preventive') }}">
-        <i class="ti ti-calendar-check me-2"></i> Preventive
-      </a>
-    </li>
-    <li>
-      <hr class="dropdown-divider">
-    </li>
-
-    <!-- Guest Services -->
-    <li class="nav-item"><small class="dropdown-header text-muted">Guest Services</small></li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.amenity-requests") ? "active" : "" }}' href="{{ route('owner.hotel.amenity-requests') }}">
-        <i class="ti ti-briefcase me-2"></i> Amenity Requests
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.wakeup-calls") ? "active" : "" }}' href="{{ route('owner.hotel.wakeup-calls') }}">
-        <i class="ti ti-alarm me-2"></i> Wakeup Calls
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.laundry-orders") ? "active" : "" }}' href="{{ route('owner.hotel.laundry-orders') }}">
-        <i class="ti ti-wash me-2"></i> Laundry Orders
-      </a>
-    </li>
-    <li>
-      <hr class="dropdown-divider">
-    </li>
-
-    <!-- Billing & Finance -->
-    <li class="nav-item"><small class="dropdown-header text-muted">Billing & Finance</small></li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.folios") ? "active" : "" }}' href="{{ route('owner.hotel.folios') }}">
-        <i class="ti ti-file-invoice me-2"></i> Folios
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.invoices") ? "active" : "" }}' href="{{ route('owner.hotel.invoices') }}">
-        <i class="ti ti-receipt me-2"></i> Invoices
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.payments") ? "active" : "" }}' href="{{ route('owner.hotel.payments') }}">
-        <i class="ti ti-cash me-2"></i> Payments
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.night-audit") ? "active" : "" }}' href="{{ route('owner.hotel.night-audit') }}">
-        <i class="ti ti-moon me-2"></i> Night Audit
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.tax-config") ? "active" : "" }}' href="{{ route('owner.hotel.tax-config') }}">
-        <i class="ti ti-percentage me-2"></i> Tax Config
-      </a>
-    </li>
-    <li>
-      <hr class="dropdown-divider">
-    </li>
-
-    <!-- F&B Management -->
-    <li class="nav-item"><small class="dropdown-header text-muted">Restaurant & Bar</small></li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.pos-outlets") ? "active" : "" }}' href="{{ route('owner.hotel.pos-outlets') }}">
-        <i class="ti ti-building-store me-2"></i> POS Outlets
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.pos-orders") ? "active" : "" }}' href="{{ route('owner.hotel.pos-orders') }}">
-        <i class="ti ti-receipt-2 me-2"></i> Orders
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.tables") ? "active" : "" }}' href="{{ route('owner.hotel.tables') }}">
-        <i class="ti ti-armchair me-2"></i> Tables
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.pos-sessions") ? "active" : "" }}' href="{{ route('owner.hotel.pos-sessions') }}">
-        <i class="ti ti-clock me-2"></i> Sessions
-      </a>
-    </li>
-    <li>
-      <hr class="dropdown-divider">
-    </li>
-
-    <!-- Reports -->
-    <li class="nav-item"><small class="dropdown-header text-muted">Reports</small></li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.reports.occupancy") ? "active" : "" }}' href="{{ route('owner.hotel.reports.occupancy') }}">
-        <i class="ti ti-chart-bar me-2"></i> Occupancy
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.reports.revenue") ? "active" : "" }}' href="{{ route('owner.hotel.reports.revenue') }}">
-        <i class="ti ti-chart-line me-2"></i> Revenue
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.reports.reservations") ? "active" : "" }}' href="{{ route('owner.hotel.reports.reservations') }}">
-        <i class="ti ti-calendar-stats me-2"></i> Reservations
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.reports.housekeeping") ? "active" : "" }}' href="{{ route('owner.hotel.reports.housekeeping') }}">
-        <i class="ti ti-report me-2"></i> Housekeeping
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.reports.guest-history") ? "active" : "" }}' href="{{ route('owner.hotel.reports.guest-history') }}">
-        <i class="ti ti-history me-2"></i> Guest History
-      </a>
-    </li>
-    <li>
-      <hr class="dropdown-divider">
-    </li>
-
-    <!-- Channels & Integrations -->
-    <li class="nav-item"><small class="dropdown-header text-muted">Channels</small></li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.booking-sources") ? "active" : "" }}' href="{{ route('owner.hotel.booking-sources') }}">
-        <i class="ti ti-source me-2"></i> Booking Sources
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.hotel.channel-mapping") ? "active" : "" }}' href="{{ route('owner.hotel.channel-mapping') }}">
-        <i class="ti ti-map-pin me-2"></i> Channel Mapping
-      </a>
-    </li>
-  </ul>
-</li>
-@endif
-@if($moduleKeys->contains('bar'))
-<!-- Bar Management -->
-<li class="nav-item dropdown" id="barManagementMenu">
-  <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.bar.*') ? 'active' : '' }}"
-    href="#!"
-    role="button"
-    data-bs-toggle="dropdown"
-    aria-expanded="{{ request()->routeIs('owner.bar.*') ? 'true' : 'false' }}">
-    <span class="nav-icon"><i class="ti ti-glass-full fs-5"></i></span>
-    <span class="text">Bar Management</span>
-  </a>
-  <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.bar.*') ? 'show' : '' }}">
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.bar.dashboard") ? "active" : "" }}' href="{{ route('owner.bar.dashboard') }}">
-        <i class="ti ti-dashboard me-2"></i> Dashboard
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.bar.pos") ? "active" : "" }}' href="{{ route('owner.bar.pos') }}">
-        <i class="ti ti-beer me-2"></i> Bar POS
-      </a>
-    </li>
-    <li>
-      <hr class="dropdown-divider">
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.bar.menu") ? "active" : "" }}' href="{{ route('owner.bar.menu') }}">
-        <i class="ti ti-menu-2 me-2"></i> Menu Items
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.bar.tabs") ? "active" : "" }}' href="{{ route('owner.bar.tabs') }}">
-        <i class="ti ti-receipt me-2"></i> Bar Tabs
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.bar.stock") ? "active" : "" }}' href="{{ route('owner.bar.stock') }}">
-        <i class="ti ti-package me-2"></i> Stock Management
-      </a>
-    </li>
-    <li>
-      <hr class="dropdown-divider">
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.bar.reports") ? "active" : "" }}' href="{{ route('owner.bar.reports') }}">
-        <i class="ti ti-chart-bar me-2"></i> Reports
-      </a>
-    </li>
-  </ul>
-</li>
-@endif
-@if($moduleKeys->contains('restaurant'))
-<!-- Restaurant Management -->
-<li class="nav-item dropdown" id="restaurantManagementMenu">
-  <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.restaurant*') ? 'active' : '' }}"
-    href="#!"
-    role="button"
-    data-bs-toggle="dropdown"
-    aria-expanded="{{ request()->routeIs('owner.restaurant*') ? 'true' : 'false' }}">
-    <span class="nav-icon"><i class="ti ti-tools-kitchen-2 fs-5"></i></span>
-    <span class="text">Restaurant Management</span>
-  </a>
-  <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.restaurant*') ? 'show' : '' }}">
-    <li class="nav-item" id="restaurantPosMenu">
-      <a class='dropdown-item {{ request()->routeIs("owner.restaurant.dashboard") ? "active" : "" }}' href="{{ route('owner.restaurant.dashboard') }}">
-        <i class="ti ti-dashboard me-2"></i> Dashboard
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.restaurant.pos") ? "active" : "" }}' href="{{ route('owner.restaurant.pos') }}">
-        <i class="ti ti-tools-kitchen-2 me-2"></i> Restaurant POS
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.restaurant.kitchenscreen") ? "active" : "" }}' href="{{ route('owner.restaurant.kitchenscreen') }}">
-        <i class="ti ti-tools-kitchen-2 me-2"></i> Kitchen Screen
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.restaurant.reservations") ? "active" : "" }}' href="{{ route('owner.restaurant.reservations') }}">
-        <i class="ti ti-calendar-event me-2"></i> Table Reservations
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.restaurant.waiters") ? "active" : "" }}' href="{{ route('owner.restaurant.waiters') }}">
-        <i class="ti ti-users me-2"></i> Waiter Management
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.restaurant.recipes") ? "active" : "" }}' href="{{ route('owner.restaurant.recipes') }}">
-        <i class="ti ti-chef-hat me-2"></i> Menu Recipes
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.restaurant.settings") ? "active" : "" }}' href="{{ route('owner.restaurant.settings') }}">
-        <i class="ti ti-settings me-2"></i> Settings
-      </a>
-    </li>
-  </ul>
-</li>
-@endif
-
-
-<!-- Items & Services Dropdown -->
-<li class="nav-item dropdown">
-  <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.items*') || request()->routeIs('owner.itemregister*') || request()->routeIs('owner.categories*') || request()->routeIs('owner.units*') ? 'active' : '' }}"
-    href="#!"
-    role="button"
-    data-bs-toggle="dropdown"
-    aria-expanded="{{ request()->routeIs('owner.items*') || request()->routeIs('owner.itemregister*') || request()->routeIs('owner.categories*') || request()->routeIs('owner.units*') ? 'true' : 'false' }}">
-    <span class="nav-icon"><i class="ti ti-tools fs-5"></i></span>
-    <span class="text">Items & Services</span>
-  </a>
-  <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.items*') || request()->routeIs('owner.itemregister*') || request()->routeIs('owner.categories*') || request()->routeIs('owner.units*') ? 'show' : '' }}">
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.itemregister") ? "active" : "" }}' href="{{ route('owner.itemregister') }}">
-        <i class="ti ti-package me-2"></i> Items / Services
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.list-items") ? "active" : "" }}' href="{{ route('owner.list-items') }}">
-        <i class="ti ti-package me-2"></i> List all Items
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.uploaditems") ? "active" : "" }}' href="{{ route('owner.uploaditems') }}">
-        <i class="ti ti-upload me-2"></i> Upload Items
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.categories") ? "active" : "" }}' href="{{ route('owner.categories') }}">
-        <i class="ti ti-category me-2"></i> Categories
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.units*") ? "active" : "" }}' href="{{ route('owner.units') }}">
-        <i class="ti ti-ruler-2 me-2"></i> Units
-      </a>
-    </li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.expenses*') || request()->routeIs('owner.expenses*') ? 'active' : '' }}"
-    href="#!"
-    role="button"
-    data-bs-toggle="dropdown"
-    aria-expanded="{{ request()->routeIs('owner.expenses*') || request()->routeIs('owner.expenses*') ? 'true' : 'false' }}">
-    <span class="nav-icon"><i class="ti ti-car-garage fs-5"></i></span>
-    <span class="text">Expenses</span>
-  </a>
-  <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.expenses*') || request()->routeIs('owner.expenses*') ? 'show' : '' }}">
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.expenses") ? "active" : "" }}' href="{{ route('owner.expenses') }}">
-        <i class="ti ti-package me-2"></i> List all Expenses
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.expenses.categories") ? "active" : "" }}' href="{{ route('owner.expenses.categories') }}">
-        <i class="ti ti-ruler-2 me-2"></i>Category and Sub Category
-      </a>
-    </li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.reports*') || request()->routeIs('owner.reports*') ? 'active' : '' }}"
-    href="#!"
-    role="button"
-    data-bs-toggle="dropdown"
-    aria-expanded="{{ request()->routeIs('owner.reports*') || request()->routeIs('owner.reports*') ? 'true' : 'false' }}">
-    <span class="nav-icon"><i class="ti ti-file-text fs-5"></i></span>
-    <span class="text">Reports</span>
-  </a>
-  <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.reports*') || request()->routeIs('owner.reports*') ? 'show' : '' }}">
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.reports.profitandloss") ? "active" : "" }}' href="{{ route('owner.reports.profitandloss') }}">
-        <i class="ti ti-package me-2"></i> Profit and Loss
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.reports.sales") ? "active" : "" }}' href="{{ route('owner.reports.sales') }}">
-        <i class="ti ti-ruler-2 me-2"></i> Sales
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.sales*") ? "active" : "" }}' href="{{ route('owner.sales') }}">
-        <i class="ti ti-cash me-2"></i> Sales
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.reports.stock") ? "active" : "" }}' href="{{ route('owner.reports.stock') }}">
-        <i class="ti ti-ruler-2 me-2"></i> Stock Report
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.reports.staffcommissions") ? "active" : "" }}' href="{{ route('owner.reports.staffcommissions') }}">
-        <i class="ti ti-users me-2"></i> Staff Commissions
-      </a>
-    </li>
-  </ul>
-</li>
-<!-- Inventory -->
-<li class="nav-item dropdown">
-  <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.inventory*') ? 'active' : '' }}"
-    href="#!"
-    role="button"
-    data-bs-toggle="dropdown"
-    aria-expanded="{{ request()->routeIs('owner.inventory*') ? 'true' : 'false' }}">
-    <span class="nav-icon"><i class="ti ti-package fs-5"></i></span>
-    <span class="text">Inventory Management</span>
-  </a>
-  <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.inventory*') ? 'show' : '' }}">
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.inventory.purchases") ? "active" : "" }}' href="{{ route('owner.inventory.purchases') }}">
-        <i class="ti ti-shopping-cart me-2"></i> Purchase Orders
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.stocktaking*") ? "active" : "" }}' href="{{ route('owner.stocktaking') }}">
-        <i class="ti ti-clipboard-list me-2"></i> Stocktaking
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.inventory.stocktransfers") ? "active" : "" }}' href="{{ route('owner.inventory.stocktransfers') }}">
-        <i class="ti ti-arrows-exchange me-2"></i> Stock Transfers
-      </a>
-    </li>
-  </ul>
-</li>
-<!-- People -->
-<li class="nav-item dropdown">
-  <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.people*') || request()->routeIs('owner.people*') ? 'active' : '' }}"
-    href="#!"
-    role="button"
-    data-bs-toggle="dropdown"
-    aria-expanded="{{ request()->routeIs('owner.people*') || request()->routeIs('owner.people*') ? 'true' : 'false' }}">
-    <span class="nav-icon"><i class="ti ti-users fs-5"></i></span>
-    <span class="text">People</span>
-  </a>
-  <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.people*') || request()->routeIs('owner.people*') ? 'show' : '' }}">
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.people.Staffs") ? "active" : "" }}' href="{{ route('owner.people.Staffs') }}">
-        <i class="ti ti-package me-2"></i> Staffs/ User Management
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.people.customers") ? "active" : "" }}' href="{{ route('owner.people.customers') }}">
-        <i class="ti ti-ruler-2 me-2"></i>Customers
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.people.suppliers*") ? "active" : "" }}' href="{{ route('owner.people.suppliers') }}">
-        <i class="ti ti-truck me-2"></i>Suppliers
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.people.user-roles*") ? "active" : "" }}' href="{{ route('owner.people.user-roles') }}">
-        <i class="ti ti-user me-2"></i>Add User Roles
-      </a>
-    </li>
-  </ul>
-</li>
-
-
-
-<!-- Configuration -->
-<li class="nav-item">
-  <div class="nav-heading">Configuration</div>
-  <hr class="mx-5 nav-line mb-1" />
-</li>
-<!-- My Business -->
-<li class="nav-item dropdown">
-  <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.businesses*') || request()->routeIs('owner.mybusiness*') ? 'active' : '' }}"
-    href="#!"
-    role="button"
-    data-bs-toggle="dropdown"
-    aria-expanded="{{ request()->routeIs('owner.businesses*') || request()->routeIs('owner.mybusiness*') ? 'true' : 'false' }}">
-    <span class="nav-icon"><i class="ti ti-car-garage fs-5"></i></span>
-    <span class="text">My Businesses</span>
-  </a>
-  <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.businesses*') || request()->routeIs('owner.mybusiness*') ? 'show' : '' }}">
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.businesses") ? "active" : "" }}' href="{{ route('owner.businesses') }}">
-        <i class="ti ti-package me-2"></i> Manage Business(es)
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.mybusiness") ? "active" : "" }}' href="{{ route('owner.mybusiness') }}">
-        <i class="ti ti-ruler-2 me-2"></i> Add New Business
-      </a>
-    </li>
-  </ul>
-</li>
-<li class="nav-item dropdown">
-  <a class="nav-link dropdown-toggle {{ request()->routeIs('owner.settings*') || request()->routeIs('owner.settings*') ? 'active' : '' }}"
-    href="#!"
-    role="button"
-    data-bs-toggle="dropdown"
-    aria-expanded="{{ request()->routeIs('owner.settings*') || request()->routeIs('owner.settings*') ? 'true' : 'false' }}">
-    <span class="nav-icon"><i class="ti ti-car-garage fs-5"></i></span>
-    <span class="text">Settings</span>
-  </a>
-  <ul class="dropdown-menu flex-column {{ request()->routeIs('owner.settings*') || request()->routeIs('owner.settings*') ? 'show' : '' }}">
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.settings") ? "active" : "" }}' href="{{ route('owner.settings') }}">
-        <i class="ti ti-package me-2"></i> System Settings
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class='dropdown-item {{ request()->routeIs("owner.settings.hotel") ? "active" : "" }}' href="{{ route('owner.settings.hotel') }}">
-        <i class="ti ti-ruler-2 me-2"></i>Hotel Management Settings
-      </a>
-    </li>
-  </ul>
-</li>
+          <ul class="dropdown-menu flex-column {{ $isOpen ? 'show' : '' }}">
+            @foreach($entry['sections'] as $sectionTitle => $links)
+              @if(! $loop->first)
+                <li><hr class="dropdown-divider"></li>
+              @endif
+              @if($sectionTitle !== '')
+                <li class="nav-item"><small class="dropdown-header text-muted">{{ $sectionTitle }}</small></li>
+              @endif
+              @foreach($links as $item)
+                <li class="nav-item">
+                  <a class="dropdown-item {{ request()->routeIs($item['active']) ? 'active' : '' }}" href="{{ route($item['route']) }}">
+                    <i class="ti {{ $item['icon'] }} me-2"></i>{{ $item['label'] }}
+                  </a>
+                </li>
+              @endforeach
+            @endforeach
+          </ul>
+        </li>
+      @endif
+    @endforeach
+  @endforeach
 </ul>

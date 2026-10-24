@@ -48,6 +48,11 @@ class EnsureActiveSubscription
             return $next($request);
         }
 
+        // Staff who can't manage billing would only hit a 403 on the subscription page, so tell them who can fix it
+        if (! $user->can('manage_subscription')) {
+            abort(403, 'Your business subscription has lapsed. Please ask the business owner to renew it.');
+        }
+
         session()->flash('error', 'Your business subscription has lapsed. Please renew to continue.');
 
         return redirect()->route('owner.subscription');

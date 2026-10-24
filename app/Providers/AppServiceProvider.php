@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Opcodes\LogViewer\Facades\LogViewer;
 
@@ -21,6 +23,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Every permission name is a Gate ability: owners/admins pass everything, staff pass what their role grants
+        Gate::before(fn (User $user, string $ability) => $user->hasPermission($ability) ? true : null);
+
+        // The supplier list is open with either supplier permission
+        Gate::define('view_suppliers', fn (User $user) => $user->hasPermission('view_all_supplier') || $user->hasPermission('view_own_supplier'));
+
         LogViewer::auth(function ($request) {
             return $request->user() && $request->user()->role === 'admin';
         });

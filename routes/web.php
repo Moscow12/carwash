@@ -163,144 +163,144 @@ Route::match(['get', 'post'], '/subscriptions/ipn', SubscriptionsIpnController::
 // Owner Dashboard (Protected Routes - Owner and Staff)
 Route::middleware(['auth', 'role:owner,staff', 'subscription.active'])->prefix('owner')->group(function () {
     Route::get('/', OwnerDashboard::class)->name('owner.dashboard');
-    Route::get('/subscription', OwnerSubscription::class)->name('owner.subscription');
-    Route::get('/sales/dashboard', OwnerSalesDashboard::class)->middleware('module:pos')->name('owner.sales.dashboard');
-    Route::get('/businesses', OwnerBusinesses::class)->name('owner.businesses');
-    Route::get('/items', OwnerItems::class)->name('owner.items');
-    Route::get('/items/edit/{itemId}', Edititems::class)->name('owner.items.edit');
-    Route::get('/staffs', OwnerStaffs::class)->name('owner.people.Staffs');
-    Route::get('/user-roles', Userroles::class)->name('owner.people.user-roles');
-    Route::get('/roles', \App\Livewire\Owner\Staffs\RolesIndex::class)->name('owner.people.roles');
-    Route::get('/roles/create', \App\Livewire\Owner\Staffs\CreateRole::class)->name('owner.people.roles.create');
-    Route::get('/roles/edit/{roleId}', \App\Livewire\Owner\Staffs\EditRole::class)->name('owner.people.roles.edit');
-    Route::get('/customers', OwnerCustomers::class)->name('owner.people.customers');
-    Route::get('/sales', OwnerSales::class)->middleware('module:pos')->name('owner.sales');
-    Route::get('/purchases', OwnerPurchases::class)->name('owner.purchases');
-    Route::get('/stocktaking', OwnerStocktaking::class)->name('owner.stocktaking');
-    Route::get('/stocktaking/count/{stock?}', OwnerStocktakingSheet::class)->name('owner.stocktaking.sheet');
-    Route::get('/suppliers', OwnerSuppliers::class)->name('owner.people.suppliers');
-    Route::get('/units', Units::class)->name('owner.units');
-    Route::get('/my-business', Mybusiness::class)->name('owner.mybusiness');
-    Route::get('/categories', Categories::class)->name('owner.categories');
-    Route::get('/item-register', Itemregister::class)->name('owner.itemregister');
-    Route::get('/upload-items', Uploaditems::class)->name('owner.uploaditems');
-    Route::get('/pos-screen', Posscreen::class)->middleware('module:pos')->name('owner.posscreen');
-    Route::get('/settings', OwnerSettings::class)->name('owner.settings');
-    Route::get('/settings/hotel', Hotelsettings::class)->name('owner.settings.hotel');
+    Route::get('/subscription', OwnerSubscription::class)->can('manage_subscription')->name('owner.subscription');
+    Route::get('/sales/dashboard', OwnerSalesDashboard::class)->middleware('module:pos')->can('view_sale')->name('owner.sales.dashboard');
+    Route::get('/businesses', OwnerBusinesses::class)->can('manage_business')->name('owner.businesses');
+    Route::get('/items', OwnerItems::class)->can('view_item')->name('owner.items');
+    Route::get('/items/edit/{itemId}', Edititems::class)->can('edit_item')->name('owner.items.edit');
+    Route::get('/staffs', OwnerStaffs::class)->can('view_staff')->name('owner.people.Staffs');
+    Route::get('/user-roles', Userroles::class)->can('view_user')->name('owner.people.user-roles');
+    Route::get('/roles', \App\Livewire\Owner\Staffs\RolesIndex::class)->can('view_role')->name('owner.people.roles');
+    Route::get('/roles/create', \App\Livewire\Owner\Staffs\CreateRole::class)->can('add_role')->name('owner.people.roles.create');
+    Route::get('/roles/edit/{roleId}', \App\Livewire\Owner\Staffs\EditRole::class)->can('edit_role')->name('owner.people.roles.edit');
+    Route::get('/customers', OwnerCustomers::class)->can('view_customer')->name('owner.people.customers');
+    Route::get('/sales', OwnerSales::class)->middleware('module:pos')->can('view_sale')->name('owner.sales');
+    Route::get('/purchases', OwnerPurchases::class)->can('view_purchase')->name('owner.purchases');
+    Route::get('/stocktaking', OwnerStocktaking::class)->can('stocktaking')->name('owner.stocktaking');
+    Route::get('/stocktaking/count/{stock?}', OwnerStocktakingSheet::class)->can('stocktaking')->name('owner.stocktaking.sheet');
+    Route::get('/suppliers', OwnerSuppliers::class)->can('view_suppliers')->name('owner.people.suppliers');
+    Route::get('/units', Units::class)->can('manage_units')->name('owner.units');
+    Route::get('/my-business', Mybusiness::class)->can('manage_business')->name('owner.mybusiness');
+    Route::get('/categories', Categories::class)->can('manage_categories')->name('owner.categories');
+    Route::get('/item-register', Itemregister::class)->can('add_item')->name('owner.itemregister');
+    Route::get('/upload-items', Uploaditems::class)->can('import_items')->name('owner.uploaditems');
+    Route::get('/pos-screen', Posscreen::class)->middleware('module:pos')->can('create_sale')->name('owner.posscreen');
+    Route::get('/settings', OwnerSettings::class)->can('view_settings')->name('owner.settings');
+    Route::get('/settings/hotel', Hotelsettings::class)->can('view_settings')->name('owner.settings.hotel');
 
     // Hotel Management Routes
     Route::middleware('module:hotel')->group(function () {
-    Route::get('/hotels', Addhotel::class)->name('owner.hotels');
-    Route::get('/hotel/addhotel', Addhotel::class)->name('owner.hotel.list');
+    Route::get('/hotels', Addhotel::class)->can('manage_hotel')->name('owner.hotels');
+    Route::get('/hotel/addhotel', Addhotel::class)->can('manage_hotel')->name('owner.hotel.list');
 
     // Front Desk
-    Route::get('/hotel/frontdesk', Frontdesk::class)->name('owner.hotel.frontdesk');
-    Route::get('/hotel/reservations', Reservations::class)->name('owner.hotel.reservations');
-    Route::get('/hotel/checkin', Checkin::class)->name('owner.hotel.checkin');
-    Route::get('/hotel/checkout', Checkout::class)->name('owner.hotel.checkout');
-    Route::get('/hotel/room-status', RoomStatus::class)->name('owner.hotel.room-status');
+    Route::get('/hotel/frontdesk', Frontdesk::class)->can('hotel_front_desk')->name('owner.hotel.frontdesk');
+    Route::get('/hotel/reservations', Reservations::class)->can('view_reservations')->name('owner.hotel.reservations');
+    Route::get('/hotel/checkin', Checkin::class)->can('checkin')->name('owner.hotel.checkin');
+    Route::get('/hotel/checkout', Checkout::class)->can('checkout')->name('owner.hotel.checkout');
+    Route::get('/hotel/room-status', RoomStatus::class)->can('manage_rooms')->name('owner.hotel.room-status');
 
     // Rooms & Inventory
-    Route::get('/hotel/room-types', RoomTypes::class)->name('owner.hotel.room-types');
-    Route::get('/hotel/rooms', Rooms::class)->name('owner.hotel.rooms');
-    Route::get('/hotel/rate-plans', RatePlans::class)->name('owner.hotel.rate-plans');
-    Route::get('/hotel/availability', RoomAvailability::class)->name('owner.hotel.availability');
+    Route::get('/hotel/room-types', RoomTypes::class)->can('manage_rooms')->name('owner.hotel.room-types');
+    Route::get('/hotel/rooms', Rooms::class)->can('manage_rooms')->name('owner.hotel.rooms');
+    Route::get('/hotel/rate-plans', RatePlans::class)->can('manage_rooms')->name('owner.hotel.rate-plans');
+    Route::get('/hotel/availability', RoomAvailability::class)->can('view_reservations')->name('owner.hotel.availability');
 
     // Guests
-    Route::get('/hotel/guests', Guests::class)->name('owner.hotel.guests');
-    Route::get('/hotel/guest-documents', GuestDocuments::class)->name('owner.hotel.guest-documents');
-    Route::get('/hotel/communication-log', CommunicationLog::class)->name('owner.hotel.communication-log');
+    Route::get('/hotel/guests', Guests::class)->can('manage_guests')->name('owner.hotel.guests');
+    Route::get('/hotel/guest-documents', GuestDocuments::class)->can('manage_guests')->name('owner.hotel.guest-documents');
+    Route::get('/hotel/communication-log', CommunicationLog::class)->can('manage_guests')->name('owner.hotel.communication-log');
 
     // Housekeeping
-    Route::get('/hotel/housekeeping/tasks', HousekeepingTasks::class)->name('owner.hotel.housekeeping.tasks');
-    Route::get('/hotel/housekeeping/status', HousekeepingStatus::class)->name('owner.hotel.housekeeping.status');
-    Route::get('/hotel/lost-found', LostAndFound::class)->name('owner.hotel.lost-found');
+    Route::get('/hotel/housekeeping/tasks', HousekeepingTasks::class)->can('housekeeping')->name('owner.hotel.housekeeping.tasks');
+    Route::get('/hotel/housekeeping/status', HousekeepingStatus::class)->can('housekeeping')->name('owner.hotel.housekeeping.status');
+    Route::get('/hotel/lost-found', LostAndFound::class)->can('housekeeping')->name('owner.hotel.lost-found');
 
     // Maintenance
-    Route::get('/hotel/maintenance/requests', MaintenanceManagement::class)->name('owner.hotel.maintenance.requests');
-    Route::get('/hotel/maintenance/preventive', MaintenanceManagement::class)->name('owner.hotel.maintenance.preventive');
+    Route::get('/hotel/maintenance/requests', MaintenanceManagement::class)->can('hotel_maintenance')->name('owner.hotel.maintenance.requests');
+    Route::get('/hotel/maintenance/preventive', MaintenanceManagement::class)->can('hotel_maintenance')->name('owner.hotel.maintenance.preventive');
 
     // Billing & Finance
-    Route::get('/hotel/folios', BillingFinance::class)->name('owner.hotel.folios');
-    Route::get('/hotel/invoices', BillingFinance::class)->name('owner.hotel.invoices');
-    Route::get('/hotel/payments', BillingFinance::class)->name('owner.hotel.payments');
-    Route::get('/hotel/night-audit', NightAudit::class)->name('owner.hotel.night-audit');
-    Route::get('/hotel/tax-config', BillingFinance::class)->name('owner.hotel.tax-config');
+    Route::get('/hotel/folios', BillingFinance::class)->can('hotel_billing')->name('owner.hotel.folios');
+    Route::get('/hotel/invoices', BillingFinance::class)->can('hotel_billing')->name('owner.hotel.invoices');
+    Route::get('/hotel/payments', BillingFinance::class)->can('hotel_billing')->name('owner.hotel.payments');
+    Route::get('/hotel/night-audit', NightAudit::class)->can('hotel_night_audit')->name('owner.hotel.night-audit');
+    Route::get('/hotel/tax-config', BillingFinance::class)->can('hotel_billing')->name('owner.hotel.tax-config');
 
     // F&B Management
-    Route::get('/hotel/pos-outlets', FoodBeverage::class)->name('owner.hotel.pos-outlets');
-    Route::get('/hotel/pos-orders', FoodBeverage::class)->name('owner.hotel.pos-orders');
-    Route::get('/hotel/tables', FoodBeverage::class)->name('owner.hotel.tables');
-    Route::get('/hotel/pos-sessions', FoodBeverage::class)->name('owner.hotel.pos-sessions');
+    Route::get('/hotel/pos-outlets', FoodBeverage::class)->can('hotel_food_beverage')->name('owner.hotel.pos-outlets');
+    Route::get('/hotel/pos-orders', FoodBeverage::class)->can('hotel_food_beverage')->name('owner.hotel.pos-orders');
+    Route::get('/hotel/tables', FoodBeverage::class)->can('hotel_food_beverage')->name('owner.hotel.tables');
+    Route::get('/hotel/pos-sessions', FoodBeverage::class)->can('hotel_food_beverage')->name('owner.hotel.pos-sessions');
 
     // Reports
-    Route::get('/hotel/reports/occupancy', HotelReports::class)->name('owner.hotel.reports.occupancy');
-    Route::get('/hotel/reports/revenue', HotelReports::class)->name('owner.hotel.reports.revenue');
-    Route::get('/hotel/reports/reservations', HotelReports::class)->name('owner.hotel.reports.reservations');
-    Route::get('/hotel/reports/housekeeping', HotelReports::class)->name('owner.hotel.reports.housekeeping');
-    Route::get('/hotel/reports/guest-history', HotelReports::class)->name('owner.hotel.reports.guest-history');
+    Route::get('/hotel/reports/occupancy', HotelReports::class)->can('hotel_reports')->name('owner.hotel.reports.occupancy');
+    Route::get('/hotel/reports/revenue', HotelReports::class)->can('hotel_reports')->name('owner.hotel.reports.revenue');
+    Route::get('/hotel/reports/reservations', HotelReports::class)->can('hotel_reports')->name('owner.hotel.reports.reservations');
+    Route::get('/hotel/reports/housekeeping', HotelReports::class)->can('hotel_reports')->name('owner.hotel.reports.housekeeping');
+    Route::get('/hotel/reports/guest-history', HotelReports::class)->can('hotel_reports')->name('owner.hotel.reports.guest-history');
 
     // Channels & Integrations
-    Route::get('/hotel/booking-sources', BookingSources::class)->name('owner.hotel.booking-sources');
-    Route::get('/hotel/channel-mapping', ChannelMapping::class)->name('owner.hotel.channel-mapping');
+    Route::get('/hotel/booking-sources', BookingSources::class)->can('hotel_channels')->name('owner.hotel.booking-sources');
+    Route::get('/hotel/channel-mapping', ChannelMapping::class)->can('hotel_channels')->name('owner.hotel.channel-mapping');
     });
 
-    Route::get('/expenses/categories', Category::class)->name('owner.expenses.categories');
-    Route::get('/expenses', Expenses::class)->name('owner.expenses');
-    Route::get('/list-items', Listitems::class)->name('owner.list-items');
-    Route::get('/history/{itemId}', History::class)->name('owner.history');
-    Route::get('/reports/profit-and-loss', Profitandloss::class)->name('owner.reports.profitandloss');
-    Route::get('/reports/sales', Sales::class)->name('owner.reports.sales');
-    Route::get('/reports/stock', Stock::class)->name('owner.reports.stock');
-    Route::get('/reports/staff-commissions', Staffcommisions::class)->name('owner.reports.staffcommissions');
+    Route::get('/expenses/categories', Category::class)->can('manage_expense_categories')->name('owner.expenses.categories');
+    Route::get('/expenses', Expenses::class)->can('view_expense')->name('owner.expenses');
+    Route::get('/list-items', Listitems::class)->can('view_item')->name('owner.list-items');
+    Route::get('/history/{itemId}', History::class)->can('view_item')->name('owner.history');
+    Route::get('/reports/profit-and-loss', Profitandloss::class)->can('view_profit_loss_report')->name('owner.reports.profitandloss');
+    Route::get('/reports/sales', Sales::class)->can('view_sales_report')->name('owner.reports.sales');
+    Route::get('/reports/stock', Stock::class)->can('view_stock_report')->name('owner.reports.stock');
+    Route::get('/reports/staff-commissions', Staffcommisions::class)->can('view_staff_commission_report')->name('owner.reports.staffcommissions');
 
     // Bar Management Routes
     Route::get('/barmanagement', function() {
         return redirect()->route('owner.bar.dashboard');
-    })->name('owner.barmanagement'); // Backward compatibility redirect
+    })->can('bar_dashboard')->name('owner.barmanagement'); // Backward compatibility redirect
 
     Route::middleware('module:bar')->group(function () {
-        Route::get('/bar/dashboard', \App\Livewire\Owner\Bar\BarDashboard::class)->name('owner.bar.dashboard');
-        Route::get('/bar/pos', \App\Livewire\Owner\Bar\BarPOS::class)->name('owner.bar.pos');
-        Route::get('/bar/menu-items', \App\Livewire\Owner\Bar\BarMenuItems::class)->name('owner.bar.menu');
-        Route::get('/bar/tabs', \App\Livewire\Owner\Bar\BarTabs::class)->name('owner.bar.tabs');
-        Route::get('/bar/stock', \App\Livewire\Owner\Bar\BarStock::class)->name('owner.bar.stock');
-        Route::get('/bar/reports', \App\Livewire\Owner\Bar\BarReports::class)->name('owner.bar.reports');
+        Route::get('/bar/dashboard', \App\Livewire\Owner\Bar\BarDashboard::class)->can('bar_dashboard')->name('owner.bar.dashboard');
+        Route::get('/bar/pos', \App\Livewire\Owner\Bar\BarPOS::class)->can('bar_pos')->name('owner.bar.pos');
+        Route::get('/bar/menu-items', \App\Livewire\Owner\Bar\BarMenuItems::class)->can('bar_menu')->name('owner.bar.menu');
+        Route::get('/bar/tabs', \App\Livewire\Owner\Bar\BarTabs::class)->can('bar_tabs')->name('owner.bar.tabs');
+        Route::get('/bar/stock', \App\Livewire\Owner\Bar\BarStock::class)->can('bar_stock')->name('owner.bar.stock');
+        Route::get('/bar/reports', \App\Livewire\Owner\Bar\BarReports::class)->can('bar_reports')->name('owner.bar.reports');
     });
 
     // Restaurant Management
     Route::middleware('module:restaurant')->group(function () {
-        Route::get('/restaurant/dashboard', \App\Livewire\Owner\Restaurant\Dashboard::class)->name('owner.restaurant.dashboard');
-        Route::get('/restaurant/reservations', \App\Livewire\Owner\Restaurant\TableReservations::class)->name('owner.restaurant.reservations');
-        Route::get('/restaurant/waiters', \App\Livewire\Owner\Restaurant\WaiterManagement::class)->name('owner.restaurant.waiters');
-        Route::get('/restaurant/recipes', \App\Livewire\Owner\Restaurant\MenuRecipes::class)->name('owner.restaurant.recipes');
-        Route::get('/restaurant/restaurant-pos', \App\Livewire\Owner\Restaurant\RestaurantPOS::class)->name('owner.restaurant.pos');
-        Route::get('/restaurant/kitchenscreen', \App\Livewire\Owner\Restaurant\KitchenScreen::class)->name('owner.restaurant.kitchenscreen');
-        Route::get('restaurant/settings', \App\Livewire\Owner\Restaurant\RestaurantSettings::class)->name('owner.restaurant.settings');
+        Route::get('/restaurant/dashboard', \App\Livewire\Owner\Restaurant\Dashboard::class)->can('restaurant_dashboard')->name('owner.restaurant.dashboard');
+        Route::get('/restaurant/reservations', \App\Livewire\Owner\Restaurant\TableReservations::class)->can('manage_table_reservations')->name('owner.restaurant.reservations');
+        Route::get('/restaurant/waiters', \App\Livewire\Owner\Restaurant\WaiterManagement::class)->can('manage_waiters')->name('owner.restaurant.waiters');
+        Route::get('/restaurant/recipes', \App\Livewire\Owner\Restaurant\MenuRecipes::class)->can('manage_recipes')->name('owner.restaurant.recipes');
+        Route::get('/restaurant/restaurant-pos', \App\Livewire\Owner\Restaurant\RestaurantPOS::class)->can('access_pos')->name('owner.restaurant.pos');
+        Route::get('/restaurant/kitchenscreen', \App\Livewire\Owner\Restaurant\KitchenScreen::class)->can('kitchen_display')->name('owner.restaurant.kitchenscreen');
+        Route::get('restaurant/settings', \App\Livewire\Owner\Restaurant\RestaurantSettings::class)->can('restaurant_settings')->name('owner.restaurant.settings');
     });
 
     // Hotel Guest Services
     Route::middleware('module:hotel')->group(function () {
-        Route::get('/hotel/amenity-requests', \App\Livewire\Owner\Hotel\AmenityRequests::class)->name('owner.hotel.amenity-requests');
-        Route::get('/hotel/wakeup-calls', \App\Livewire\Owner\Hotel\WakeupCalls::class)->name('owner.hotel.wakeup-calls');
-        Route::get('/hotel/laundry-orders', \App\Livewire\Owner\Hotel\LaundryManagement::class)->name('owner.hotel.laundry-orders');
+        Route::get('/hotel/amenity-requests', \App\Livewire\Owner\Hotel\AmenityRequests::class)->can('hotel_guest_services')->name('owner.hotel.amenity-requests');
+        Route::get('/hotel/wakeup-calls', \App\Livewire\Owner\Hotel\WakeupCalls::class)->can('hotel_guest_services')->name('owner.hotel.wakeup-calls');
+        Route::get('/hotel/laundry-orders', \App\Livewire\Owner\Hotel\LaundryManagement::class)->can('hotel_guest_services')->name('owner.hotel.laundry-orders');
     });
 
     // Inventory & Purchase Management
-    Route::get('/inventory/purchases', \App\Livewire\Owner\Inventory\PurchaseManagement::class)->name('owner.inventory.purchases');
-    Route::get('/inventory/purchases/create', \App\Livewire\Owner\Inventory\CreatePurchase::class)->name('owner.inventory.purchases.create');
-    Route::get('/inventory/stocktransfers', \App\Livewire\Owner\Inventory\StockTransferManagement::class)->name('owner.inventory.stocktransfers');
+    Route::get('/inventory/purchases', \App\Livewire\Owner\Inventory\PurchaseManagement::class)->can('view_purchase')->name('owner.inventory.purchases');
+    Route::get('/inventory/purchases/create', \App\Livewire\Owner\Inventory\CreatePurchase::class)->can('create_purchase')->name('owner.inventory.purchases.create');
+    Route::get('/inventory/stocktransfers', \App\Livewire\Owner\Inventory\StockTransferManagement::class)->can('transfer_stock')->name('owner.inventory.stocktransfers');
 
     // rental management
     Route::middleware('module:rental')->group(function () {
-        Route::get('/rental/dashboard', \App\Livewire\Owner\Rental\RentalDashboard::class)->name('owner.rental.dashboard');
-        Route::get('/rental/landlords', \App\Livewire\Owner\Rental\Landlords::class)->name('owner.rental.landlords');
-        Route::get('/rental/properties', \App\Livewire\Owner\Rental\RentalProperties::class)->name('owner.rental.properties');
-        Route::get('/rental/units', \App\Livewire\Owner\Rental\RentalUnits::class)->name('owner.rental.units');
-        Route::get('/rental/rental-agreements', \App\Livewire\Owner\Rental\RentalAgreements::class)->name('owner.rental.agreements');
-        Route::get('/rental/rent-payments', \App\Livewire\Owner\Rental\RentPayments::class)->name('owner.rental.rent-payments');
-        Route::get('/rental/utility-bills', \App\Livewire\Owner\Rental\UtilityBills::class)->name('owner.rental.utility-bills');
-        Route::get('/rental/maintenance', \App\Livewire\Owner\Rental\MaintenanceRequests::class)->name('owner.rental.maintenance');
+        Route::get('/rental/dashboard', \App\Livewire\Owner\Rental\RentalDashboard::class)->can('rental_dashboard')->name('owner.rental.dashboard');
+        Route::get('/rental/landlords', \App\Livewire\Owner\Rental\Landlords::class)->can('manage_landlords')->name('owner.rental.landlords');
+        Route::get('/rental/properties', \App\Livewire\Owner\Rental\RentalProperties::class)->can('manage_properties')->name('owner.rental.properties');
+        Route::get('/rental/units', \App\Livewire\Owner\Rental\RentalUnits::class)->can('manage_rental_units')->name('owner.rental.units');
+        Route::get('/rental/rental-agreements', \App\Livewire\Owner\Rental\RentalAgreements::class)->can('manage_rental_agreements')->name('owner.rental.agreements');
+        Route::get('/rental/rent-payments', \App\Livewire\Owner\Rental\RentPayments::class)->can('manage_rent_payments')->name('owner.rental.rent-payments');
+        Route::get('/rental/utility-bills', \App\Livewire\Owner\Rental\UtilityBills::class)->can('manage_utility_bills')->name('owner.rental.utility-bills');
+        Route::get('/rental/maintenance', \App\Livewire\Owner\Rental\MaintenanceRequests::class)->can('rental_maintenance')->name('owner.rental.maintenance');
     });
 
 });
