@@ -298,32 +298,48 @@
             flex-shrink: 0;
         }
 
-        /* Make Select2 read like the plain "Served by" select */
-        .pos-field .select2-container { display: block; }
-
-        .pos-field .select2-container--bootstrap-5 .select2-selection {
+        /* Customer search */
+        .customer-search { position: relative; }
+        .customer-search-input {
+            width: 100%;
             border: 0;
-            background-color: transparent;
-            box-shadow: none !important;
-            min-height: 24px;
-            padding: 0 2.75rem 0 0;
+            padding: 0;
+            background: transparent;
             font-weight: 600;
             font-size: .875rem;
-        }
-
-        .pos-field .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
-            padding: 0;
-            line-height: 24px;
             color: inherit;
+            outline: none;
+            min-height: 24px;
         }
-
-        .pos-field .select2-container--bootstrap-5 .select2-selection--single .select2-selection__placeholder {
+        .customer-search-input::placeholder { color: var(--bs-secondary-color); font-weight: 500; }
+        .customer-results {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            z-index: 1050;
+            background: var(--pos-surface);
+            border: 1px solid var(--pos-border);
+            border-radius: 12px;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .customer-result {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            width: 100%;
+            padding: .6rem .9rem;
+            border: 0;
+            border-bottom: 1px solid var(--pos-border);
+            background: transparent;
             color: inherit;
+            text-align: left;
         }
-
-        .pos-field .select2-container--bootstrap-5 .select2-selection__clear {
-            right: 1.5rem;
-        }
+        .customer-result:last-child { border-bottom: 0; }
+        .customer-result:hover, .customer-result:focus { background: var(--bs-primary-bg-subtle); outline: none; }
+        .customer-field.has-balance { background: var(--bs-danger-bg-subtle); }
+        .customer-field.has-balance .avatar-initials { background: var(--bs-danger); color: #fff; }
 
         .pos-container .pos-field .form-select {
             border: 0;
@@ -513,28 +529,70 @@
                 </div>
 
                 {{-- Customer --}}
-                <div class="pos-field customer-field d-flex align-items-center gap-2">
-                    <span class="avatar-initials"><i class="ti ti-user"></i></span>
-                    <div class="flex-grow-1 min-w-0">
-                        <small class="text-muted d-block lh-1">Customer</small>
-                        {{-- Ignored by morphing so Select2 is not torn down on every cart update; the key rebuilds it when the list or selection changes. --}}
-                        <div wire:ignore wire:key="customer-select-{{ count($availableCustomers) }}-{{ $customer_id ?: 'walk-in' }}">
-                            <x-forms.select2
-                                name="customer_id"
-                                :options="$availableCustomers"
-                                :selected="$customer_id"
-                                wire:model="customer_id"
-                                placeholder="Walk-in customer"
-                                wrapper="false"
-                                inputGroup="true"
-                                class="form-select"
-                            />
+                @php $customer = $this->selectedCustomer; @endphp
+                @if($customer)
+                    <div class="pos-field customer-field d-flex align-items-center gap-2 {{ $customer['balance'] > 0 ? 'has-balance' : '' }}">
+                        <span class="avatar-initials">{{ collect(explode(' ', $customer['name']))->filter()->take(2)->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('') }}</span>
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="fw-semibold text-truncate lh-sm">{{ $customer['name'] }}</div>
+                            <small class="d-block text-truncate">
+                                @if($customer['balance'] > 0)
+                                    <span class="text-danger fw-semibold"><i class="ti ti-alert-circle"></i> Owes TZS {{ number_format($customer['balance'], 0) }}</span>
+                                    <span class="text-muted">· {{ $customer['invoices'] }} unpaid {{ Str::plural('invoice', $customer['invoices']) }}</span>
+                                @else
+                                    <span class="text-success"><i class="ti ti-circle-check"></i> No pending balance</span>
+                                    @if($customer['phone'])<span class="text-muted">· {{ $customer['phone'] }}</span>@endif
+                                @endif
+                            </small>
                         </div>
+                        <button type="button" wire:click="clearCustomer" class="btn btn-sm btn-outline-secondary field-action" title="Change to walk-in customer" aria-label="Remove customer">
+                            <i class="ti ti-x"></i>
+                        </button>
                     </div>
-                    <button type="button" wire:click="openCustomerModal" class="btn btn-sm btn-outline-primary field-action" title="Add new customer" aria-label="Add new customer">
-                        <i class="ti ti-user-plus"></i>
-                    </button>
-                </div>
+                @else
+                    <div class="pos-field customer-field customer-search d-flex align-items-center gap-2"
+                         x-data="{ open: false }" x-on:click.outside="open = false" x-on:keydown.escape="open = false">
+                        <span class="avatar-initials"><i class="ti ti-user"></i></span>
+                        <div class="flex-grow-1 min-w-0">
+                            <small class="text-muted d-block lh-1">Customer</small>
+                            <input type="search"
+                                   wire:model.live.debounce.250ms="customerSearch"
+                                   wire:keydown.enter.prevent="selectFirstCustomer"
+                                   x-on:focus="open = true" x-on:input="open = true"
+                                   class="customer-search-input" placeholder="Walk-in · search name or phone"
+                                   autocomplete="off" aria-label="Search customer by name or phone">
+                        </div>
+                        <span wire:loading wire:target="customerSearch" class="spinner-border spinner-border-sm text-primary"></span>
+                        <button type="button" wire:click="openCustomerModal" class="btn btn-sm btn-outline-primary field-action" title="Add new customer" aria-label="Add new customer">
+                            <i class="ti ti-user-plus"></i>
+                        </button>
+
+                        @if(trim($customerSearch) !== '')
+                            <div class="customer-results shadow" x-show="open" x-transition.opacity>
+                                @forelse($this->customerResults as $result)
+                                    <button type="button" wire:key="customer-result-{{ $result['id'] }}" wire:click="selectCustomer('{{ $result['id'] }}')" class="customer-result">
+                                        <span class="min-w-0">
+                                            <span class="d-block fw-semibold text-truncate">{{ $result['name'] }}</span>
+                                            <small class="text-muted">{{ $result['phone'] ?: 'No phone' }}</small>
+                                        </span>
+                                        @if($result['balance'] > 0)
+                                            <span class="badge bg-danger-subtle text-danger-emphasis ms-auto">Owes TZS {{ number_format($result['balance'], 0) }}</span>
+                                        @else
+                                            <span class="badge bg-success-subtle text-success-emphasis ms-auto">No balance</span>
+                                        @endif
+                                    </button>
+                                @empty
+                                    <div class="p-3 text-center small text-muted">
+                                        No customer matches "{{ $customerSearch }}".
+                                        <button type="button" wire:click="openCustomerModal" class="btn btn-sm btn-primary d-block mx-auto mt-2">
+                                            <i class="ti ti-user-plus me-1"></i> Add "{{ Str::limit($customerSearch, 20) }}" as new customer
+                                        </button>
+                                    </div>
+                                @endforelse
+                            </div>
+                        @endif
+                    </div>
+                @endif
             </div>
 
             {{-- Cart lines --}}
@@ -714,10 +772,33 @@
                         <div class="col-md-8 p-3 border-end">
                             @if($paymentType === 'credit')
                             {{-- Credit Sale Info --}}
-                            <div class="alert alert-info mb-3">
-                                <i class="ti ti-info-circle me-2"></i>
-                                This sale will be recorded as <strong>unpaid</strong>. Customer can pay later.
-                            </div>
+                            @php $creditCustomer = $this->selectedCustomer; @endphp
+                            @if(! $creditCustomer)
+                                <div class="alert alert-warning mb-3">
+                                    <i class="ti ti-user-exclamation me-2"></i>
+                                    Select a customer first. A credit sale has to be recorded against someone so they can pay it later.
+                                    <button type="button" wire:click="closePaymentModal" class="btn btn-sm btn-warning d-block mt-2">Choose customer</button>
+                                </div>
+                            @else
+                                <div class="alert alert-info mb-3">
+                                    <i class="ti ti-info-circle me-2"></i>
+                                    This sale will be recorded as <strong>unpaid</strong> for <strong>{{ $creditCustomer['name'] }}</strong>. They can pay later.
+                                </div>
+                                <div class="row g-2 mb-3 text-center">
+                                    <div class="col-4">
+                                        <div class="small text-muted">Owes now</div>
+                                        <div class="fw-semibold">TZS {{ number_format($creditCustomer['balance'], 0) }}</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="small text-muted">This sale</div>
+                                        <div class="fw-semibold">+ TZS {{ number_format($cartTotal, 0) }}</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="small text-muted">New balance</div>
+                                        <div class="fw-bold text-danger">TZS {{ number_format($creditCustomer['balance'] + $cartTotal, 0) }}</div>
+                                    </div>
+                                </div>
+                            @endif
                             @else
                             {{-- Payment Rows --}}
                             <div class="payment-rows mb-3">
@@ -830,7 +911,7 @@
                                 </button>
                                 <button wire:click="processSale"
                                         class="btn btn-primary flex-fill"
-                                        {{ $paymentType !== 'credit' && $this->totalPaying <= 0 ? 'disabled' : '' }}>
+                                        {{ ($paymentType !== 'credit' && $this->totalPaying <= 0) || ($paymentType === 'credit' && ! $this->selectedCustomer) ? 'disabled' : '' }}>
                                     <span wire:loading.remove wire:target="processSale">
                                         <i class="ti ti-check me-1"></i> Finalize Payment
                                     </span>

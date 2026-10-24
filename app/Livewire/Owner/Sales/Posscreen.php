@@ -4,6 +4,7 @@ namespace App\Livewire\Owner\Sales;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -68,7 +69,6 @@ class Posscreen extends Component
     // Data collections
     public $availableItems = [];
     public $availableCategories = [];
-    public $availableCustomers = [];
     public $availableStaffs = [];
     public $availablePaymentMethods = [];
 
@@ -130,7 +130,6 @@ class Posscreen extends Component
 
         $this->loadItems();
         $this->loadCategories();
-        $this->loadCustomers();
         $this->loadStaffs();
         $this->loadPaymentMethods();
     }
@@ -170,14 +169,125 @@ class Posscreen extends Component
             ->toArray();
     }
 
-    public function loadCustomers()
+    /**
+     * Customers matching the search box (name or phone), with what each still owes.
+     *
+     * @return \Illuminate\Support\Collection<int, array{id: string, name: string, phone: ?string, balance: float, invoices: int}>
+     */
+    #[Computed]
+    public function customerResults(): \Illuminate\Support\Collection
     {
-        $this->availableCustomers = customers::where('business_id', $this->selectedBusiness)
+        $term = trim($this->customerSearch);
+
+        if ($term === '' || ! $this->selectedBusiness) {
+            return collect();
+        }
+
+        $customers = customers::where('business_id', $this->selectedBusiness)
             ->where('status', 'active')
+            ->where(function ($query) use ($term) {
+                $query->where('name', 'like', "%{$term}%")
+                    ->orWhere('phone', 'like', "%{$term}%");
+            })
             ->orderBy('name')
-            ->get()
-            ->pluck('name', 'id')
-            ->toArray();
+            ->limit(8)
+            ->get(['id', 'name', 'phone']);
+
+        $balances = $this->customerBalances($customers->pluck('id')->all());
+
+        return $customers->map(fn ($customer) => [
+            'id' => $customer->id,
+            'name' => $customer->name,
+            'phone' => $customer->phone,
+            ...($balances[$customer->id] ?? ['balance' => 0.0, 'invoices' => 0]),
+        ]);
+    }
+
+    /**
+     * The selected customer with their pending balance, or null for a walk-in sale.
+     *
+     * @return array{id: string, name: string, phone: ?string, balance: float, invoices: int}|null
+     */
+    #[Computed]
+    public function selectedCustomer(): ?array
+    {
+        if (! $this->customer_id) {
+            return null;
+        }
+
+        $customer = customers::where('business_id', $this->selectedBusiness)->find($this->customer_id, ['id', 'name', 'phone']);
+
+        if (! $customer) {
+            return null;
+        }
+
+        return [
+            'id' => $customer->id,
+            'name' => $customer->name,
+            'phone' => $customer->phone,
+            ...($this->customerBalances([$customer->id])[$customer->id] ?? ['balance' => 0.0, 'invoices' => 0]),
+        ];
+    }
+
+    /**
+     * Outstanding amount (total minus payments) on each customer's unpaid and partly paid sales.
+     *
+     * @param  array<int, string>  $customerIds
+     * @return array<string, array{balance: float, invoices: int}>
+     */
+    private function customerBalances(array $customerIds): array
+    {
+        if ($customerIds === []) {
+            return [];
+        }
+
+        return sales::whereIn('customer_id', $customerIds)
+            ->where('business_id', $this->selectedBusiness)
+            ->where('sale_status', '!=', 'canceled')
+            ->whereIn('payment_status', ['unpaid', 'partial'])
+            ->withSum('payments', 'amount')
+            ->get(['id', 'customer_id', 'total_amount'])
+            ->groupBy('customer_id')
+            ->map(function ($customerSales) {
+                $outstanding = $customerSales->map(fn ($sale) => max(0, (float) $sale->total_amount - (float) $sale->payments_sum_amount));
+
+                return [
+                    'balance' => round($outstanding->sum(), 2),
+                    'invoices' => $outstanding->filter(fn ($amount) => $amount > 0)->count(),
+                ];
+            })
+            ->all();
+    }
+
+    public function selectCustomer(string $customerId): void
+    {
+        $exists = customers::where('business_id', $this->selectedBusiness)->whereKey($customerId)->exists();
+
+        if (! $exists) {
+            session()->flash('error', 'Customer not found.');
+            return;
+        }
+
+        $this->customer_id = $customerId;
+        $this->customerSearch = '';
+    }
+
+    /**
+     * Enter in the search box picks the first match.
+     */
+    public function selectFirstCustomer(): void
+    {
+        $first = $this->customerResults->first();
+
+        if ($first) {
+            $this->selectCustomer($first['id']);
+        }
+    }
+
+    public function clearCustomer(): void
+    {
+        $this->customer_id = '';
+        $this->customerSearch = '';
     }
 
     public function loadStaffs()
@@ -339,6 +449,7 @@ class Posscreen extends Component
         $this->cartDiscount = 0;
         $this->cartItemsCount = 0;
         $this->customer_id = '';
+        $this->customerSearch = '';
         $this->selectedStaff = $this->defaultStaffId ?: (string) (array_key_first($this->availableStaffs) ?? '');
     }
 
@@ -367,6 +478,13 @@ class Posscreen extends Component
     public function openCustomerModal()
     {
         $this->resetCustomerForm();
+
+        // Carry over what was typed in the customer search: digits become the phone, anything else the name
+        $typed = trim($this->customerSearch);
+        if ($typed !== '') {
+            preg_match('/^[\d\s+()-]+$/', $typed) ? $this->newCustomerPhone = $typed : $this->newCustomerName = $typed;
+        }
+
         $this->showCustomerModal = true;
     }
 
@@ -401,8 +519,8 @@ class Posscreen extends Component
                 'status' => 'active',
             ]);
 
-            $this->loadCustomers();
             $this->customer_id = $customer->id;
+            $this->customerSearch = '';
             $this->closeCustomerModal();
             session()->flash('message', 'Customer added successfully.');
         } catch (\Exception $e) {
@@ -560,6 +678,11 @@ class Posscreen extends Component
 
         if (! array_key_exists($this->selectedStaff, $this->availableStaffs)) {
             session()->flash('error', 'Please select who is serving this sale.');
+            return;
+        }
+
+        if ($this->paymentType === 'credit' && ! $this->selectedCustomer) {
+            session()->flash('error', 'Select a customer for a credit sale, so the balance is recorded against them.');
             return;
         }
 
