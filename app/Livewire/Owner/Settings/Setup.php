@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
 use App\Models\CarwashSetting;
+use Illuminate\Validation\Rule;
 use App\Models\payment_method;
 
 #[Layout('components.layouts.app-owner')]
@@ -34,6 +35,9 @@ class Setup extends Component
     public $decimal_places = 2;
     public $thousand_separator = ',';
     public $decimal_separator = '.';
+
+    /** The symbol saved before this visit, kept selectable even if it isn't one of the standard symbols. */
+    public $savedCurrencySymbol = '';
 
     // Tax Settings
     public $tax_enabled = false;
@@ -200,6 +204,61 @@ class Setup extends Component
         $this->loadSettings();
     }
 
+    /**
+     * Picking a currency selects its usual symbol, unless the current symbol already belongs to it.
+     */
+    public function updatedCurrency($value): void
+    {
+        $symbols = CarwashSetting::CURRENCIES[$value]['symbols'] ?? [];
+
+        if ($symbols !== [] && ! in_array($this->currency_symbol, $symbols, true)) {
+            $this->currency_symbol = $symbols[0];
+        }
+    }
+
+    /**
+     * Symbols offered for the chosen currency, plus a previously saved custom one.
+     *
+     * @return array<int, string>
+     */
+    public function currencySymbolOptions(): array
+    {
+        $symbols = CarwashSetting::CURRENCIES[$this->currency]['symbols'] ?? [];
+
+        if ($this->savedCurrencySymbol !== '' && ! in_array($this->savedCurrencySymbol, $symbols, true)) {
+            $symbols[] = $this->savedCurrencySymbol;
+        }
+
+        return $symbols;
+    }
+
+    /**
+     * The current date and time as they would appear with the chosen system settings.
+     */
+    public function dateTimePreview(): string
+    {
+        $timezone = in_array($this->timezone, CarwashSetting::timezoneIds(), true) ? $this->timezone : 'UTC';
+        $format = (array_key_exists($this->date_format, CarwashSetting::DATE_FORMATS) ? $this->date_format : 'Y-m-d')
+            .' '.(array_key_exists($this->time_format, CarwashSetting::TIME_FORMATS) ? $this->time_format : 'H:i');
+
+        return now($timezone)->format($format);
+    }
+
+    /**
+     * How a sample price looks with the current currency choices.
+     */
+    public function moneyPreview(float $amount = 1234567.891): string
+    {
+        return CarwashSetting::formatMoney(
+            $amount,
+            (string) $this->currency_symbol,
+            (string) $this->currency_position,
+            (int) $this->decimal_places,
+            (string) $this->thousand_separator,
+            (string) $this->decimal_separator,
+        );
+    }
+
     public function setTab($tab)
     {
         $this->activeTab = $tab;
@@ -220,12 +279,14 @@ class Setup extends Component
         $this->business_phone = $settings->business_phone ?? '';
         $this->business_email = $settings->business_email ?? '';
         $this->business_address = $settings->business_address ?? '';
-        $this->currency = $settings->currency ?? 'TZS';
+        // Older forms could save option-group keys such as "name"; fall back to TZS so the form opens valid
+        $this->currency = array_key_exists((string) $settings->currency, CarwashSetting::CURRENCIES) ? $settings->currency : 'TZS';
         $this->currency_symbol = $settings->currency_symbol ?? 'TZS';
         $this->currency_position = $settings->currency_position ?? 'before';
         $this->decimal_places = $settings->decimal_places ?? 2;
         $this->thousand_separator = $settings->thousand_separator ?? ',';
         $this->decimal_separator = $settings->decimal_separator ?? '.';
+        $this->savedCurrencySymbol = (string) ($settings->currency_symbol ?? '');
 
         // Tax Settings
         $this->tax_enabled = $settings->tax_enabled ?? false;
@@ -292,10 +353,11 @@ class Setup extends Component
         $this->show_dashboard_stock = $settings->show_dashboard_stock ?? true;
 
         // System Settings
-        $this->date_format = $settings->date_format ?? 'Y-m-d';
-        $this->time_format = $settings->time_format ?? 'H:i';
-        $this->timezone = $settings->timezone ?? 'Africa/Dar_es_Salaam';
-        $this->language = $settings->language ?? 'en';
+        // Older forms could save option-group keys such as "id"/"name"; fall back to defaults so the form opens valid
+        $this->date_format = array_key_exists((string) $settings->date_format, CarwashSetting::DATE_FORMATS) ? $settings->date_format : 'Y-m-d';
+        $this->time_format = array_key_exists((string) $settings->time_format, CarwashSetting::TIME_FORMATS) ? $settings->time_format : 'H:i';
+        $this->timezone = in_array($settings->timezone, CarwashSetting::timezoneIds(), true) ? $settings->timezone : 'Africa/Dar_es_Salaam';
+        $this->language = array_key_exists((string) $settings->language, CarwashSetting::LANGUAGES) ? $settings->language : 'en';
 
         // Prefixes
         $this->invoice_prefix = $settings->invoice_prefix ?? 'INV';
@@ -352,6 +414,31 @@ class Setup extends Component
             return;
         }
 
+        $this->validate([
+            'currency' => ['required', Rule::in(array_keys(CarwashSetting::CURRENCIES))],
+            'currency_symbol' => ['required', Rule::in($this->currencySymbolOptions())],
+            'currency_position' => ['required', Rule::in(array_keys(CarwashSetting::SYMBOL_POSITIONS))],
+            'decimal_places' => ['required', 'integer', Rule::in(array_keys(CarwashSetting::DECIMAL_PLACES))],
+            'thousand_separator' => ['present', 'nullable', Rule::in(array_keys(CarwashSetting::THOUSAND_SEPARATORS))],
+            'decimal_separator' => ['required', Rule::in(array_keys(CarwashSetting::DECIMAL_SEPARATORS)), 'different:thousand_separator'],
+        ], [
+            'currency.in' => 'Choose a currency from the list.',
+            'currency_symbol.in' => 'Choose a symbol that matches the selected currency.',
+            'decimal_separator.different' => 'The decimal separator must be different from the thousand separator.',
+        ]);
+
+        $this->validate([
+            'date_format' => ['required', Rule::in(array_keys(CarwashSetting::DATE_FORMATS))],
+            'time_format' => ['required', Rule::in(array_keys(CarwashSetting::TIME_FORMATS))],
+            'timezone' => ['required', Rule::in(CarwashSetting::timezoneIds())],
+            'language' => ['required', Rule::in(array_keys(CarwashSetting::LANGUAGES))],
+        ], [
+            'date_format.in' => 'Choose a date format from the list.',
+            'time_format.in' => 'Choose a time format from the list.',
+            'timezone.in' => 'Choose a timezone from the list.',
+            'language.in' => 'Choose a language from the list.',
+        ]);
+
         try {
             $settings = CarwashSetting::getForBusiness($this->selectedBusiness);
 
@@ -371,8 +458,9 @@ class Setup extends Component
                 'currency' => $this->currency,
                 'currency_symbol' => $this->currency_symbol,
                 'currency_position' => $this->currency_position,
-                'decimal_places' => $this->decimal_places,
-                'thousand_separator' => $this->thousand_separator,
+                'decimal_places' => (int) $this->decimal_places,
+                // "None" is an empty string; the column is NOT NULL
+                'thousand_separator' => (string) $this->thousand_separator,
                 'decimal_separator' => $this->decimal_separator,
                 // Tax Settings
                 'tax_enabled' => $this->tax_enabled,

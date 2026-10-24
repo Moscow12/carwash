@@ -210,6 +210,106 @@ class CarwashSetting extends Model
         );
     }
 
+    /**
+     * Currencies offered in Business Settings: code => name and the symbols people use for it (first is the default).
+     *
+     * @var array<string, array{name: string, symbols: array<int, string>}>
+     */
+    public const CURRENCIES = [
+        'TZS' => ['name' => 'Tanzanian Shilling', 'symbols' => ['TSh', 'TZS', '/=']],
+        'KES' => ['name' => 'Kenyan Shilling', 'symbols' => ['KSh', 'KES']],
+        'UGX' => ['name' => 'Ugandan Shilling', 'symbols' => ['USh', 'UGX']],
+        'RWF' => ['name' => 'Rwandan Franc', 'symbols' => ['FRw', 'RWF']],
+        'BIF' => ['name' => 'Burundian Franc', 'symbols' => ['FBu', 'BIF']],
+        'USD' => ['name' => 'US Dollar', 'symbols' => ['$', 'USD']],
+        'EUR' => ['name' => 'Euro', 'symbols' => ['€', 'EUR']],
+        'GBP' => ['name' => 'British Pound', 'symbols' => ['£', 'GBP']],
+        'ZAR' => ['name' => 'South African Rand', 'symbols' => ['R', 'ZAR']],
+    ];
+
+    /** @var array<string, string> */
+    public const SYMBOL_POSITIONS = [
+        'before' => 'Before the amount',
+        'after' => 'After the amount',
+    ];
+
+    /** @var array<int, string> */
+    public const DECIMAL_PLACES = [0 => 'None (1,000)', 1 => '1 (1,000.5)', 2 => '2 (1,000.50)', 3 => '3 (1,000.500)'];
+
+    /** Separator value => label; the values are what number_format() receives. @var array<string, string> */
+    public const THOUSAND_SEPARATORS = [
+        ',' => ', Comma (1,000,000)',
+        '.' => '. Period (1.000.000)',
+        ' ' => 'Space (1 000 000)',
+        "'" => "' Apostrophe (1'000'000)",
+        '' => 'None (1000000)',
+    ];
+
+    /** @var array<string, string> */
+    public const DECIMAL_SEPARATORS = [
+        '.' => '. Period (10.50)',
+        ',' => ', Comma (10,50)',
+    ];
+
+    /** PHP date format => short description. @var array<string, string> */
+    public const DATE_FORMATS = [
+        'd/m/Y' => 'Day/Month/Year',
+        'd-m-Y' => 'Day-Month-Year',
+        'Y-m-d' => 'Year-Month-Day (ISO)',
+        'm/d/Y' => 'Month/Day/Year (US)',
+        'd M Y' => 'Day Mon Year',
+        'M d, Y' => 'Mon Day, Year',
+    ];
+
+    /** @var array<string, string> */
+    public const TIME_FORMATS = [
+        'H:i' => '24-hour',
+        'h:i A' => '12-hour',
+    ];
+
+    /** Timezones offered, grouped by region for the dropdown. @var array<string, array<int, string>> */
+    public const TIMEZONES = [
+        'East Africa' => ['Africa/Dar_es_Salaam', 'Africa/Nairobi', 'Africa/Kampala', 'Africa/Kigali', 'Africa/Bujumbura', 'Africa/Addis_Ababa', 'Africa/Mogadishu'],
+        'Southern & Central Africa' => ['Africa/Lusaka', 'Africa/Harare', 'Africa/Maputo', 'Africa/Lubumbashi', 'Africa/Johannesburg'],
+        'West & North Africa' => ['Africa/Lagos', 'Africa/Accra', 'Africa/Cairo'],
+        'Other' => ['UTC', 'Europe/London', 'Asia/Dubai', 'Asia/Kolkata', 'America/New_York'],
+    ];
+
+    /** @var array<string, string> */
+    public const LANGUAGES = [
+        'en' => 'English',
+        'sw' => 'Kiswahili',
+    ];
+
+    /**
+     * @return array<int, string>
+     */
+    public static function timezoneIds(): array
+    {
+        return array_merge(...array_values(self::TIMEZONES));
+    }
+
+    /**
+     * Label for a timezone, e.g. "Dar es Salaam (UTC+03:00)".
+     */
+    public static function timezoneLabel(string $timezone): string
+    {
+        $offset = now($timezone)->format('P');
+        $city = str_replace('_', ' ', last(explode('/', $timezone)));
+
+        return $timezone === 'UTC' ? 'UTC (UTC+00:00)' : "{$city} (UTC{$offset})";
+    }
+
+    /**
+     * Format an amount with the given currency settings, e.g. "TSh 1,234,567.89".
+     */
+    public static function formatMoney(float $amount, string $symbol, string $position, int $decimals, string $thousands, string $decimal): string
+    {
+        $number = number_format($amount, $decimals, $decimal, $thousands);
+
+        return $position === 'after' ? "{$number} {$symbol}" : "{$symbol} {$number}";
+    }
+
     // Default settings
     public static function getDefaults()
     {

@@ -108,53 +108,74 @@
                                 <h6 class="mb-3">Currency Settings</h6>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Currency</label>
-                                <x-forms.select2
-                                    name="currency"
-                                    :options="[['id' => 'TZS', 'name' => 'TZS - Tanzanian Shilling'], ['id' => 'USD', 'name' => 'USD - US Dollar'], ['id' => 'EUR', 'name' => 'EUR - Euro'], ['id' => 'KES', 'name' => 'KES - Kenyan Shilling'], ['id' => 'UGX', 'name' => 'UGX - Ugandan Shilling']]"
-                                    wire:model="currency"
-                                    wrapper="false"
-                                />
+                                <label class="form-label" for="settingCurrency">Currency</label>
+                                <select id="settingCurrency" wire:model.live="currency" class="form-select @error('currency') is-invalid @enderror">
+                                    @foreach(\App\Models\CarwashSetting::CURRENCIES as $code => $currencyInfo)
+                                        <option value="{{ $code }}" wire:key="currency-{{ $code }}">{{ $code }} – {{ $currencyInfo['name'] }}</option>
+                                    @endforeach
+                                </select>
+                                @error('currency') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Currency Symbol</label>
-                                <input type="text" wire:model="currency_symbol" class="form-control" placeholder="TZS">
+                                <label class="form-label" for="settingCurrencySymbol">Currency Symbol</label>
+                                <select id="settingCurrencySymbol" wire:model.live="currency_symbol" class="form-select @error('currency_symbol') is-invalid @enderror">
+                                    @foreach($this->currencySymbolOptions() as $symbol)
+                                        <option value="{{ $symbol }}" wire:key="symbol-{{ md5($symbol) }}">
+                                            {{ $symbol }}{{ $symbol === $savedCurrencySymbol && ! in_array($symbol, \App\Models\CarwashSetting::CURRENCIES[$currency]['symbols'] ?? [], true) ? ' (currently saved)' : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('currency_symbol') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <small class="text-muted">Shown next to every price</small>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Symbol Position</label>
-                                <x-forms.select2
-                                    name="currency_position"
-                                    :options="[['id' => 'before', 'name' => 'Before Amount (TZS 100)'], ['id' => 'after', 'name' => 'After Amount (100 TZS)']]"
-                                    wire:model="currency_position"
-                                    wrapper="false"
-                                />
+                                <label class="form-label" for="settingSymbolPosition">Symbol Position</label>
+                                <select id="settingSymbolPosition" wire:model.live="currency_position" class="form-select @error('currency_position') is-invalid @enderror">
+                                    @foreach(\App\Models\CarwashSetting::SYMBOL_POSITIONS as $position => $positionLabel)
+                                        <option value="{{ $position }}" wire:key="position-{{ $position }}">
+                                            {{ $positionLabel }} ({{ $position === 'after' ? '1,000 '.$currency_symbol : $currency_symbol.' 1,000' }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('currency_position') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Decimal Places</label>
-                                <x-forms.select2
-                                    name="decimal_places"
-                                    :options="[['id' => '0', 'name' => '0'], ['id' => '1', 'name' => '1'], ['id' => '2', 'name' => '2'], ['id' => '3', 'name' => '3']]"
-                                    wire:model="decimal_places"
-                                    wrapper="false"
-                                />
+                                <label class="form-label" for="settingDecimalPlaces">Decimal Places</label>
+                                <select id="settingDecimalPlaces" wire:model.live="decimal_places" class="form-select @error('decimal_places') is-invalid @enderror">
+                                    @foreach(\App\Models\CarwashSetting::DECIMAL_PLACES as $places => $placesLabel)
+                                        <option value="{{ $places }}" wire:key="places-{{ $places }}">{{ $placesLabel }}</option>
+                                    @endforeach
+                                </select>
+                                @error('decimal_places') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Thousand Separator</label>
-                                <x-forms.select2
-                                    name="thousand_separator"
-                                    :options="[['id' => ',', 'name' => ', (Comma)'], ['id' => '.', 'name' => '. (Period)'], ['id' => ' ', 'name' => '(Space)']]"
-                                    wire:model="thousand_separator"
-                                    wrapper="false"
-                                />
+                                <label class="form-label" for="settingThousandSeparator">Thousand Separator</label>
+                                <select id="settingThousandSeparator" wire:model.live="thousand_separator" class="form-select @error('thousand_separator') is-invalid @enderror">
+                                    @foreach(\App\Models\CarwashSetting::THOUSAND_SEPARATORS as $separator => $separatorLabel)
+                                        <option value="{{ $separator }}" wire:key="thousands-{{ md5($separator) }}">{{ $separatorLabel }}</option>
+                                    @endforeach
+                                </select>
+                                @error('thousand_separator') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Decimal Separator</label>
-                                <x-forms.select2
-                                    name="decimal_separator"
-                                    :options="[['id' => '.', 'name' => '. (Period)'], ['id' => ',', 'name' => ', (Comma)']]"
-                                    wire:model="decimal_separator"
-                                    wrapper="false"
-                                />
+                                <label class="form-label" for="settingDecimalSeparator">Decimal Separator</label>
+                                <select id="settingDecimalSeparator" wire:model.live="decimal_separator" class="form-select @error('decimal_separator') is-invalid @enderror">
+                                    @foreach(\App\Models\CarwashSetting::DECIMAL_SEPARATORS as $separator => $separatorLabel)
+                                        <option value="{{ $separator }}" wire:key="decimal-{{ md5($separator) }}">{{ $separatorLabel }}</option>
+                                    @endforeach
+                                </select>
+                                @error('decimal_separator') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex flex-wrap align-items-center gap-3 rounded-3 bg-body-tertiary p-3">
+                                    <span class="text-muted small"><i class="ti ti-eye me-1"></i>Prices will look like</span>
+                                    <span class="fs-5 fw-semibold" data-test="money-preview">{{ $this->moneyPreview() }}</span>
+                                    <span class="text-muted small">and</span>
+                                    <span class="fw-semibold">{{ $this->moneyPreview(15000) }}</span>
+                                    @if((string) $thousand_separator === (string) $decimal_separator)
+                                        <span class="text-danger small"><i class="ti ti-alert-triangle me-1"></i>Thousand and decimal separators must be different.</span>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     @endif
@@ -624,7 +645,7 @@
                                 <label class="form-label">Dashboard Start Date</label>
                                 <x-forms.select2
                                     name="dashboard_start_date"
-                                    :options="[['id' => 'today', 'name' => 'Today'], ['id' => 'week', 'name' => 'This Week'], ['id' => 'month', 'name' => 'This Month'], ['id' => 'year', 'name' => 'This Year']]"
+                                    :options="['today' => 'Today', 'week' => 'This Week', 'month' => 'This Month', 'year' => 'This Year']"
                                     wire:model="dashboard_start_date"
                                     wrapper="false"
                                 />
@@ -657,41 +678,54 @@
                     @if($activeTab === 'system')
                         <h5 class="card-title mb-4"><i class="ti ti-settings me-2"></i>System Settings</h5>
                         <div class="row g-3">
+                            @php $sampleMoment = now(in_array($timezone, \App\Models\CarwashSetting::timezoneIds(), true) ? $timezone : 'UTC'); @endphp
                             <div class="col-md-6">
-                                <label class="form-label">Date Format</label>
-                                <x-forms.select2
-                                    name="date_format"
-                                    :options="[['id' => 'Y-m-d', 'name' => '2024-12-29 (Y-m-d)'], ['id' => 'd-m-Y', 'name' => '29-12-2024 (d-m-Y)'], ['id' => 'm/d/Y', 'name' => '12/29/2024 (m/d/Y)'], ['id' => 'd/m/Y', 'name' => '29/12/2024 (d/m/Y)'], ['id' => 'M d, Y', 'name' => 'Dec 29, 2024'], ['id' => 'd M Y', 'name' => '29 Dec 2024']]"
-                                    wire:model="date_format"
-                                    wrapper="false"
-                                />
+                                <label class="form-label" for="settingDateFormat">Date Format</label>
+                                <select id="settingDateFormat" wire:model.live="date_format" class="form-select @error('date_format') is-invalid @enderror">
+                                    @foreach(\App\Models\CarwashSetting::DATE_FORMATS as $format => $formatLabel)
+                                        <option value="{{ $format }}" wire:key="date-format-{{ md5($format) }}">{{ $sampleMoment->format($format) }} — {{ $formatLabel }}</option>
+                                    @endforeach
+                                </select>
+                                @error('date_format') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Time Format</label>
-                                <x-forms.select2
-                                    name="time_format"
-                                    :options="[['id' => 'H:i', 'name' => '24-hour (14:30)'], ['id' => 'h:i A', 'name' => '12-hour (02:30 PM)']]"
-                                    wire:model="time_format"
-                                    wrapper="false"
-                                />
+                                <label class="form-label" for="settingTimeFormat">Time Format</label>
+                                <select id="settingTimeFormat" wire:model.live="time_format" class="form-select @error('time_format') is-invalid @enderror">
+                                    @foreach(\App\Models\CarwashSetting::TIME_FORMATS as $format => $formatLabel)
+                                        <option value="{{ $format }}" wire:key="time-format-{{ md5($format) }}">{{ $sampleMoment->format($format) }} — {{ $formatLabel }}</option>
+                                    @endforeach
+                                </select>
+                                @error('time_format') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Timezone</label>
-                                <x-forms.select2
-                                    name="timezone"
-                                    :options="[['id' => 'Africa/Dar_es_Salaam', 'name' => 'Africa/Dar_es_Salaam (EAT)'], ['id' => 'Africa/Nairobi', 'name' => 'Africa/Nairobi (EAT)'], ['id' => 'Africa/Kampala', 'name' => 'Africa/Kampala (EAT)'], ['id' => 'UTC', 'name' => 'UTC']]"
-                                    wire:model="timezone"
-                                    wrapper="false"
-                                />
+                                <label class="form-label" for="settingTimezone">Timezone</label>
+                                <select id="settingTimezone" wire:model.live="timezone" class="form-select @error('timezone') is-invalid @enderror">
+                                    @foreach(\App\Models\CarwashSetting::TIMEZONES as $region => $zones)
+                                        <optgroup label="{{ $region }}" wire:key="timezone-group-{{ md5($region) }}">
+                                            @foreach($zones as $zone)
+                                                <option value="{{ $zone }}" wire:key="timezone-{{ md5($zone) }}">{{ \App\Models\CarwashSetting::timezoneLabel($zone) }}</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endforeach
+                                </select>
+                                @error('timezone') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <small class="text-muted">Used for sale times, reports and receipts</small>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Language</label>
-                                <x-forms.select2
-                                    name="language"
-                                    :options="[['id' => 'en', 'name' => 'English'], ['id' => 'sw', 'name' => 'Swahili']]"
-                                    wire:model="language"
-                                    wrapper="false"
-                                />
+                                <label class="form-label" for="settingLanguage">Language</label>
+                                <select id="settingLanguage" wire:model.live="language" class="form-select @error('language') is-invalid @enderror">
+                                    @foreach(\App\Models\CarwashSetting::LANGUAGES as $code => $languageName)
+                                        <option value="{{ $code }}" wire:key="language-{{ $code }}">{{ $languageName }}</option>
+                                    @endforeach
+                                </select>
+                                @error('language') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex flex-wrap align-items-center gap-3 rounded-3 bg-body-tertiary p-3">
+                                    <span class="text-muted small"><i class="ti ti-eye me-1"></i>Dates and times will look like</span>
+                                    <span class="fs-5 fw-semibold" data-test="datetime-preview">{{ $this->dateTimePreview() }}</span>
+                                    <span class="text-muted small">({{ \App\Models\CarwashSetting::timezoneLabel(in_array($timezone, \App\Models\CarwashSetting::timezoneIds(), true) ? $timezone : 'UTC') }})</span>
+                                </div>
                             </div>
                         </div>
                     @endif
@@ -773,7 +807,8 @@
                                     <label class="form-label">SMS Provider</label>
                                     <x-forms.select2
                                         name="sms_provider"
-                                        :options="[['id' => '', 'name' => 'Select Provider'], ['id' => 'nexmo', 'name' => 'Nexmo'], ['id' => 'twilio', 'name' => 'Twilio'], ['id' => 'africastalking', 'name' => 'Africa\'s Talking'], ['id' => 'beem', 'name' => 'Beem Africa']]"
+                                        :options="['nexmo' => 'Nexmo', 'twilio' => 'Twilio', 'africastalking' => 'Africa\'s Talking', 'beem' => 'Beem Africa']"
+                                        placeholder="Select Provider"
                                         wire:model="sms_provider"
                                         placeholder="Select Provider"
                                         wrapper="false"
