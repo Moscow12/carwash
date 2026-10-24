@@ -57,7 +57,7 @@ class Index extends Component
 
     public function mount()
     {
-        $firstBusiness = Business::where('owner_id', Auth::id())->first();
+        $firstBusiness = Auth::user()->assignedBusinesses()->orderBy('name')->first();
         if ($firstBusiness) {
             $this->selectedBusiness = $firstBusiness->id;
         }
@@ -103,20 +103,48 @@ class Index extends Component
         $this->resetPage();
     }
 
+    /**
+     * Businesses the signed-in user may see sales for.
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    protected function businessIds(): \Illuminate\Support\Collection
+    {
+        return Auth::user()->assignedBusinesses()->pluck('id');
+    }
+
+    /**
+     * Sales of the user's own businesses; every action looks sales up through this.
+     */
+    protected function ownedSales(): \Illuminate\Database\Eloquent\Builder
+    {
+        return sales::whereIn('business_id', $this->businessIds());
+    }
+
+    /**
+     * Current filters, in the shape sales::scopeListFilters() and the print route expect.
+     *
+     * @return array{business: ?string, sale_status: ?string, payment_status: ?string, from: ?string, to: ?string, search: ?string}
+     */
+    public function listFilters(): array
+    {
+        return [
+            'business' => $this->selectedBusiness ?: null,
+            'sale_status' => $this->saleStatusFilter ?: null,
+            'payment_status' => $this->paymentStatusFilter ?: null,
+            'from' => $this->dateFrom ?: null,
+            'to' => $this->dateTo ?: null,
+            'search' => $this->search ?: null,
+        ];
+    }
+
     public function loadStats()
     {
-        if (!$this->selectedBusiness) {
-            $this->totalSales = 0;
-            $this->totalRevenue = 0;
-            $this->paidSales = 0;
-            $this->unpaidSales = 0;
-            $this->partialSalesCount = 0;
-            $this->unpaidSalesCount = 0;
-            return;
-        }
+        $businessIds = $this->businessIds();
 
         // Use single optimized query to get all stats
-        $stats = sales::where('business_id', $this->selectedBusiness)
+        $stats = sales::whereIn('business_id', $businessIds)
+            ->when($this->selectedBusiness, fn ($q) => $q->where('business_id', $this->selectedBusiness))
             ->where('sale_status', '!=', 'canceled')
             ->when($this->dateFrom, fn($q) => $q->whereDate('sale_date', '>=', $this->dateFrom))
             ->when($this->dateTo, fn($q) => $q->whereDate('sale_date', '<=', $this->dateTo))
@@ -134,8 +162,9 @@ class Index extends Component
         $this->unpaidSalesCount = $stats->unpaid_count ?? 0;
 
         // Calculate actual paid amount from payments table
-        $this->paidSales = (float) sales_payments::whereHas('sale', function($query) {
-            $query->where('business_id', $this->selectedBusiness)
+        $this->paidSales = (float) sales_payments::whereHas('sale', function($query) use ($businessIds) {
+            $query->whereIn('business_id', $businessIds)
+                  ->when($this->selectedBusiness, fn ($q) => $q->where('business_id', $this->selectedBusiness))
                   ->where('sale_status', '!=', 'canceled')
                   ->when($this->dateFrom, fn($q) => $q->whereDate('sale_date', '>=', $this->dateFrom))
                   ->when($this->dateTo, fn($q) => $q->whereDate('sale_date', '<=', $this->dateTo));
@@ -146,7 +175,7 @@ class Index extends Component
 
     public function viewSale($id)
     {
-        $sale = sales::with(['customer', 'user', 'items.item', 'payments.paymentMethod'])->find($id);
+        $sale = $this->ownedSales()->with(['customer', 'user', 'items.item', 'payments.paymentMethod'])->find($id);
         if ($sale) {
             $this->selectedSale = $sale->toArray();
             $this->selectedSaleItems = $sale->items->toArray();
@@ -173,7 +202,7 @@ class Index extends Component
     // Add Payment Modal Methods
     public function openAddPaymentModal($saleId)
     {
-        $sale = sales::find($saleId);
+        $sale = $this->ownedSales()->find($saleId);
         if (!$sale) return;
 
         $this->paymentSaleId = $saleId;
@@ -234,7 +263,7 @@ class Index extends Component
 
     public function processPayment()
     {
-        $sale = sales::find($this->paymentSaleId);
+        $sale = $this->ownedSales()->find($this->paymentSaleId);
         if (!$sale) {
             session()->flash('error', 'Sale not found.');
             return;
@@ -308,7 +337,7 @@ class Index extends Component
 
     public function markAsPaid($id)
     {
-        $sale = sales::find($id);
+        $sale = $this->ownedSales()->find($id);
         if ($sale) {
             $sale->update(['payment_status' => 'paid', 'payment_date' => now()]);
             session()->flash('message', 'Sale marked as paid.');
@@ -318,7 +347,7 @@ class Index extends Component
 
     public function cancelSale($id)
     {
-        $sale = sales::find($id);
+        $sale = $this->ownedSales()->find($id);
         if ($sale && $sale->sale_status !== 'canceled') {
             $sale->update(['sale_status' => 'canceled']);
             session()->flash('message', 'Sale canceled successfully.');
@@ -328,7 +357,7 @@ class Index extends Component
 
     public function showReceipt($saleId)
     {
-        $sale = sales::with(['customer', 'user', 'items.item', 'payments.paymentMethod', 'business.settings'])
+        $sale = $this->ownedSales()->with(['customer', 'user', 'items.item', 'payments.paymentMethod', 'business.settings'])
             ->find($saleId);
         if (!$sale) return;
 
@@ -354,26 +383,19 @@ class Index extends Component
     {
         $this->loadStats();
 
-        $businesses = Business::where('owner_id', Auth::id())
-            ->select('id', 'name')
+        $businesses = Auth::user()->assignedBusinesses()
+            ->select('businesses.id', 'businesses.name')
             ->orderBy('name')
             ->get();
 
-        $query = sales::select([
+        $filtered = sales::query()->listFilters($this->businessIds(), $this->listFilters());
+
+        $query = (clone $filtered)
+            ->select([
                 'id', 'business_id', 'sale_date', 'customer_id', 'user_id',
                 'total_amount', 'payment_status', 'sale_status', 'created_at'
             ])
-            ->when($this->selectedBusiness, fn($q) => $q->where('business_id', $this->selectedBusiness))
-            ->when($this->saleStatusFilter, fn($q) => $q->where('sale_status', $this->saleStatusFilter))
-            ->when($this->paymentStatusFilter, fn($q) => $q->where('payment_status', $this->paymentStatusFilter))
-            ->when($this->dateFrom, fn($q) => $q->whereDate('sale_date', '>=', $this->dateFrom))
-            ->when($this->dateTo, fn($q) => $q->whereDate('sale_date', '<=', $this->dateTo))
-            ->when($this->search, function ($q) {
-                $q->where(function ($query) {
-                    $query->whereHas('customer', fn($cq) => $cq->where('name', 'like', "%{$this->search}%"))
-                        ->orWhereHas('items', fn($iq) => $iq->where('plate_number', 'like', "%{$this->search}%"));
-                });
-            })
+            ->withCount('items')
             ->with([
                 'customer:id,name,phone',
                 'user:id,name',
@@ -395,9 +417,17 @@ class Index extends Component
             $sales = $query->paginate((int) $this->perPage);
         }
 
+        $pageTotals = [
+            'total' => (float) $sales->sum('total_amount'),
+            'paid' => (float) $sales->sum(fn ($sale) => $sale->payments->sum('amount')),
+            'unpaid' => (float) $sales->sum(fn ($sale) => max(0, (float) $sale->total_amount - (float) $sale->payments->sum('amount'))),
+        ];
+
         return view('livewire.owner.sales.index', [
             'sales' => $sales,
-            'businesses' => $businesses
+            'businesses' => $businesses,
+            'pageTotals' => $pageTotals,
+            'grandTotals' => sales::totalsFor($filtered),
         ]);
     }
 }

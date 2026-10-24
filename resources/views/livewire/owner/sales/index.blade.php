@@ -155,8 +155,13 @@
                 </select>
                 <label class="mb-0 small text-muted">entries</label>
             </div>
-            <div class="text-muted small">
-                Showing {{ $sales->firstItem() ?? 0 }} to {{ $sales->lastItem() ?? 0 }} of {{ $sales->total() }} transactions
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-muted small">
+                    Showing {{ $sales->firstItem() ?? 0 }} to {{ $sales->lastItem() ?? 0 }} of {{ $sales->total() }} transactions
+                </span>
+                <a href="{{ route('owner.sales.print', array_filter($this->listFilters())) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="Opens a printable report of all sales matching these filters">
+                    <i class="ti ti-printer me-1"></i> Print report
+                </a>
             </div>
         </div>
         <div class="card-body p-0">
@@ -204,7 +209,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @php $itemCount = $sale->items->count(); @endphp
+                                    @php $itemCount = $sale->items_count; @endphp
                                     <span class="badge bg-secondary">{{ $itemCount }}</span>
                                     @if($sale->items->first())
                                         <br>
@@ -257,6 +262,26 @@
                             </tr>
                         @endforelse
                     </tbody>
+                    @if($sales->count() > 0)
+                        <tfoot class="table-light position-sticky bottom-0" style="z-index: 1;">
+                            @if($sales->total() > $sales->count())
+                                <tr class="small">
+                                    <td colspan="5" class="text-end text-muted">Page subtotal ({{ $sales->count() }} {{ Str::plural('sale', $sales->count()) }})</td>
+                                    <td class="text-end text-nowrap">TZS {{ number_format($pageTotals['total'], 2) }}</td>
+                                    <td class="text-end text-nowrap text-success">TZS {{ number_format($pageTotals['paid'], 2) }}</td>
+                                    <td class="text-end text-nowrap {{ $pageTotals['unpaid'] > 0 ? 'text-danger' : 'text-muted' }}">TZS {{ number_format($pageTotals['unpaid'], 2) }}</td>
+                                    <td colspan="2"></td>
+                                </tr>
+                            @endif
+                            <tr class="fw-bold">
+                                <td colspan="5" class="text-end">Total ({{ number_format($grandTotals['count']) }} {{ Str::plural('sale', $grandTotals['count']) }})</td>
+                                <td class="text-end text-nowrap">TZS {{ number_format($grandTotals['total'], 2) }}</td>
+                                <td class="text-end text-nowrap text-success">TZS {{ number_format($grandTotals['paid'], 2) }}</td>
+                                <td class="text-end text-nowrap {{ $grandTotals['unpaid'] > 0 ? 'text-danger' : 'text-muted' }}">TZS {{ number_format($grandTotals['unpaid'], 2) }}</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
         </div>
@@ -428,9 +453,9 @@
                             </button>
                         @endif
                         <button type="button" class="btn btn-secondary" wire:click="closeDetailsModal">Close</button>
-                        <button type="button" class="btn btn-primary" onclick="window.print()">
-                            <i class="ti ti-printer me-1"></i> Print
-                        </button>
+                        <a href="{{ route('owner.sales.invoice', $selectedSale['id']) }}" target="_blank" rel="noopener" class="btn btn-primary">
+                            <i class="ti ti-printer me-1"></i> Print Invoice
+                        </a>
                     </div>
                 </div>
             </div>

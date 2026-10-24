@@ -40,6 +40,7 @@ use App\Livewire\Owner\Items\Index as OwnerItems;
 use App\Livewire\Owner\Staffs\Index as OwnerStaffs;
 use App\Livewire\Owner\Customers\Index as OwnerCustomers;
 use App\Livewire\Owner\Sales\Index as OwnerSales;
+use App\Http\Controllers\Owner\SalesPrintController;
 use App\Livewire\Owner\Sales\Dashboard as OwnerSalesDashboard;
 use App\Livewire\Owner\Purchases\Index as OwnerPurchases;
 use App\Livewire\Owner\Stocktaking\Index as OwnerStocktaking;
@@ -175,6 +176,8 @@ Route::middleware(['auth', 'role:owner,staff', 'subscription.active'])->prefix('
     Route::get('/roles/edit/{roleId}', \App\Livewire\Owner\Staffs\EditRole::class)->can('edit_role')->name('owner.people.roles.edit');
     Route::get('/customers', OwnerCustomers::class)->can('view_customer')->name('owner.people.customers');
     Route::get('/sales', OwnerSales::class)->middleware('module:pos')->can('view_sale')->name('owner.sales');
+    Route::get('/sales/print', [SalesPrintController::class, 'list'])->middleware('module:pos')->can('view_sale')->name('owner.sales.print');
+    Route::get('/sales/{sale}/invoice', [SalesPrintController::class, 'invoice'])->middleware('module:pos')->can('view_sale')->name('owner.sales.invoice');
     Route::get('/purchases', OwnerPurchases::class)->can('view_purchase')->name('owner.purchases');
     Route::get('/stocktaking', OwnerStocktaking::class)->can('stocktaking')->name('owner.stocktaking');
     Route::get('/stocktaking/count/{stock?}', OwnerStocktakingSheet::class)->can('stocktaking')->name('owner.stocktaking.sheet');
