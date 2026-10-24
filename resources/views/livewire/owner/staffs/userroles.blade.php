@@ -234,6 +234,15 @@
                                 @error('user_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                @if(empty($availableUsers) && ! $editingId)
+                                    <small class="text-muted d-block mt-1">
+                                        <i class="ti ti-info-circle me-1"></i>
+                                        Only people who work at this business are listed.
+                                        <a href="{{ route('owner.people.Staffs') }}">Add a staff member with a login</a> first.
+                                    </small>
+                                @else
+                                    <small class="text-muted d-block mt-1">Only people who work at this business are listed.</small>
+                                @endif
                             </div>
 
                             <div class="col-12">

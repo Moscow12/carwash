@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Business;
 use App\Models\PosOutlet;
 use App\Models\staffs;
+use Illuminate\Validation\Rule;
 
 #[Layout('components.layouts.app-owner')]
 class Userroles extends Component
@@ -103,12 +104,41 @@ class Userroles extends Component
             ->toArray();
     }
 
+    /**
+     * Businesses the signed-in owner manages.
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    protected function businessIds(): \Illuminate\Support\Collection
+    {
+        return Auth::user()->assignedBusinesses()->pluck('id');
+    }
+
+    /**
+     * Users who belong to a business: staff of that business with a login, or anyone already holding a role there.
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    protected function relatedUserIds(string $businessId): \Illuminate\Support\Collection
+    {
+        return staffs::where('business_id', $businessId)
+            ->whereNotNull('user_id')
+            ->pluck('user_id')
+            ->merge(UserBusinessRole::where('business_id', $businessId)->pluck('user_id'))
+            ->unique()
+            ->values();
+    }
+
     public function loadUsers()
     {
-        if (!$this->selectedBusiness) return;
+        if (!$this->selectedBusiness || !$this->businessIds()->contains($this->selectedBusiness)) {
+            $this->availableUsers = [];
+            return;
+        }
 
-        // Get staff members and users
-        $this->availableUsers = User::where('role', 'staff')
+        // Only this business's people, never every staff login in the system
+        $this->availableUsers = User::whereIn('id', $this->relatedUserIds($this->selectedBusiness))
+            ->where('role', 'staff')
             ->where('status', 'active')
             ->orderBy('name')
             ->get()
@@ -118,9 +148,17 @@ class Userroles extends Component
             ->toArray();
     }
 
+    /**
+     * A role assignment in one of the owner's businesses, or null.
+     */
+    protected function findAssignment($id): ?UserBusinessRole
+    {
+        return UserBusinessRole::whereKey($id)->whereIn('business_id', $this->businessIds())->first();
+    }
+
     public function loadStats()
     {
-        if (!$this->selectedBusiness) {
+        if (!$this->selectedBusiness || !$this->businessIds()->contains($this->selectedBusiness)) {
             $this->roleStats = [];
             return;
         }
@@ -139,6 +177,7 @@ class Userroles extends Component
     {
         $this->resetForm();
         $this->business_id = $this->selectedBusiness;
+        $this->loadUsers();
         $this->showModal = true;
     }
 
@@ -161,7 +200,7 @@ class Userroles extends Component
 
     public function edit($id)
     {
-        $roleAssignment = UserBusinessRole::with(['user', 'outlet'])->find($id);
+        $roleAssignment = $this->findAssignment($id)?->load(['user', 'outlet']);
         if ($roleAssignment) {
             $this->editingId = $id;
             $this->user_id = $roleAssignment->user_id;
@@ -175,11 +214,26 @@ class Userroles extends Component
 
     public function save()
     {
+        $existing = $this->editingId ? $this->findAssignment($this->editingId) : null;
+
+        if ($this->editingId && ! $existing) {
+            session()->flash('error', 'Role assignment not found.');
+            $this->closeModal();
+            return;
+        }
+
+        // The business can't be changed in the form; always use the one being managed
+        $this->business_id = $existing?->business_id ?? $this->selectedBusiness;
+
         $this->validate([
-            'user_id' => 'required|exists:users,id',
-            'business_id' => 'required|exists:businesses,id',
-            'outlet_id' => 'nullable|exists:pos_outlets,id',
+            'business_id' => ['required', Rule::in($this->businessIds()->all())],
+            'user_id' => ['required', Rule::in($existing ? [$existing->user_id] : $this->relatedUserIds((string) $this->business_id)->all())],
+            'outlet_id' => ['nullable', Rule::exists('pos_outlets', 'id')->where('business_id', $this->business_id)],
             'role' => 'required|in:owner,admin,manager,cashier,waiter,bartender,receptionist,housekeeping,kitchen,accountant,viewer',
+        ], [
+            'business_id.in' => 'Choose one of your businesses.',
+            'user_id.in' => 'Choose someone who works at this business. Add them on the Staff page with a login first.',
+            'outlet_id.exists' => 'Choose an outlet of this business.',
         ]);
 
         try {
@@ -194,7 +248,7 @@ class Userroles extends Component
             ];
 
             if ($this->editingId) {
-                $roleAssignment = UserBusinessRole::find($this->editingId);
+                $roleAssignment = $existing;
                 if ($roleAssignment) {
                     $roleAssignment->update($data);
                     session()->flash('message', 'User role updated successfully.');
@@ -228,7 +282,7 @@ class Userroles extends Component
 
     public function toggleStatus($id)
     {
-        $roleAssignment = UserBusinessRole::find($id);
+        $roleAssignment = $this->findAssignment($id);
         if ($roleAssignment) {
             $roleAssignment->update([
                 'is_active' => !$roleAssignment->is_active,
@@ -241,7 +295,7 @@ class Userroles extends Component
     public function delete($id)
     {
         try {
-            $roleAssignment = UserBusinessRole::find($id);
+            $roleAssignment = $this->findAssignment($id);
             if ($roleAssignment) {
                 $roleAssignment->delete();
                 $this->loadStats();
@@ -256,8 +310,11 @@ class Userroles extends Component
     {
         $this->loadStats();
 
+        // Never list another tenant's assignments, even if selectedBusiness is tampered with
+        $businessId = $this->businessIds()->contains($this->selectedBusiness) ? $this->selectedBusiness : null;
+
         $query = UserBusinessRole::with(['user', 'business', 'outlet'])
-            ->where('business_id', $this->selectedBusiness);
+            ->where('business_id', $businessId);
 
         if ($this->selectedRole) {
             $query->where('role', $this->selectedRole);
