@@ -94,6 +94,7 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
+                        <th class="border-0" style="width: 50px;">#</th>
                         <th class="border-0">Reference</th>
                         <th class="border-0">Date</th>
                         <th class="border-0 text-end">Items Counted</th>
@@ -105,9 +106,13 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @php
+                        $num=1;
+                    @endphp
                     @forelse($stocks as $stock)
                         @php($netVariance = (float) ($stock->items_sum_variance ?? 0))
                         <tr wire:key="stock-{{ $stock->id }}">
+                            <td class="text-center">{{ $num++ }}</td>
                             <td>
                                 <div class="fw-medium">{{ $stock->reference_no }}</div>
                                 @if($stock->notes)

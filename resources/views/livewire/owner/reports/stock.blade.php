@@ -146,7 +146,7 @@
                 <table class="table table-hover table-striped">
                     <thead class="table-light">
                         <tr>
-                            <th style="width: 60px;">S/N</th>
+                            <th style="width: 60px;">#</th>
                             <th>SKU</th>
                             <th>Product Name</th>
                             <th>Category</th>
@@ -177,17 +177,17 @@
                             <td><span class="badge bg-secondary">{{ $item->sku ?? '-' }}</span></td>
                             <td>{{ $item->name }}</td>
                             <td>{{ $item->category->name ?? '-' }}</td>
-                            <td class="text-end">TSh {{ number_format($sellingPrice, 2) }}</td>
-                            <td class="text-end">TSh {{ number_format($costPrice, 2) }}</td>
+                            <td class="text-end">{{ number_format($sellingPrice, 2) }}</td>
+                            <td class="text-end">{{ number_format($costPrice, 2) }}</td>
                             <td class="text-end">
                                 <span class="{{ $stock <= 0 ? 'text-danger' : ($stock <= 10 ? 'text-warning' : 'text-success') }}">
                                     {{ number_format($stock, 2) }} {{ $item->unit->name ?? 'Pc(s)' }}
                                 </span>
                             </td>
-                            <td class="text-end">TSh {{ number_format($stockValueCost, 2) }}</td>
-                            <td class="text-end">TSh {{ number_format($stockValueSale, 2) }}</td>
+                            <td class="text-end">{{ number_format($stockValueCost, 2) }}</td>
+                            <td class="text-end">{{ number_format($stockValueSale, 2) }}</td>
                             <td class="text-end {{ $itemProfit >= 0 ? 'text-success' : 'text-danger' }} fw-bold">
-                                TSh {{ number_format($itemProfit, 2) }}
+                                {{ number_format($itemProfit, 2) }}
                             </td>
                             <td class="text-end">{{ number_format($totalSold, 2) }} Pc(s)</td>
                         </tr>
@@ -204,10 +204,10 @@
                     <tfoot class="table-light fw-bold">
                         <tr>
                             <td colspan="7" class="text-end">Totals:</td>
-                            <td class="text-end">TSh {{ number_format($closingStockPurchase, 2) }}</td>
-                            <td class="text-end">TSh {{ number_format($closingStockSale, 2) }}</td>
+                            <td class="text-end">{{ number_format($closingStockPurchase, 2) }}</td>
+                            <td class="text-end">{{ number_format($closingStockSale, 2) }}</td>
                             <td class="text-end {{ $potentialProfit >= 0 ? 'text-success' : 'text-danger' }}">
-                                TSh {{ number_format($potentialProfit, 2) }}
+                                {{ number_format($potentialProfit, 2) }}
                             </td>
                             <td></td>
                         </tr>

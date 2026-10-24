@@ -302,7 +302,7 @@
                             </td>
                             <td>{{ $item->plate_number ?? '-' }}</td>
                             <td class="text-end">TSh {{ number_format($item->price, 0) }}</td>
-                            <td class="text-end">{{ $item->quantity ?? 1 }}</td>
+                            <td class="text-end">{{ number_format($item->quantity ?? 1) }}</td>
                             <td class="text-end fw-semibold text-warning">
                                 TSh {{ number_format($item->commission ?? 0, 0) }}
                             </td>
