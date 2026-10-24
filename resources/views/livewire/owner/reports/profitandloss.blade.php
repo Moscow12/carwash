@@ -76,7 +76,7 @@
     </div>
 
     <!-- Two Column Report Section -->
-    <div class="row mb-4">
+    <div class="row mb-4" data-print-area>
         <!-- Left Column -->
         <div class="col-lg-6">
             <div class="card h-100">
@@ -201,7 +201,7 @@
     </div>
 
     <!-- Profit Summary Section -->
-    <div class="card mb-4 border-0 bg-light">
+    <div class="card mb-4 border-0 bg-light" data-print-area>
         <div class="card-body">
             <div class="mb-4">
                 <h3 class="text-secondary">
@@ -225,8 +225,8 @@
     </div>
 
     <!-- Profit Breakdown Tabs -->
-    <div class="card">
-        <div class="card-header bg-white border-bottom-0">
+    <div class="card" data-print-area>
+        <div class="card-header bg-white border-bottom-0" data-print-exclude>
             <div class="d-flex justify-content-between align-items-center flex-wrap">
                 <ul class="nav nav-tabs card-header-tabs" role="tablist">
                     <li class="nav-item">
@@ -260,9 +260,13 @@
                         </button>
                     </li>
                 </ul>
-                <button class="btn btn-outline-primary btn-sm" onclick="window.print()">
-                    <i class="fas fa-print me-1"></i> Print
-                </button>
+                @php
+                    $breakdownLabels = ['products' => 'By product', 'categories' => 'By category', 'customers' => 'By customer', 'date' => 'By date', 'day' => 'By day of week'];
+                @endphp
+                <x-print.button title="Profit & Loss" :business="$business_id" :meta="[
+                    'Period' => $this->dateFilterLabel.($date_filter === 'custom' && $start_date ? ' ('.\Carbon\Carbon::parse($start_date)->format('d M Y').' – '.\Carbon\Carbon::parse($end_date ?: now())->format('d M Y').')' : ''),
+                    'Breakdown' => $breakdownLabels[$activeTab] ?? null,
+                ]" />
             </div>
         </div>
         <div class="card-body">

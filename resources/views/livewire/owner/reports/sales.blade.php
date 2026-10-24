@@ -112,7 +112,7 @@
     @endif
 
     <!-- Summary Cards -->
-    <div class="row mb-4">
+    <div class="row mb-4" data-print-area>
         <div class="col-md-4">
             <div class="card bg-primary text-white">
                 <div class="card-body">
@@ -145,19 +145,19 @@
         $cashShare = $splitTotal > 0 ? round($summary['cash_amount'] / $splitTotal * 100, 1) : 0;
         $creditShare = $splitTotal > 0 ? round(100 - $cashShare, 1) : 0;
     @endphp
-    <div class="card mb-4">
+    <div class="card mb-4" data-print-area>
         <div class="card-body">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
                 <h6 class="mb-0">Payment Split</h6>
                 <div class="d-flex flex-wrap gap-2">
-                    <button type="button"
+                    <button type="button" data-print-text
                             wire:click="$set('payment_method', '{{ $payment_method === 'cash' ? '' : 'cash' }}')"
                             class="btn btn-sm {{ $payment_method === 'cash' ? 'btn-success' : 'btn-outline-success' }}"
                             title="{{ $payment_method === 'cash' ? 'Show all payments' : 'Show only cash sales' }}">
                         <i class="ti ti-cash me-1"></i> Cash · TSh {{ number_format($summary['cash_amount'], 2) }}
                         <span class="opacity-75">({{ $cashShare }}%)</span>
                     </button>
-                    <button type="button"
+                    <button type="button" data-print-text
                             wire:click="$set('payment_method', '{{ $payment_method === 'credit' ? '' : 'credit' }}')"
                             class="btn btn-sm {{ $payment_method === 'credit' ? 'btn-warning' : 'btn-outline-warning' }}"
                             title="{{ $payment_method === 'credit' ? 'Show all payments' : 'Show only credit sales' }}">
@@ -174,8 +174,8 @@
     </div>
 
     <!-- Tabs -->
-    <div class="card">
-        <div class="card-header bg-white">
+    <div class="card" data-print-area>
+        <div class="card-header bg-white" data-print-exclude>
             <div class="d-flex justify-content-between align-items-center flex-wrap">
                 <ul class="nav nav-tabs card-header-tabs" role="tablist">
                     <li class="nav-item">
@@ -210,9 +210,14 @@
                         <label class="mb-0">entries</label>
                     </div>
 
-                    <button class="btn btn-outline-primary btn-sm" onclick="window.print()">
-                        <i class="fas fa-print me-1"></i> Print
-                    </button>
+                    <x-print.button title="Product Sell Report" :business="$business_id" all :meta="[
+                        'Period' => \Carbon\Carbon::parse($start_date.' '.$start_time)->format('d M Y H:i').' – '.\Carbon\Carbon::parse($end_date.' '.$end_time)->format('d M Y H:i'),
+                        'View' => ['detailed' => 'Detailed', 'grouped' => 'Grouped by product', 'category' => 'By category'][$activeTab] ?? null,
+                        'Payment' => $payment_method ? ucfirst($payment_method) : 'All',
+                        'Customer' => $customer_id ? data_get(collect($customersList)->firstWhere('id', $customer_id), 'name') : null,
+                        'Category' => $category_id ? data_get(collect($categories)->firstWhere('id', $category_id), 'name') : null,
+                        'Search' => $search,
+                    ]" />
                 </div>
             </div>
         </div>

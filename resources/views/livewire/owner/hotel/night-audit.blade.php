@@ -190,7 +190,7 @@
                         </h5>
                         <button type="button" class="btn-close" wire:click="closeModal"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body" data-print-area>
                         <!-- Occupancy Section -->
                         <div class="card mb-3">
                             <div class="card-header bg-primary text-white">
@@ -276,9 +276,9 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" wire:click="closeModal">Close</button>
-                        <button type="button" class="btn btn-primary" onclick="window.print()">
-                            <i class="ti ti-printer me-1"></i> Print Report
-                        </button>
+                        <x-print.button title="Night Audit" :business="$selectedHotel" label="Print Report" class="btn btn-primary" :meta="[
+                            'Audit date' => \Carbon\Carbon::parse($auditData['audit_date'])->format('d M Y'),
+                        ]" />
                     </div>
                 </div>
             </div>

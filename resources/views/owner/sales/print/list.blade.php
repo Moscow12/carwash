@@ -4,39 +4,17 @@
 
 @section('content')
     @php
-        $settings = $business?->settings;
-        $businessName = $settings?->business_name ?: ($business?->name ?? 'All businesses');
         $period = ($filters['from'] ?? null) || ($filters['to'] ?? null)
             ? (isset($filters['from']) ? \Carbon\Carbon::parse($filters['from'])->format('d M Y') : 'Start').' – '.(isset($filters['to']) ? \Carbon\Carbon::parse($filters['to'])->format('d M Y') : 'Today')
             : 'All dates';
-        $applied = array_filter([
-            'Sale status' => isset($filters['sale_status']) ? ucfirst($filters['sale_status']) : null,
-            'Payment' => isset($filters['payment_status']) ? ucfirst($filters['payment_status']) : null,
-            'Search' => $filters['search'] ?? null,
-        ]);
     @endphp
 
-    <div class="doc-header">
-        <div>
-            @if($settings?->show_logo_on_receipt && $business?->logo)
-                <img src="{{ asset('storage/'.$business->logo) }}" alt="" class="logo">
-            @endif
-            <h1>{{ $businessName }}</h1>
-            @if($settings?->business_address || $business?->address)
-                <div class="muted">{{ $settings?->business_address ?: $business?->address }}</div>
-            @endif
-            @if($settings?->business_phone)
-                <div class="muted">Tel: {{ $settings->business_phone }}</div>
-            @endif
-        </div>
-        <div class="meta">
-            <h1>Sales Report</h1>
-            <div><strong>Period:</strong> {{ $period }}</div>
-            @foreach($applied as $label => $value)
-                <div><strong>{{ $label }}:</strong> {{ $value }}</div>
-            @endforeach
-        </div>
-    </div>
+    <x-print.header title="Sales Report" :business="$business" :meta="[
+        'Period' => $period,
+        'Sale status' => isset($filters['sale_status']) ? ucfirst($filters['sale_status']) : null,
+        'Payment' => isset($filters['payment_status']) ? ucfirst($filters['payment_status']) : null,
+        'Search' => $filters['search'] ?? null,
+    ]" />
 
     <div class="summary">
         <div><span class="muted">Transactions</span><strong>{{ number_format($totals['count']) }}</strong></div>

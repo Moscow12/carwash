@@ -44,7 +44,7 @@
 
     @if($item && $itemId)
         <!-- Summary Card -->
-        <div class="card border-0 shadow-sm mb-4">
+        <div class="card border-0 shadow-sm mb-4" data-print-area>
             <div class="card-body">
                 <h5 class="mb-4">{{ $item->name }} @if($item->sku ?? false)({{ $item->sku }})@endif</h5>
 
@@ -110,10 +110,10 @@
         </div>
 
         <!-- Transactions Table Card -->
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm" data-print-area>
             <div class="card-body">
                 <!-- Table Controls -->
-                <div class="row g-3 mb-3 align-items-end">
+                <div class="row g-3 mb-3 align-items-end" data-print-exclude>
                     <div class="col-md-2">
                         <label class="form-label small">Show</label>
                         <x-forms.select2
@@ -136,9 +136,10 @@
                     </div>
                     <div class="col-md-7">
                         <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-secondary" onclick="window.print()">
-                                <i class="ti ti-printer me-1"></i> Print
-                            </button>
+                            <x-print.button title="Stock History" :business="$item->business_id" all class="btn btn-outline-secondary" :meta="[
+                                'Item' => $item->name.($item->sku ? ' (SKU '.$item->sku.')' : ''),
+                                'Type' => $typeFilter ? ucwords(str_replace('_', ' ', $typeFilter)) : 'All transactions',
+                            ]" />
                         </div>
                     </div>
                 </div>
@@ -198,7 +199,7 @@
 
             <!-- Pagination -->
             @if($transactions instanceof \Illuminate\Pagination\LengthAwarePaginator && $transactions->hasPages())
-                <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                <div class="card-footer bg-transparent d-flex justify-content-between align-items-center" data-print-exclude>
                     <div class="text-muted small">
                         Showing {{ $transactions->firstItem() }} to {{ $transactions->lastItem() }} of {{ $transactions->total() }} entries
                     </div>

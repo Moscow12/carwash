@@ -33,9 +33,14 @@
                     </select>
                 </div>
             @endif
-            <button class="btn btn-outline-secondary" onclick="window.print()" title="Print">
-                <i class="ti ti-printer"></i><span class="d-none d-sm-inline ms-1">Print</span>
-            </button>
+            <x-print.button :title="$activeTab === 'stock' ? 'Stock Report' : 'Items & Services'" :business="$selectedBusiness" all class="btn btn-outline-secondary" :meta="[
+                'Type' => $typeFilter === 'Service' ? 'Services' : ($typeFilter === 'product' ? 'Products' : 'All items'),
+                'Category' => $categoryFilter ? ($categories->firstWhere('id', $categoryFilter)?->name) : null,
+                'Unit' => $unitFilter ? ($units->firstWhere('id', $unitFilter)?->name) : null,
+                'Status' => $statusFilter ? ucfirst($statusFilter) : null,
+                'Stock' => $stockFilter === 'out' ? 'Out of stock' : ($stockFilter === 'low' ? 'Low stock' : null),
+                'Search' => $search,
+            ]" />
             <a href="{{ route('owner.uploaditems') }}" class="btn btn-outline-primary" title="Import from CSV">
                 <i class="ti ti-file-upload"></i><span class="d-none d-sm-inline ms-1">Import</span>
             </a>
@@ -179,7 +184,7 @@
             @endif
         </div>
 
-        <div class="card-body table-wrap">
+        <div class="card-body table-wrap" data-print-area>
             <div class="table-loading" wire:loading.flex wire:target="search,typeFilter,categoryFilter,unitFilter,statusFilter,stockFilter,sortTable,setTab,quickFilter,clearFilters,selectedBusiness,perPage,gotoPage,nextPage,previousPage">
                 <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
             </div>

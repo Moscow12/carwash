@@ -23,7 +23,7 @@
     @endif
 
     <!-- Summary Cards -->
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4" data-print-area>
         <div class="col-md-3">
             <div class="card border-0 shadow-sm bg-primary text-white">
                 <div class="card-body">
@@ -170,7 +170,7 @@
     </div>
 
     <!-- Main Table Card -->
-    <div class="card border-0 shadow-sm">
+    <div class="card border-0 shadow-sm" data-print-area>
         <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
             <h5 class="mb-0">All expenses</h5>
             <button wire:click="openModal" class="btn btn-primary">
@@ -179,7 +179,7 @@
         </div>
         <div class="card-body">
             <!-- Table Controls -->
-            <div class="row g-3 mb-3 align-items-end">
+            <div class="row g-3 mb-3 align-items-end" data-print-exclude>
                 <div class="col-md-2">
                     <label class="form-label small">Show</label>
                     <select wire:model.live="perPage" class="form-select">
@@ -191,9 +191,11 @@
                 </div>
                 <div class="col-md-6">
                     <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-secondary" onclick="window.print()">
-                            <i class="ti ti-printer me-1"></i> Print
-                        </button>
+                        <x-print.button title="Expenses" :business="$selectedBusiness" all class="btn btn-outline-secondary" :meta="[
+                            'Period' => $dateFrom || $dateTo ? ($dateFrom ? \Carbon\Carbon::parse($dateFrom)->format('d M Y') : 'Start').' – '.($dateTo ? \Carbon\Carbon::parse($dateTo)->format('d M Y') : 'Today') : 'All dates',
+                            'Payment' => $paymentStatusFilter ? ucfirst($paymentStatusFilter) : null,
+                            'Search' => $search,
+                        ]" />
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -305,7 +307,7 @@
 
         <!-- Pagination -->
         @if($expenses instanceof \Illuminate\Pagination\LengthAwarePaginator && $expenses->hasPages())
-            <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+            <div class="card-footer bg-transparent d-flex justify-content-between align-items-center" data-print-exclude>
                 <div class="text-muted small">
                     Showing {{ $expenses->firstItem() }} to {{ $expenses->lastItem() }} of {{ $expenses->total() }} entries
                 </div>

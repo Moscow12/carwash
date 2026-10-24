@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
+use App\Traits\WithPrintMode;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Business;
@@ -19,7 +20,7 @@ use Carbon\Carbon;
 #[Layout('components.layouts.app-owner')]
 class Sales extends Component
 {
-    use WithPagination;
+    use WithPagination, WithPrintMode;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -237,14 +238,14 @@ class Sales extends Component
 
     public function getDetailedDataProperty()
     {
-        return $this->getBaseQuery()
+        return $this->paginateForPrint($this->getBaseQuery()
             ->orderBy('sales.sale_date', 'desc')
-            ->paginate($this->perPage);
+        );
     }
 
     public function getGroupedDataProperty()
     {
-        return $this->getBaseQuery()
+        return $this->paginateForPrint($this->getBaseQuery()
             ->select(
                 'items.id as item_id',
                 'items.name as product_name',
@@ -257,12 +258,12 @@ class Sales extends Component
             )
             ->groupBy('items.id', 'items.name', 'items.sku')
             ->orderBy('total_amount', 'desc')
-            ->paginate($this->perPage);
+        );
     }
 
     public function getByCategoryDataProperty()
     {
-        return $this->getBaseQuery()
+        return $this->paginateForPrint($this->getBaseQuery()
             ->select(
                 'categories.id as category_id',
                 'categories.name as category_name',
@@ -274,7 +275,7 @@ class Sales extends Component
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->groupBy('categories.id', 'categories.name')
             ->orderBy('total_amount', 'desc')
-            ->paginate($this->perPage);
+        );
     }
 
     public function getSummaryProperty()

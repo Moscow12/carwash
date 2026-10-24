@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
+use App\Traits\WithPrintMode;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\items;
@@ -18,7 +19,7 @@ use Carbon\Carbon;
 #[Layout('components.layouts.app-owner')]
 class Stock extends Component
 {
-    use WithPagination;
+    use WithPagination, WithPrintMode;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -190,10 +191,10 @@ class Stock extends Component
 
     public function getStockDataProperty()
     {
-        return $this->getBaseQuery()
+        return $this->paginateForPrint($this->getBaseQuery()
             ->with(['category', 'unit'])
             ->orderBy('name')
-            ->paginate($this->perPage);
+        );
     }
 
     public function getCurrentStock($itemId)

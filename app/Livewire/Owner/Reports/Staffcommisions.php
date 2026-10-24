@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
+use App\Traits\WithPrintMode;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\staffs;
@@ -16,7 +17,7 @@ use Carbon\Carbon;
 #[Layout('components.layouts.app-owner')]
 class Staffcommisions extends Component
 {
-    use WithPagination;
+    use WithPagination, WithPrintMode;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -244,8 +245,8 @@ class Staffcommisions extends Component
             $query->where('sales_items.staff_id', $this->staff_id);
         }
 
-        return $query->orderBy('sales_items.date', 'desc')
-            ->paginate($this->perPage);
+        return $this->paginateForPrint($query->orderBy('sales_items.date', 'desc')
+        );
     }
 
     public function getSummaryProperty()

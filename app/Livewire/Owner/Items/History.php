@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\WithPagination;
+use App\Traits\WithPrintMode;
 use Illuminate\Support\Facades\Auth;
 use App\Models\items;
 use App\Models\item_balance;
@@ -15,7 +16,7 @@ use App\Models\PurchaseOrder;
 #[Layout('components.layouts.app-owner')]
 class History extends Component
 {
-    use WithPagination;
+    use WithPagination, WithPrintMode;
 
     public $itemId = '';
     public $selectedBusiness = '';
@@ -218,7 +219,7 @@ class History extends Component
                 ->with(['user'])
                 ->orderBy('created_at', 'desc');
 
-            $transactions = $query->paginate($this->perPage);
+            $transactions = $this->paginateForPrint($query);
         }
 
         return view('livewire.owner.items.history', [

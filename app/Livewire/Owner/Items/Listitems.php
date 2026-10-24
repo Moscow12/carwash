@@ -5,6 +5,7 @@ namespace App\Livewire\Owner\Items;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
+use App\Traits\WithPrintMode;
 use Illuminate\Support\Facades\Auth;
 use App\Models\items;
 use App\Models\category;
@@ -14,7 +15,7 @@ use App\Models\item_balance;
 #[Layout('components.layouts.app-owner')]
 class Listitems extends Component
 {
-    use WithPagination;
+    use WithPagination, WithPrintMode;
 
     /** Products below this balance are flagged as low stock. */
     public const LOW_STOCK_THRESHOLD = 10;
@@ -388,7 +389,7 @@ class Listitems extends Component
 
             $query->orderBy('name');
 
-            $items = $query->paginate($this->perPage);
+            $items = $this->paginateForPrint($query);
         }
 
         // Get stock data for all items

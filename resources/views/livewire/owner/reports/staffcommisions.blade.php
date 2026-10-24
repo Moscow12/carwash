@@ -28,9 +28,10 @@
                 <i class="ti ti-filter me-1"></i> Filters
             </button>
 
-            <button class="btn btn-outline-primary" onclick="window.print()">
-                <i class="ti ti-printer me-1"></i> Print
-            </button>
+            <x-print.button title="Staff Commissions" :business="$business_id" all class="btn btn-outline-primary" :meta="[
+                'Period' => \Carbon\Carbon::parse($start_date)->format('d M Y').' – '.\Carbon\Carbon::parse($end_date)->format('d M Y'),
+                'Staff' => $staff_id ? data_get(collect($staffList)->firstWhere('id', $staff_id), 'name') : 'All staff',
+            ]" />
         </div>
     </div>
 
@@ -100,7 +101,7 @@
     @endif
 
     <!-- Summary Cards -->
-    <div class="row mb-4">
+    <div class="row mb-4" data-print-area>
         <div class="col-md-3">
             <div class="card bg-primary text-white">
                 <div class="card-body">
@@ -164,7 +165,7 @@
     </div>
 
     <!-- Staff Performance Table -->
-    <div class="card mb-4">
+    <div class="card mb-4" data-print-area>
         <div class="card-header bg-white">
             <h5 class="mb-0"><i class="ti ti-chart-bar me-2"></i>Staff Performance Summary</h5>
         </div>
@@ -259,7 +260,7 @@
 
     <!-- Detailed Transactions -->
     @if($detailedData && $detailedData->count() > 0)
-    <div class="card">
+    <div class="card" data-print-area>
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="ti ti-list-details me-2"></i>Detailed Transactions</h5>
             <div class="d-flex align-items-center gap-2">

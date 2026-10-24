@@ -5,6 +5,7 @@ namespace App\Livewire\Owner\Expenses;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
+use App\Traits\WithPrintMode;
 use Illuminate\Support\Facades\Auth;
 use App\Models\expenses as ExpenseModel;
 use App\Models\expense_category;
@@ -15,7 +16,7 @@ use Carbon\Carbon;
 #[Layout('components.layouts.app-owner')]
 class Expenses extends Component
 {
-    use WithPagination;
+    use WithPagination, WithPrintMode;
 
     // Filters
     public $selectedBusiness = '';
@@ -348,7 +349,7 @@ class Expenses extends Component
             $grandTotal = (clone $query)->sum('total_amount');
             $grandPaymentDue = (clone $query)->sum('payment_due');
 
-            $expenses = $query->paginate($this->perPage);
+            $expenses = $this->paginateForPrint($query);
         }
 
         return view('livewire.owner.expenses.expenses', [

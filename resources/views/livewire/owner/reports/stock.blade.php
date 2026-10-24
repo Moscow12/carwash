@@ -81,7 +81,7 @@
     @endif
 
     <!-- Summary Cards -->
-    <div class="row mb-4">
+    <div class="row mb-4" data-print-area>
         <div class="col-md-3">
             <div class="card border-0 shadow-sm">
                 <div class="card-body text-center">
@@ -121,8 +121,8 @@
     </div>
 
     <!-- Stock Table -->
-    <div class="card">
-        <div class="card-header bg-white">
+    <div class="card" data-print-area>
+        <div class="card-header bg-white" data-print-exclude>
             <div class="d-flex justify-content-between align-items-center flex-wrap">
                 <div class="d-flex align-items-center gap-2">
                     <label class="mb-0">Show</label>
@@ -135,9 +135,11 @@
                     <label class="mb-0">entries</label>
                 </div>
 
-                <button class="btn btn-outline-primary btn-sm" onclick="window.print()">
-                    <i class="fas fa-print me-1"></i> Print
-                </button>
+                <x-print.button title="Stock Report" :business="$business_id" all :meta="[
+                    'Category' => $category_id ? ($categories[$category_id] ?? null) : 'All',
+                    'Unit' => $unit_id ? ($units[$unit_id] ?? null) : 'All',
+                    'Search' => $search,
+                ]" />
             </div>
         </div>
 

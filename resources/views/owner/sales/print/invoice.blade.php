@@ -3,35 +3,18 @@
 @section('title', 'Invoice '.$sale->invoice_number)
 
 @section('content')
-    @php
-        $business = $sale->business;
-        $settings = $business?->settings;
-    @endphp
+    @php $settings = $sale->business?->settings; @endphp
 
-    <div class="doc-header">
+    <x-print.header title="Invoice" :business="$sale->business" :meta="[
+        'No' => $sale->invoice_number,
+        'Date' => $sale->sale_date?->format('d M Y H:i'),
+    ]">
         <div>
-            @if($settings?->show_logo_on_receipt && $business?->logo)
-                <img src="{{ asset('storage/'.$business->logo) }}" alt="" class="logo">
-            @endif
-            <h1>{{ $settings?->business_name ?: $business?->name }}</h1>
-            @if($settings?->business_address || $business?->address)
-                <div class="muted">{{ $settings?->business_address ?: $business?->address }}</div>
-            @endif
-            @if($settings?->business_phone)
-                <div class="muted">Tel: {{ $settings->business_phone }}</div>
-            @endif
+            <span class="badge {{ $sale->sale_status === 'canceled' ? 'canceled' : $sale->payment_status }}">
+                {{ $sale->sale_status === 'canceled' ? 'Canceled' : ucfirst($sale->payment_status) }}
+            </span>
         </div>
-        <div class="meta">
-            <h1>Invoice</h1>
-            <div><strong>No:</strong> {{ $sale->invoice_number }}</div>
-            <div><strong>Date:</strong> {{ $sale->sale_date?->format('d M Y H:i') }}</div>
-            <div>
-                <span class="badge {{ $sale->sale_status === 'canceled' ? 'canceled' : $sale->payment_status }}">
-                    {{ $sale->sale_status === 'canceled' ? 'Canceled' : ucfirst($sale->payment_status) }}
-                </span>
-            </div>
-        </div>
-    </div>
+    </x-print.header>
 
     <div class="summary">
         <div>
