@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="author" content="TechScales">
-    <title>CAMS - Admin Login</title>
+    <title>BIMS - Admin Login</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon/favicon-32x32.png') }}" />

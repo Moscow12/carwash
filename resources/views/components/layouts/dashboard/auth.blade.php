@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="author" content="TechScales">
-    <title>{{ $title ?? 'Login' }} | CAMS Admin</title>
+    <title>{{ $title ?? 'Login' }} | BIMS Admin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('dashertheme/assets/images/favicon/favicon-32x32.png') }}" />

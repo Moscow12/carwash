@@ -4,9 +4,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="CAMS - Carwash Management System by TechScales">
+    <meta name="description" content="BIMS - Business Information Management System by TechScales">
     <meta name="author" content="TechScales Company Limited">
-    <title>{{ $title ?? 'CAMS - Carwash Management System' }}</title>
+    <title>{{ $title ?? 'BIMS - Business Information Management System' }}</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon/favicon-32x32.png') }}" />
@@ -25,11 +25,11 @@
     <!-- Custom Site CSS -->
     <style>
         :root {
-            --cams-primary: #0d6efd;
-            --cams-secondary: #6c757d;
-            --cams-accent: #00b4d8;
-            --cams-dark: #1a1a2e;
-            --cams-light: #f8f9fa;
+            --bims-primary: #0d6efd;
+            --bims-secondary: #6c757d;
+            --bims-accent: #00b4d8;
+            --bims-dark: #1a1a2e;
+            --bims-light: #f8f9fa;
         }
 
         body {
@@ -38,7 +38,7 @@
 
         /* Navbar Styles */
         .navbar-site {
-            background: linear-gradient(135deg, var(--cams-dark) 0%, #16213e 100%);
+            background: linear-gradient(135deg, var(--bims-dark) 0%, #16213e 100%);
             padding: 1rem 0;
             transition: all 0.3s ease;
         }
@@ -50,7 +50,7 @@
         .navbar-brand-text {
             font-weight: 800;
             font-size: 1.5rem;
-            background: linear-gradient(135deg, var(--cams-accent) 0%, #48cae4 100%);
+            background: linear-gradient(135deg, var(--bims-accent) 0%, #48cae4 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -66,7 +66,7 @@
 
         .nav-link-site:hover,
         .nav-link-site.active {
-            color: var(--cams-accent) !important;
+            color: var(--bims-accent) !important;
         }
 
         .nav-link-site::after {
@@ -76,7 +76,7 @@
             left: 50%;
             width: 0;
             height: 2px;
-            background: var(--cams-accent);
+            background: var(--bims-accent);
             transition: all 0.3s ease;
             transform: translateX(-50%);
         }
@@ -88,7 +88,7 @@
 
         /* Hero Section */
         .hero-section {
-            background: linear-gradient(135deg, var(--cams-dark) 0%, #16213e 100%);
+            background: linear-gradient(135deg, var(--bims-dark) 0%, #16213e 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -128,15 +128,15 @@
         }
 
         .gradient-text {
-            background: linear-gradient(135deg, var(--cams-accent) 0%, #48cae4 100%);
+            background: linear-gradient(135deg, var(--bims-accent) 0%, #48cae4 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
         /* Buttons */
-        .btn-cams {
-            background: linear-gradient(135deg, var(--cams-accent) 0%, #0096c7 100%);
+        .btn-bims {
+            background: linear-gradient(135deg, var(--bims-accent) 0%, #0096c7 100%);
             border: none;
             padding: 0.75rem 2rem;
             font-weight: 600;
@@ -145,24 +145,24 @@
             transition: all 0.3s ease;
         }
 
-        .btn-cams:hover {
+        .btn-bims:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 30px rgba(0, 180, 216, 0.3);
             color: #fff;
         }
 
-        .btn-outline-cams {
-            border: 2px solid var(--cams-accent);
+        .btn-outline-bims {
+            border: 2px solid var(--bims-accent);
             padding: 0.75rem 2rem;
             font-weight: 600;
             border-radius: 50px;
-            color: var(--cams-accent);
+            color: var(--bims-accent);
             background: transparent;
             transition: all 0.3s ease;
         }
 
-        .btn-outline-cams:hover {
-            background: var(--cams-accent);
+        .btn-outline-bims:hover {
+            background: var(--bims-accent);
             color: #fff;
             transform: translateY(-2px);
         }
@@ -186,7 +186,7 @@
             width: 80px;
             height: 80px;
             border-radius: 20px;
-            background: linear-gradient(135deg, var(--cams-accent) 0%, #48cae4 100%);
+            background: linear-gradient(135deg, var(--bims-accent) 0%, #48cae4 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -207,12 +207,12 @@
             font-size: 2.5rem;
             font-weight: 800;
             margin-bottom: 1rem;
-            color: var(--cams-dark);
+            color: var(--bims-dark);
         }
 
         .section-subtitle {
             font-size: 1.1rem;
-            color: var(--cams-secondary);
+            color: var(--bims-secondary);
             margin-bottom: 3rem;
         }
 
@@ -232,7 +232,7 @@
 
         .service-card-img {
             height: 200px;
-            background: linear-gradient(135deg, var(--cams-dark) 0%, #16213e 100%);
+            background: linear-gradient(135deg, var(--bims-dark) 0%, #16213e 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -240,12 +240,12 @@
 
         .service-card-img i {
             font-size: 4rem;
-            color: var(--cams-accent);
+            color: var(--bims-accent);
         }
 
         /* Footer */
         .footer-site {
-            background: linear-gradient(135deg, var(--cams-dark) 0%, #16213e 100%);
+            background: linear-gradient(135deg, var(--bims-dark) 0%, #16213e 100%);
             color: #fff;
             padding: 80px 0 30px;
         }
@@ -254,7 +254,7 @@
             font-size: 1.25rem;
             font-weight: 700;
             margin-bottom: 1.5rem;
-            color: var(--cams-accent);
+            color: var(--bims-accent);
         }
 
         .footer-link {
@@ -266,7 +266,7 @@
         }
 
         .footer-link:hover {
-            color: var(--cams-accent);
+            color: var(--bims-accent);
             padding-left: 5px;
         }
 
@@ -284,7 +284,7 @@
         }
 
         .social-link:hover {
-            background: var(--cams-accent);
+            background: var(--bims-accent);
             transform: translateY(-3px);
             color: #fff;
         }
@@ -298,7 +298,7 @@
         }
 
         .form-control-site:focus {
-            border-color: var(--cams-accent);
+            border-color: var(--bims-accent);
             box-shadow: 0 0 0 4px rgba(0, 180, 216, 0.1);
         }
 
@@ -311,7 +311,7 @@
         }
 
         .auth-sidebar {
-            background: linear-gradient(135deg, var(--cams-dark) 0%, #16213e 100%);
+            background: linear-gradient(135deg, var(--bims-dark) 0%, #16213e 100%);
             padding: 3rem;
             display: flex;
             flex-direction: column;
@@ -328,11 +328,11 @@
         .stat-number {
             font-size: 3rem;
             font-weight: 800;
-            color: var(--cams-accent);
+            color: var(--bims-accent);
         }
 
         .stat-label {
-            color: var(--cams-secondary);
+            color: var(--bims-secondary);
             font-weight: 500;
         }
 
@@ -370,8 +370,8 @@
     <nav class="navbar navbar-expand-lg navbar-site fixed-top" id="mainNav">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="{{ route('site.home') }}">
-                <i class="fas fa-car-side me-2 text-info fs-4"></i>
-                <span class="navbar-brand-text">CAMS</span>
+                <i class="fas fa-store me-2 text-info fs-4"></i>
+                <span class="navbar-brand-text">BIMS</span>
             </a>
 
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -396,10 +396,10 @@
                         <a class="nav-link nav-link-site {{ request()->routeIs('site.contact') ? 'active' : '' }}" href="{{ route('site.contact') }}">Contact Us</a>
                     </li>
                     <li class="nav-item ms-lg-3">
-                        <a class="btn btn-outline-cams btn-sm" href="{{ route('site.login') }}">Login</a>
+                        <a class="btn btn-outline-bims btn-sm" href="{{ route('site.login') }}">Login</a>
                     </li>
                     <li class="nav-item ms-2">
-                        <a class="btn btn-cams btn-sm" href="{{ route('site.register') }}">Register</a>
+                        <a class="btn btn-bims btn-sm" href="{{ route('site.register') }}">Register</a>
                     </li>
                 </ul>
             </div>
@@ -415,11 +415,11 @@
             <div class="row g-4">
                 <div class="col-lg-4 col-md-6">
                     <div class="d-flex align-items-center mb-3">
-                        <i class="fas fa-car-side me-2 text-info fs-4"></i>
-                        <span class="navbar-brand-text">CAMS</span>
+                        <i class="fas fa-store me-2 text-info fs-4"></i>
+                        <span class="navbar-brand-text">BIMS</span>
                     </div>
                     <p class="text-white-50 mb-4">
-                        Carwash Management System - A comprehensive solution to manage all carwash activities and services in one powerful system.
+                        Business Information Management System - one platform to run hotels, restaurants, bars, shops, rentals and carwashes.
                     </p>
                     <div class="d-flex">
                         <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
@@ -438,11 +438,11 @@
                 </div>
 
                 <div class="col-lg-3 col-md-6">
-                    <h5 class="footer-title">Services</h5>
-                    <a href="#" class="footer-link">Full Car Wash</a>
-                    <a href="#" class="footer-link">Interior Cleaning</a>
-                    <a href="#" class="footer-link">Exterior Polish</a>
-                    <a href="#" class="footer-link">Engine Cleaning</a>
+                    <h5 class="footer-title">Solutions</h5>
+                    <a href="{{ route('site.services') }}" class="footer-link">Hotel & Lodging</a>
+                    <a href="{{ route('site.services') }}" class="footer-link">Restaurant & Bar</a>
+                    <a href="{{ route('site.services') }}" class="footer-link">POS & Retail</a>
+                    <a href="{{ route('site.services') }}" class="footer-link">Rental & Carwash</a>
                 </div>
 
                 <div class="col-lg-3 col-md-6">
@@ -464,7 +464,7 @@
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start">
                     <p class="text-white-50 mb-0">
-                        &copy; {{ date('Y') }} CAMS. Developed by <strong class="text-info">TechScales Company Limited</strong>
+                        &copy; {{ date('Y') }} BIMS. Developed by <strong class="text-info">TechScales Company Limited</strong>
                     </p>
                 </div>
                 <div class="col-md-6 text-center text-md-end">

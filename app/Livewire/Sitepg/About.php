@@ -9,6 +9,6 @@ class About extends Component
     public function render()
     {
         return view('livewire.sitepg.about')
-            ->layout('components.layouts.sitepg', ['title' => 'About Us - CAMS']);
+            ->layout('components.layouts.sitepg', ['title' => 'About Us - BIMS']);
     }
 }

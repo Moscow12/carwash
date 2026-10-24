@@ -19,7 +19,7 @@ class Index extends Component
     public $showSystemInfo = false;
 
     // General settings
-    public $siteName = 'CAMS';
+    public $siteName = 'BIMS';
     public $siteEmail = 'info@techscales.co.tz';
     public $sitePhone = '+255659811966';
     public $siteAddress = 'Dodoma, Tanzania';

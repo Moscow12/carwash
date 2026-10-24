@@ -47,7 +47,7 @@
         <div class="mt-auto d-flex justify-content-between align-items-center">
             <span class="fs-5 fw-bold text-info">{{ $card['price_label'] ?? 'Enquire' }}</span>
             @if($card['shop_url'])
-                <a href="{{ $card['shop_url'] }}" class="btn btn-sm btn-outline-cams">
+                <a href="{{ $card['shop_url'] }}" class="btn btn-sm btn-outline-bims">
                     View <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             @endif

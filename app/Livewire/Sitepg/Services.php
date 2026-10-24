@@ -14,6 +14,6 @@ class Services extends Component
 
         return view('livewire.sitepg.services', [
             'publishedServices' => $services,
-        ])->layout('components.layouts.sitepg', ['title' => 'Our Services - CAMS']);
+        ])->layout('components.layouts.sitepg', ['title' => 'Our Services - BIMS']);
     }
 }

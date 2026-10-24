@@ -38,6 +38,6 @@ class ForgotPassword extends Component
     public function render()
     {
         return view('livewire.sitepg.forgot-password')
-            ->layout('components.layouts.sitepg', ['title' => 'Forgot Password - CAMS']);
+            ->layout('components.layouts.sitepg', ['title' => 'Forgot Password - BIMS']);
     }
 }

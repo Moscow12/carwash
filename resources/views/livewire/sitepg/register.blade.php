@@ -9,10 +9,10 @@
                             <div class="col-lg-5 d-none d-lg-block">
                                 <div class="auth-sidebar h-100">
                                     <div class="text-center">
-                                        <i class="fas fa-car-side text-info mb-4" style="font-size: 5rem;"></i>
-                                        <h2 class="text-white fw-bold mb-3">Join CAMS Today!</h2>
+                                        <i class="fas fa-store text-info mb-4" style="font-size: 5rem;"></i>
+                                        <h2 class="text-white fw-bold mb-3">Join BIMS Today!</h2>
                                         <p class="text-white-50 mb-4">
-                                            Create your account and start managing your carwash business like a pro.
+                                            Create your account and start managing your business like a pro.
                                         </p>
 
                                         <div class="mt-5">
@@ -47,8 +47,8 @@
                                 <div class="p-4 p-lg-5">
                                     <div class="text-center mb-4">
                                         <a href="{{ route('site.home') }}" class="d-inline-flex align-items-center text-decoration-none mb-4">
-                                            <i class="fas fa-car-side text-info me-2 fs-4"></i>
-                                            <span class="navbar-brand-text">CAMS</span>
+                                            <i class="fas fa-store text-info me-2 fs-4"></i>
+                                            <span class="navbar-brand-text">BIMS</span>
                                         </a>
                                         <h3 class="fw-bold mb-2">Create Account</h3>
                                         <p class="text-muted">Fill in your details to get started</p>
@@ -182,7 +182,7 @@
                                                            id="reg-business-name"
                                                            wire:model.blur="business_name"
                                                            class="form-control form-control-site border-start-0 ps-0 @error('business_name') is-invalid @enderror"
-                                                           placeholder="e.g. Sparkle Carwash">
+                                                           placeholder="e.g. Sunrise Hotel">
                                                 </div>
                                                 @error('business_name')
                                                     <div class="text-danger small mt-1">{{ $message }}</div>
@@ -229,7 +229,7 @@
 
                                             <div class="col-12">
                                                 <button type="submit"
-                                                        class="btn btn-cams btn-lg w-100"
+                                                        class="btn btn-bims btn-lg w-100"
                                                         wire:loading.attr="disabled"
                                                         wire:target="register">
                                                     <span wire:loading.remove wire:target="register">

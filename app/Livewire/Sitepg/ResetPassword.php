@@ -63,6 +63,6 @@ class ResetPassword extends Component
     public function render()
     {
         return view('livewire.sitepg.reset-password')
-            ->layout('components.layouts.sitepg', ['title' => 'Reset Password - CAMS']);
+            ->layout('components.layouts.sitepg', ['title' => 'Reset Password - BIMS']);
     }
 }

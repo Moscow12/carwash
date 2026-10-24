@@ -173,7 +173,7 @@
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item d-flex justify-content-between px-0">
                             <span class="text-muted">App Name</span>
-                            <span class="fw-semibold">CAMS</span>
+                            <span class="fw-semibold">BIMS</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between px-0">
                             <span class="text-muted">Version</span>

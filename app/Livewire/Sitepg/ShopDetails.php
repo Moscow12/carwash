@@ -35,6 +35,6 @@ class ShopDetails extends Component
             'business' => $business,
             'grouped' => $grouped,
             'total' => $cards->count(),
-        ])->layout('components.layouts.sitepg', ['title' => $business->name . ' - CAMS']);
+        ])->layout('components.layouts.sitepg', ['title' => $business->name . ' - BIMS']);
     }
 }

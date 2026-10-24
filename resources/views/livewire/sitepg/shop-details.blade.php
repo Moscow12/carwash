@@ -37,7 +37,7 @@
                     {{-- Contact / Enquire --}}
                     <div class="d-flex flex-wrap gap-2 mt-4">
                         @if($waNumber)
-                            <a href="https://wa.me/{{ $waNumber }}?text={{ urlencode('Hi, I found your business on the CAMS marketplace and would like to enquire.') }}"
+                            <a href="https://wa.me/{{ $waNumber }}?text={{ urlencode('Hi, I found your business on the BIMS marketplace and would like to enquire.') }}"
                                target="_blank" rel="noopener" class="btn btn-success">
                                 <i class="fab fa-whatsapp me-1"></i> WhatsApp
                             </a>
@@ -48,7 +48,7 @@
                             </a>
                         @endif
                         @if($business->email)
-                            <a href="mailto:{{ $business->email }}?subject={{ urlencode('Enquiry from CAMS marketplace') }}" class="btn btn-outline-light">
+                            <a href="mailto:{{ $business->email }}?subject={{ urlencode('Enquiry from BIMS marketplace') }}" class="btn btn-outline-light">
                                 <i class="fas fa-envelope me-1"></i> Email
                             </a>
                         @endif
@@ -83,7 +83,7 @@
                                     @endphp
                                     <x-listing-card :card="$card" />
                                     @if($needsBooking)
-                                        <a href="{{ route('site.login') }}" class="btn btn-sm btn-cams w-100 mt-2">
+                                        <a href="{{ route('site.login') }}" class="btn btn-sm btn-bims w-100 mt-2">
                                             <i class="fas fa-calendar-check me-1"></i> Login to book
                                         </a>
                                     @endif

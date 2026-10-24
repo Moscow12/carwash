@@ -15,7 +15,7 @@
         <div class="offcanvas-header">
             <a class='d-flex align-items-center gap-2' href="{{ route('customer.dashboard') }}">
               <img src="{{ asset('images/brand/logo/logo-icon.svg') }}" alt="" />
-              <span class="fw-bold fs-4 site-logo-text">CAMS</span>
+              <span class="fw-bold fs-4 site-logo-text">BIMS</span>
             </a>
           <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>

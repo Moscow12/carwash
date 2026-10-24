@@ -14,6 +14,6 @@ class Home extends Component
 
         return view('livewire.sitepg.home', [
             'featured' => $featured,
-        ])->layout('components.layouts.sitepg', ['title' => 'Home - CAMS']);
+        ])->layout('components.layouts.sitepg', ['title' => 'Home - BIMS']);
     }
 }

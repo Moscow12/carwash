@@ -21,7 +21,7 @@
                 <div class="col-lg-5">
                     <h2 class="section-title mb-4">Get in <span class="gradient-text">Touch</span></h2>
                     <p class="text-muted mb-5">
-                        Have questions about CAMS or need support? Our team is here to help you get the most out of our carwash management system.
+                        Have questions about BIMS or need support? Our team is here to help you get the most out of our business information management system.
                     </p>
 
                     <div class="d-flex mb-4">
@@ -68,16 +68,16 @@
                     <div class="mt-5">
                         <h5 class="fw-bold mb-3">Follow Us</h5>
                         <div class="d-flex gap-2">
-                            <a href="#" class="social-link" style="background: var(--cams-accent);">
+                            <a href="#" class="social-link" style="background: var(--bims-accent);">
                                 <i class="fab fa-facebook-f"></i>
                             </a>
-                            <a href="#" class="social-link" style="background: var(--cams-accent);">
+                            <a href="#" class="social-link" style="background: var(--bims-accent);">
                                 <i class="fab fa-twitter"></i>
                             </a>
-                            <a href="#" class="social-link" style="background: var(--cams-accent);">
+                            <a href="#" class="social-link" style="background: var(--bims-accent);">
                                 <i class="fab fa-instagram"></i>
                             </a>
-                            <a href="#" class="social-link" style="background: var(--cams-accent);">
+                            <a href="#" class="social-link" style="background: var(--bims-accent);">
                                 <i class="fab fa-linkedin-in"></i>
                             </a>
                         </div>
@@ -154,7 +154,7 @@
                                 </div>
 
                                 <div class="col-12">
-                                    <button type="submit" class="btn btn-cams btn-lg w-100">
+                                    <button type="submit" class="btn btn-bims btn-lg w-100">
                                         <span wire:loading.remove wire:target="submit">
                                             <i class="fas fa-paper-plane me-2"></i>Send Message
                                         </span>
@@ -207,12 +207,12 @@
                         <div class="accordion-item border-0 mb-3 feature-card p-0">
                             <h2 class="accordion-header">
                                 <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                                    What is CAMS?
+                                    What is BIMS?
                                 </button>
                             </h2>
                             <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body text-muted">
-                                    CAMS (Carwash Management System) is a comprehensive software solution designed to help carwash businesses manage their daily operations, including booking, customer management, invoicing, and analytics.
+                                    BIMS (Business Information Management System) is a software platform for running hotels, restaurants, bars, shops, rental properties and carwashes. It covers sales, bookings, stock, staff, invoicing and analytics.
                                 </div>
                             </div>
                         </div>
@@ -220,7 +220,7 @@
                         <div class="accordion-item border-0 mb-3 feature-card p-0">
                             <h2 class="accordion-header">
                                 <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                                    How can I get started with CAMS?
+                                    How can I get started with BIMS?
                                 </button>
                             </h2>
                             <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
@@ -246,12 +246,12 @@
                         <div class="accordion-item border-0 feature-card p-0">
                             <h2 class="accordion-header">
                                 <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                                    Is CAMS suitable for small businesses?
+                                    Is BIMS suitable for small businesses?
                                 </button>
                             </h2>
                             <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body text-muted">
-                                    Absolutely! CAMS is designed to scale with your business. Whether you're running a single location or multiple branches, our system adapts to your needs.
+                                    Absolutely! BIMS is designed to scale with your business. Whether you're running a single location or multiple branches, our system adapts to your needs.
                                 </div>
                             </div>
                         </div>

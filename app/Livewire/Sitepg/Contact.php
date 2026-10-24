@@ -33,6 +33,6 @@ class Contact extends Component
     public function render()
     {
         return view('livewire.sitepg.contact')
-            ->layout('components.layouts.sitepg', ['title' => 'Contact Us - CAMS']);
+            ->layout('components.layouts.sitepg', ['title' => 'Contact Us - BIMS']);
     }
 }

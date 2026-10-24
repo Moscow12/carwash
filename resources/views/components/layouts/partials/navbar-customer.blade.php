@@ -15,7 +15,7 @@
   <li class="nav-item">
     <a class='nav-link {{ request()->routeIs("customer.businesses") ? "active" : "" }}' href="{{ route('customer.businesses') }}">
       <span class="nav-icon"><i class="ti ti-car-garage fs-5"></i></span>
-      <span class="text">Browse Carwashes</span>
+      <span class="text">Browse Businesses</span>
     </a>
   </li>
   <li class="nav-item">

@@ -7,8 +7,8 @@
                         <div class="p-4 p-lg-5">
                             <div class="text-center mb-4">
                                 <a href="{{ route('site.home') }}" class="d-inline-flex align-items-center text-decoration-none mb-4">
-                                    <i class="fas fa-car-side text-info me-2 fs-4"></i>
-                                    <span class="navbar-brand-text">CAMS</span>
+                                    <i class="fas fa-store text-info me-2 fs-4"></i>
+                                    <span class="navbar-brand-text">BIMS</span>
                                 </a>
                                 <div class="mb-3">
                                     <i class="fas fa-key text-info" style="font-size: 3rem;"></i>
@@ -44,7 +44,7 @@
                                     @enderror
                                 </div>
 
-                                <button type="submit" class="btn btn-cams btn-lg w-100 mb-4"
+                                <button type="submit" class="btn btn-bims btn-lg w-100 mb-4"
                                         wire:loading.attr="disabled" wire:target="sendResetLink">
                                     <span wire:loading.remove wire:target="sendResetLink">
                                         <i class="fas fa-paper-plane me-2"></i>Send Reset Link

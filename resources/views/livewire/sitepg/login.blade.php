@@ -9,10 +9,10 @@
                             <div class="col-lg-5 d-none d-lg-block">
                                 <div class="auth-sidebar h-100">
                                     <div class="text-center">
-                                        <i class="fas fa-car-side text-info mb-4" style="font-size: 5rem;"></i>
+                                        <i class="fas fa-store text-info mb-4" style="font-size: 5rem;"></i>
                                         <h2 class="text-white fw-bold mb-3">Welcome Back!</h2>
                                         <p class="text-white-50 mb-4">
-                                            Sign in to access your CAMS dashboard and manage your carwash business efficiently.
+                                            Sign in to access your BIMS dashboard and manage your business efficiently.
                                         </p>
 
                                         <div class="mt-5">
@@ -42,8 +42,8 @@
                                 <div class="p-4 p-lg-5">
                                     <div class="text-center mb-4">
                                         <a href="{{ route('site.home') }}" class="d-inline-flex align-items-center text-decoration-none mb-4">
-                                            <i class="fas fa-car-side text-info me-2 fs-4"></i>
-                                            <span class="navbar-brand-text">CAMS</span>
+                                            <i class="fas fa-store text-info me-2 fs-4"></i>
+                                            <span class="navbar-brand-text">BIMS</span>
                                         </a>
                                         <h3 class="fw-bold mb-2">Sign In</h3>
                                         <p class="text-muted">Enter your credentials to access your account</p>
@@ -119,7 +119,7 @@
                                             </div>
                                         </div>
 
-                                        <button type="submit" class="btn btn-cams btn-lg w-100 mb-4"
+                                        <button type="submit" class="btn btn-bims btn-lg w-100 mb-4"
                                                 wire:loading.attr="disabled" wire:target="login">
                                             <span wire:loading.remove wire:target="login">
                                                 <i class="fas fa-sign-in-alt me-2"></i>Sign In

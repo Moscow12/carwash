@@ -20,7 +20,7 @@
                     : asset('images/brand/logo/logo-icon.svg');
                 $businessName = $settings && $settings->business_name
                     ? $settings->business_name
-                    : 'CAMS Owner';
+                    : 'BIMS Owner';
             @endphp
             <a class='d-flex align-items-center gap-2' href="{{ route('owner.dashboard') }}">
               <img src="{{ $logoUrl }}" alt="{{ $businessName }}" style="max-height: 40px; max-width: 40px; object-fit: contain;" />

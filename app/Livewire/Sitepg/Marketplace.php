@@ -64,6 +64,6 @@ class Marketplace extends Component
             'businessTypes' => $businessTypes,
             'categories' => $categories,
             'listingTypes' => ListingQuery::TYPES,
-        ])->layout('components.layouts.sitepg', ['title' => 'Marketplace - CAMS']);
+        ])->layout('components.layouts.sitepg', ['title' => 'Marketplace - BIMS']);
     }
 }

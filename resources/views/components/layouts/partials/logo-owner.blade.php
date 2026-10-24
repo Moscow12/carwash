@@ -5,7 +5,7 @@
         : asset('images/brand/logo/logo-icon.svg');
     $businessName = $settings && $settings->business_name
         ? $settings->business_name
-        : 'CAMS Owner';
+        : 'BIMS Owner';
 @endphp
 <div class="brand-logo">
     <a class='d-none d-md-flex align-items-center gap-2' href="{{ route('owner.dashboard') }}">

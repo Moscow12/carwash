@@ -6,7 +6,7 @@
                 <div class="col-lg-8 mx-auto text-center">
                     <h1 class="hero-title">The <span class="gradient-text">Marketplace</span></h1>
                     <p class="hero-subtitle">
-                        Browse products, rentals, hotel rooms and more from businesses on CAMS
+                        Browse products, rentals, hotel rooms and more from businesses on BIMS
                     </p>
                 </div>
             </div>

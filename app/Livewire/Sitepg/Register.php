@@ -106,11 +106,11 @@ class Register extends Component
         session()->regenerate();
 
         if ($this->registerBusiness) {
-            session()->flash('success', 'Welcome to CAMS! Your business "' . $this->business_name . '" is ready.');
+            session()->flash('success', 'Welcome to BIMS! Your business "' . $this->business_name . '" is ready.');
             return redirect()->route('owner.dashboard');
         }
 
-        session()->flash('success', 'Welcome to CAMS, ' . $user->name . '!');
+        session()->flash('success', 'Welcome to BIMS, ' . $user->name . '!');
 
         return redirect()->route('customer.dashboard');
     }
@@ -119,6 +119,6 @@ class Register extends Component
     {
         return view('livewire.sitepg.register', [
             'businessTypes' => $this->businessTypes(),
-        ])->layout('components.layouts.sitepg', ['title' => 'Register - CAMS']);
+        ])->layout('components.layouts.sitepg', ['title' => 'Register - BIMS']);
     }
 }

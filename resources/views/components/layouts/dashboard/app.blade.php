@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="author" content="TechScales">
-    <title>{{ $title ?? 'Dashboard' }} | CAMS Admin</title>
+    <title>{{ $title ?? 'Dashboard' }} | BIMS Admin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('dashertheme/assets/images/favicon/favicon-32x32.png') }}" />
@@ -77,7 +77,7 @@
             <div class="brand-logo">
                 <a class='d-none d-md-flex align-items-center gap-2' href='{{ route("admin.dashboard") }}'>
                     <i class="ti ti-car text-primary fs-3"></i>
-                    <span class="fw-bold fs-4 site-logo-text">CAMS</span>
+                    <span class="fw-bold fs-4 site-logo-text">BIMS</span>
                 </a>
             </div>
 
@@ -240,7 +240,7 @@
                 <div class="container-fluid px-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="text-muted small">
-                            &copy; {{ date('Y') }} CAMS. Developed by <strong>TechScales Company Limited</strong>
+                            &copy; {{ date('Y') }} BIMS. Developed by <strong>TechScales Company Limited</strong>
                         </span>
                         <span class="text-muted small">
                             <i class="ti ti-phone me-1"></i>+255 659 811 966
